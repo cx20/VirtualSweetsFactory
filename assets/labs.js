@@ -568,92 +568,113 @@ function foldField(u, v, seed) {
 }
 
 /* ======================================================================
-   HERO — 点から団子が組み上がり、焼き目がついて、たれが流れ落ちる
+   HERO — 断面からドーナツが組み上がり、焼き色がついて、チョコに浸かる
+   形も色もドーナツ.js の値から（断面 PROFILE_PTS・寸法・生地とチョコの色）
    ====================================================================== */
 (function () {
     var cv = $("#heroCanvas"); if (!cv) return;
     var c = setupCanvas(cv), ctx = c.ctx;
     var stageEl = $("#heroStage"), countEl = $("#heroCount");
-    var PR = PROFILES.dango, PH = PROFILE_H.dango;
 
-    // 手で丸めた低周波の凹凸。球のままだと「色つきの球」に見える（花見団子.js）
-    function lump(u, t) {
-        return 1 + 0.035 * (Noise.fbmu(u * 3, t * 2, 3, 13, 2) - 0.5) * 2;
+    // ドーナツ.js の断面。[横（−1 が穴側, 1 が外側）, 高さ（0〜1）, 肌（0 = 型に接した面, 1 = 膨れた面）]
+    // 外側の赤道から、上の膨れた面 → 穴 → 型の底 と一周する閉じた輪郭
+    var SECT = [
+        [1.000, 0.494, 0.00], [0.996, 0.655, 0.00], [0.952, 0.792, 0.08], [0.856, 0.918, 0.60],
+        [0.700, 1.000, 1.00], [0.430, 0.958, 1.00], [0.070, 0.930, 1.00], [-0.300, 0.946, 1.00],
+        [-0.575, 0.975, 1.00], [-0.795, 0.930, 0.72], [-0.928, 0.808, 0.14], [-1.000, 0.580, 0.00],
+        [-0.985, 0.340, 0.00], [-0.898, 0.155, 0.00], [-0.660, 0.042, 0.00], [-0.280, 0.004, 0.00],
+        [0.180, 0.000, 0.00], [0.580, 0.031, 0.00], [0.850, 0.146, 0.00], [0.968, 0.312, 0.00]
+    ];
+    var NSECT = SECT.length;
+    // 寸法（cm）。外径 7.0 / 高さ 2.05。この実験の尺度（外径 ≒ 1.5）に縮める
+    var RING = 2.32, TW = 1.20, TH = 2.05, K = 0.95 / (RING + TW);
+
+    // 閉じた Catmull-Rom。s は 0〜1 で一周
+    function sect(s, k) {
+        var f = (s - Math.floor(s)) * NSECT, i = Math.floor(f), t = f - i;
+        var p0 = SECT[(i + NSECT - 1) % NSECT][k], p1 = SECT[i % NSECT][k];
+        var p2 = SECT[(i + 1) % NSECT][k], p3 = SECT[(i + 2) % NSECT][k];
+        return 0.5 * (2 * p1 + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t + (-p0 + 3 * p1 - 3 * p2 + p3) * t * t * t);
     }
-    var N = 46, M = 52;
-    var mesh = buildMesh({
-        pos: function (t, a, out) {
-            var r = sampleProfile(PR, t) * lump(a / TAU, t);
-            out[0] = r * Math.cos(a); out[1] = (t - 0.5) * PH; out[2] = r * Math.sin(a);
-            return out;
-        }
-    }, N, M);
+    // 外形もわずかに楕円で、真円ではない（ドーナツ.js の ringMod。工業製品なので幅は狭い）
+    function ringMod(a) { return 1 + 0.018 * Math.cos(2 * a + 0.7) + 0.010 * Math.sin(3 * a + 1.9); }
+    function sectR(s, a) { return (RING * ringMod(a) + sect(s, 0) * TW) * K; }
+    function sectY(s) { return (sect(s, 1) - 0.5) * TH * K; }
 
-    // ドラッグで視点を回せるようにする。組み上がる途中でも横から覗ける
-    var orb = orbit(cv, { elev: 0.28, speed: 0.275 });
+    // 断面を軸のまわりに回す。行 = 断面に沿った s、列 = 周方向
+    var NS = 40, MW = 64;
+    var mesh = buildGrid(NS, MW, function (s, w, out) {
+        var a = w * TAU, r = sectR(s, a);
+        out[0] = r * Math.cos(a); out[1] = sectY(s); out[2] = r * Math.sin(a);
+        return out;
+    });
+
+    // 上から見下ろして穴が見える角度にする
+    var orb = orbit(cv, { elev: 0.62, speed: 0.275 });
 
     var STAGES = [
         { t: 1.5, name: "断面をひく" },
         { t: 3.0, name: "軸のまわりに点を回す" },
         { t: 4.5, name: "面を張る" },
-        { t: 6.5, name: "焼き目をつける" },
-        { t: 9.9, name: "たれを掛ける" }
+        { t: 6.5, name: "焼き色をつける" },
+        { t: 9.9, name: "チョコに浸ける" }
     ];
     var t0 = 0, started = false;
 
-    var mat = copyMat(MATS.dango);
-    var DOUGH = MATS.dango.col;
-    // 焼き目は等高線ではなく、輪郭の崩れた斑（まだら）。上と横に多い
+    // 生地の色（ドーナツ.js の doughAlbedo）
+    var CRUMB = [0.906, 0.796, 0.616], BAKE = [0.868, 0.618, 0.334];
+    var EDGE = [0.664, 0.392, 0.170], RAW = [0.948, 0.884, 0.744];
+    var CHOCO = [0.170, 0.092, 0.058];
+    // 1個の中に2つの肌。型に接した面は滑らかで濃く、膨れた面は浅い色でざらつく
+    function skin(v) { return clamp(sect(v, 2), 0, 1); }
     function albedo(u, v) {
-        var s = Noise.fbmu(u * 6, v * 5, 6, 41, 4);
-        var spot = smooth(0.56, 0.72, s) * smooth(0.22, 0.62, v);
-        return mix3(DOUGH, bakeColor(0.50 + 0.40 * spot), spot * 0.85);
+        var sk = skin(v);
+        var n = Noise.fbmu(u * 14, v * 6, 14, 41, 4);
+        var mold = mix3(BAKE, EDGE, clamp(0.25 + 0.55 * n, 0, 1));
+        // 【対策】気泡を暗く塗るとカビになる。中は焼けていない生地なので明るい
+        // 面1枚より細かい模様は四角いモザイクになるので、気泡は面の数に合わせて粗く引く
+        var pore = smooth(0.58, 0.80, Noise.fbmu(u * 12, v * 6, 12, 7, 2));
+        var risen = mix3(mix3(CRUMB, BAKE, 0.25 + 0.35 * n), RAW, pore * 0.35);
+        var col = mix3(mold, risen, sk);
+        // 型からあふれた縁（シーム）に、水平の一本線
+        var seam = Math.exp(-Math.pow((v - 1 / NSECT) / 0.012, 2));
+        return mix3(col, EDGE, seam * 0.7);
+    }
+    // チョコに浸けた範囲。膨れた面（上）だけで、境界は1本の弦。reach 0 → 1 で浸かっていく
+    var DIP = 0.4;
+    function choco(u, v, reach) {
+        // 上の面（高さ 0.75 より上）だけ。外側の肩から内側の肩まで
+        var top = smooth(0.70, 0.80, sect(v, 1));
+        if (top <= 0) return 0;
+        var a = u * TAU, r = sectR(v, a) / K;
+        var wob = 0.30 * 2 * (Noise.fbmu(u * 7, 2.5, 7, 87, 2) - 0.5);
+        var chord = mix(RING + TW + 0.4, -0.55, reach);
+        var d = r * Math.cos(a - DIP) + wob;
+        return top * smooth(chord - 0.18, chord + 0.18, d);
     }
 
-    // たれの厚み。上から掛かって下へ流れ、途中で止まる。止まった線には玉ができる
-    // reach … 0 で掛け始め、1 で流れ切った状態
-    function glazeT(u, v, reach) {
-        var stop = 0.30 + 0.16 * Noise.fbmu(u * 3, 1.7, 3, 77, 3);
-        var edge = 1.02 - (1.02 - stop) * reach;
-        var d = v - edge;
-        if (d <= 0) return 0;
-        var body = clamp(d / 0.40, 0, 1) * (0.55 + 0.45 * Noise.fbmu(u * 4, v * 3, 4, 91, 3));
-        var bead = 0.45 * Math.exp(-(d / 0.05) * (d / 0.05)) * reach;
-        return body * 0.7 + bead;
-    }
-    // みたらしの吸収係数。12章の実験と同じ値（花見団子.js の飴色に合わせたもの）
-    var EXT = [1.35, 3.05, 5.20];
-    function albedoGlaze(reach) {
-        return function (u, v) {
-            var base = albedo(u, v);
-            var th = glazeT(u, v, reach);
-            if (th <= 0) return base;
-            return [base[0] * Math.exp(-EXT[0] * th),
-                    base[1] * Math.exp(-EXT[1] * th),
-                    base[2] * Math.exp(-EXT[2] * th)];
-        };
-    }
+    var matDough = { rough: 0.62, coat: 0.0, sss: 0.12, sheen: 0, sssCol: [1.0, 0.78, 0.55] };
 
     function drawProfileStage(k) {
-        // 断面の折れ線だけを、方眼の上に引く
+        // 軸の左右に、同じ断面を1枚ずつ引く（回す前の「横顔」）
         var W = c.W, H = c.H, cx = W / 2, cy = H / 2, S = Math.min(W, H) * 0.42;
         ctx.strokeStyle = "rgba(138,119,101,.5)"; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(cx, cy - S * 0.85); ctx.lineTo(cx, cy + S * 0.85); ctx.stroke();
-        ctx.strokeStyle = "#B8737E"; ctx.lineWidth = 2;
-        ctx.beginPath();
-        for (var i = 0; i <= 60; i++) {
-            var t = i / 60;
-            var r = sampleProfile(PR, t);
-            var x = cx + r * S, y = cy + (0.5 - t) * PH * S;
-            i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
-        }
-        ctx.stroke();
-        ctx.fillStyle = "#8F5A2B";
-        for (var j = 0; j < PR.length; j++) {
-            var p = PR[j];
-            var px = cx + p.r * S, py = cy + (0.5 - p.t) * PH * S;
-            ctx.beginPath(); ctx.arc(px, py, 3.2 * clamp(k, 0.2, 1), 0, TAU); ctx.fill();
-        }
+        ctx.beginPath(); ctx.moveTo(cx, cy - S * 0.6); ctx.lineTo(cx, cy + S * 0.6); ctx.stroke();
+        [-1, 1].forEach(function (side) {
+            ctx.strokeStyle = "#B8737E"; ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (var i = 0; i <= 120; i++) {
+                var s = i / 120;
+                var x = cx + side * sectR(s, 0) * S, y = cy - sectY(s) * S;
+                i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+            }
+            ctx.closePath(); ctx.stroke();
+            ctx.fillStyle = "#8F5A2B";
+            for (var j = 0; j < NSECT; j++) {
+                var px = cx + side * sectR(j / NSECT, 0) * S, py = cy - sectY(j / NSECT) * S;
+                ctx.beginPath(); ctx.arc(px, py, 3.0 * clamp(k, 0.2, 1), 0, TAU); ctx.fill();
+            }
+        });
     }
 
     // 【対策】倍率は、このあと renderMesh に渡す zoom と同じにすること。
@@ -687,23 +708,24 @@ function foldField(u, v, seed) {
         var rot = orb.rot(now), ev = orb.elev;
         var shown = mesh.count;
 
-        if (si === 0) { drawProfileStage(k); shown = PR.length; }
+        if (si === 0) { drawProfileStage(k); shown = NSECT; }
         else if (si === 1) { shown = drawPoints(rot, ev, k); }
         else if (si === 2) {
             renderMesh(ctx, c.W, c.H, mesh, { rot: rot, elev: ev, mode: "wire", zoom: 0.84 });
         } else if (si === 3) {
             renderMesh(ctx, c.W, c.H, mesh, {
-                rot: rot, elev: ev, zoom: 0.84, mat: mat,
+                rot: rot, elev: ev, zoom: 0.84, mat: matDough,
                 albedo: function (u, v) {
-                    return mix3(DOUGH, albedo(u, v), clamp(k * 1.3, 0, 1));   // 生地 → 焼き目
+                    return mix3(RAW, albedo(u, v), clamp(k * 1.3, 0, 1));   // 生の生地 → 焼き色
                 }
             });
         } else {
-            // たれは透明な層。色は厚みから解き、艶はクリアコートで持たせる（12章）
+            // 【対策】ドーナツ.js はチョコにだけクリアコートを付け、生地には絶対に付けない。
+            //         このミニレンダラは材質が1つしか持てないので、艶は足さずに色だけ変える
+            var reach = smooth(0, 0.75, k);
             renderMesh(ctx, c.W, c.H, mesh, {
-                rot: rot, elev: ev, zoom: 0.84,
-                mat: { rough: 0.24, coat: 0.62, sss: 0.30, sheen: 0, sssCol: [1, .82, .58] },
-                albedo: albedoGlaze(smooth(0, 0.75, k))
+                rot: rot, elev: ev, zoom: 0.84, mat: matDough,
+                albedo: function (u, v) { return mix3(albedo(u, v), CHOCO, choco(u, v, reach)); }
             });
         }
 
