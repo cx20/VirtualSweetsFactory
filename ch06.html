@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>模様も、その場で描く — おかしのつくりかた</title>
-<meta name="description" content="模様も、その場で描く">
+<title>回す、型で抜く — おかしのつくりかた</title>
+<meta name="description" content="回す、型で抜く">
 <link rel="stylesheet" href="assets/site.css">
 <script src="assets/labs.js" defer></script>
 </head>
@@ -18,20 +18,21 @@
       <a href="ch01.html">01 生成</a>
       <a href="ch02.html">02 乱数</a>
       <a href="ch03.html">03 ノイズ</a>
-      <a href="ch04.html">04 かたち</a>
-      <a href="ch05.html">05 面</a>
-      <a href="ch06.html" aria-current="page">06 模様</a>
-      <a href="ch07.html">07 質感</a>
-      <a href="ch08.html">08 物理</a>
-      <a href="ch09.html">09 部品</a>
-      <a href="ch10.html">10 曲がり</a>
-      <a href="ch11.html">11 光</a>
+      <a href="ch04.html">04 面</a>
+      <a href="ch05.html">05 模様</a>
+      <a href="ch06.html" aria-current="page">06 かたち</a>
+      <a href="ch07.html">07 曲がり</a>
+      <a href="ch08.html">08 潰れ</a>
+      <a href="ch09.html">09 塊</a>
+      <a href="ch10.html">10 焼き色</a>
+      <a href="ch11.html">11 質感</a>
       <a href="ch12.html">12 たれ</a>
-      <a href="ch13.html">13 潰れ</a>
-      <a href="ch14.html">14 揺れ</a>
-      <a href="ch15.html">15 透け</a>
-      <a href="ch16.html">16 塊</a>
-      <a href="ch17.html">17 糸</a>
+      <a href="ch13.html">13 透け</a>
+      <a href="ch14.html">14 光</a>
+      <a href="ch15.html">15 盛る</a>
+      <a href="ch16.html">16 振る</a>
+      <a href="ch17.html">17 揺れ</a>
+      <a href="ch18.html">18 糸</a>
       <a href="zukan.html">図鑑</a>
       <a href="view.html">ソース</a>
       <a href="terms.html">用語</a>
@@ -40,130 +41,182 @@
 </header>
 
 <main id="top" class="page">
-<div class="wrap" style="--ch:var(--p-kitsune)">
+<div class="wrap" style="--ch:var(--p-sakura)">
   <p class="crumbs"><a href="index.html">目次</a><span class="sep">/</span>第06章</p>
-<section class="chapter" id="ch06" style="--ch:var(--p-kitsune)">
+<section class="chapter" id="ch06" style="--ch:var(--p-sakura)">
   <div class="chapter-head">
-    <div class="chnum">06<small>Texture</small></div>
+    <div class="chnum">06<small>Shape</small></div>
     <div>
-      <h2>模様も、その場で描く</h2>
-      <p class="sub">procedural texture — UV とテクスチャ生成</p>
+      <h2>回す、型で抜く</h2>
+      <p class="sub">profile / outline × section — 断面と外形</p>
     </div>
   </div>
   <div class="body">
     <div class="recap">
       <span class="label">この章の3行まとめ</span>
       <ul>
-        <li>立体の表面と画像を対応づける座標を <b>UV</b> といいます。u が横、v が縦。</li>
-        <li>このプロジェクトは画像を1枚も読み込まず、<b>1ピクセルずつ計算して描いて</b>います。</li>
-        <li>描くのは色（アルベド）だけではありません。<b>光り方</b>と<b>凹凸</b>も別の画像として描きます。</li>
+        <li>団子もプリンもドーナツも、<b>横顔の折れ線を1本</b>描いて、軸のまわりに回すだけで作れます。ろくろと同じです。</li>
+        <li>回すのではなく<b>外形（抜き型）と縦断面を掛け合わせる</b>やり方もあります。チョコレートとクッキーがそれです。</li>
+        <li>どちらも、形を作る関数は1つ。お菓子の種類の違いは<b>数値の表</b>に入っています。</li>
       </ul>
     </div>
 
     <p>
-      立体ができたら、表面に模様を貼ります。そのために、
-      立体の表面のどの点が画像のどの点に対応するかを決めておきます。これが <b>UV</b> です。
-      回転体なら簡単で、<b>u は一周した角度、v は下から上への位置</b>にすればよい。
-      05章で <code>uvs.push(j / M, t)</code> と書いていたのがそれです。
+      団子を作りたいとします。3Dの球を置いて潰す、ではありません。
+      まず紙に<b>縦に切った断面の右半分</b>を描きます。下から上へ、
+      中心からの距離（半径）が場所ごとにいくつになるかを並べた表です。
+      これを軸のまわりに1周ぶん回せば、立体ができます。これを<b>回転体</b>といいます。
     </p>
     <p>
-      次に画像を用意します。ふつうは写真を読み込みますが、このプロジェクトは
-      <code>RawTexture</code> という「生の数値の配列」を作って、
-      <b>1ピクセルずつ色を計算して詰めます</b>。トーストの焼き色なら、
-      その位置のノイズを見て、焼けていれば茶色、焼けていなければ白、というふうに。
+      型から抜いたプリンも同じです。プリン.js の母線（回す前の横顔）は、
+      骨格がたった<b>4つの点</b>でできています。上面の中心、上の縁、下の縁、底の中心。
+      つまり台形です。そこに角の丸めと、3つの小さな変形を足します。
     </p>
     <figure>
-<pre><span class="c">// 5. TextureLab : 焼き色を1ピクセルずつ描く（トースト.js の考え方）</span>
-<span class="k">const</span> data = <span class="k">new</span> Uint8Array(S * S * <span class="n">4</span>);
-<span class="k">for</span> (<span class="k">let</span> y = <span class="n">0</span>; y &lt; S; y++) <span class="k">for</span> (<span class="k">let</span> x = <span class="n">0</span>; x &lt; S; x++) {
-    <span class="k">const</span> u = x / S, v = y / S;
-    <span class="k">const</span> n = fbm(u * <span class="n">6</span>, v * <span class="n">6</span>, <span class="n">21</span>, <span class="n">5</span>);        <span class="c">// 焼きムラ</span>
-    <span class="k">const</span> heat = clamp(bake * <span class="n">1.4</span> + (n - <span class="n">0.5</span>) * <span class="n">0.6</span>, <span class="n">0</span>, <span class="n">1</span>);
-    <span class="k">const</span> c = heat &lt; <span class="n">0.5</span> ? mix3(CRUMB, CBR1, heat * <span class="n">2</span>)
-                        : mix3(CBR1,  CBR3, heat * <span class="n">2</span> - <span class="n">1</span>);
-    <span class="k">const</span> i = (y * S + x) * <span class="n">4</span>;
-    data[i] = c[<span class="n">0</span>] * <span class="n">255</span>; data[i+<span class="n">1</span>] = c[<span class="n">1</span>] * <span class="n">255</span>;
-    data[i+<span class="n">2</span>] = c[<span class="n">2</span>] * <span class="n">255</span>; data[i+<span class="n">3</span>] = <span class="n">255</span>;
+<pre><span class="c">// 4. Profile : プリンの母線（プリン.js を短くしたもの）。単位は cm
+//    点は [中心からの距離 r, 高さ y]。上面 → 側面 → 底面の順</span>
+<span class="k">const</span> ctrl = [[<span class="n">0</span>, H], [rTop, H], [rBot, <span class="n">0</span>], [<span class="n">0</span>, <span class="n">0</span>]];   <span class="c">// rTop 2.30 / rBot 3.30 / H 4.30</span>
+<span class="k">const</span> rad  = [<span class="n">0</span>, filletTop, filletBot, <span class="n">0</span>];            <span class="c">// 角の丸め 0.44 / 0.30</span>
+<span class="k">let</span> poly = roundPolyline(ctrl, rad, <span class="n">26</span>);
+<span class="k">for</span> (<span class="k">const</span> p <span class="k">of</span> poly) {
+    p[<span class="n">1</span>] -= dish * (<span class="n">1</span> - rIn * rIn) * kTop;          <span class="c">// 上面のへこみ（型の底の形。カラメルがたまる） 0.060</span>
+    p[<span class="n">0</span>] += barrel * Math.sin(Math.PI * y / H);     <span class="c">// 自重で樽型に膨らむぶん 0.048</span>
+    p[<span class="n">0</span>] += bottomSpread * Math.exp(-(y / <span class="n">0.55</span>) ** <span class="n">2</span>); <span class="c">// 座ったところが少し広がる 0.055</span>
 }</pre>
-      <figcaption>1024×1024 なら100万回まわる。実行に数秒かかるのはこのため</figcaption>
+      <figcaption>変形の3つは、どれも 1mm に満たない。それでも「型の内側の形」と「型から出して置いたプリン」はここで分かれる</figcaption>
     </figure>
-
-    <h3>1枚では足りない。3枚要る</h3>
     <p>
-      色の画像（<b>アルベド</b>）だけを貼っても、まだ紙に印刷したように見えます。
-      同じトーストでも、白いところはざらついて光を散らし、焦げたところは少し光る。
-      その差を伝えるのが2枚目の <b>ORM</b> です。
-      R に陰り（AO）、G に粗さ（Roughness）、B に金属度（Metallic）を詰めた1枚の画像で、
-      3つの情報を3つの色チャンネルに同居させています。
-    </p>
-    <p>
-      3枚目が<b>法線マップ</b>。細かい凹凸を、頂点を増やさずに表現します。
-      本当は平らなのに、法線だけを傾けて「でこぼこしている」と光に嘘をつく。
-      トーストの気泡の縁も、クッキーの型押しも、これでやっています。
+      点と点のあいだは直線でつなぐと角ばるので、なめらかな曲線で補います。
+      下の実験では <b>Catmull-Rom スプライン</b>を使っています。
+      「4つの点を見て、真ん中の2点のあいだをなめらかに通る」曲線です。
+      これで、10個前後の数字から曲面ができます。
     </p>
 
-    <div class="lab" id="lab06">
-      <p class="lab-title">実験 — 3枚の画像を描き分ける</p>
-      <div class="lab-cols side">
-        <div class="controls">
-          <div class="chips" id="texMap">
-            <button class="chip" type="button" data-v="albedo" aria-pressed="true">色（アルベド）</button>
-            <button class="chip" type="button" data-v="rough">粗さ（ORM の G）</button>
-            <button class="chip" type="button" data-v="normal">凹凸（法線マップ）</button>
-          </div>
-          <div class="ctrl">
-            <label for="texBake">焼き加減<span class="v" id="texBakeV">0.45</span></label>
-            <input type="range" id="texBake" min="0" max="1" step="0.01" value="0.45">
-          </div>
-          <div class="ctrl">
-            <label for="texPore">す（気泡）の多さ<span class="v" id="texPoreV">0.50</span></label>
-            <input type="range" id="texPore" min="0" max="1" step="0.01" value="0.5">
-          </div>
-          <label class="switch"><input type="checkbox" id="texApplyOn" checked>立体に貼ってみる</label>
+    <div class="lab" id="lab04">
+      <p class="lab-title">実験 — 断面を引っぱると、立体が変わる</p>
+      <div class="lab-cols two">
+        <div>
+          <canvas id="profCanvas" width="330" height="330" aria-label="断面の制御点をドラッグして形を変える"></canvas>
+          <p class="hint">白い点を左右にドラッグ。これが半径の表です。</p>
         </div>
-        <canvas id="texCanvas" width="640" height="340" aria-label="トーストのテクスチャ3枚と、それを貼った立体"></canvas>
+        <div>
+          <canvas id="revCanvas" width="330" height="330" aria-label="断面を回転させた立体のプレビュー"></canvas>
+          <p class="hint">その断面を1周ぶん回した結果。ドラッグで回せます。</p>
+        </div>
+      </div>
+      <div class="chips" id="profPreset" style="margin-top:14px">
+        <button class="chip" type="button" data-v="dango" aria-pressed="true">団子</button>
+        <button class="chip" type="button" data-v="purin">プリン</button>
+        <button class="chip" type="button" data-v="cookie">クッキー</button>
+        <button class="chip" type="button" data-v="kuri">栗饅頭</button>
+      </div>
+      <div class="ctrl" style="margin-top:12px;max-width:320px">
+        <label for="profBump">手のあとの凹凸<span class="v" id="profBumpV">0.10</span></label>
+        <input type="range" id="profBump" min="0" max="0.4" step="0.01" value="0.1">
       </div>
       <p class="hint">
-        左が焼いている画像そのもの、右がそれを貼った結果。
-        「粗さ」の画像は、白いほどざらざら（光らない）という意味です。
+        凹凸を 0 にすると工業製品、上げすぎると手びねりの粘土になります。
+        お菓子を切り替えると、そのお菓子の初期値に戻ります。手で丸める団子は 0.10、型から抜くプリンは 0.01。
+        プリンを 0.10 にすると、型抜きではなく積み重ねた輪に見えてきます。
+        栗饅頭は、本物は上から見ると楕円です。回転体を作ってから横に伸ばしています（→ <a href="ch04.html">04章</a>）。
       </p>
     </div>
 
-    <h3>継ぎ目をなくす</h3>
+    <h3>断面は、円とは限らない — ドーナツ</h3>
     <p>
-      筒に模様を巻くと、一周して戻ったところで模様がぶつかります。
-      03章で出てきた「u 方向に折り返すノイズ」はこのためのものです。
-      さらに、05章で分割の列を M+1 本にしていたのも同じ理由で、
-      <b>u=0 の頂点と u=1 の頂点を別々に持たせないと、継ぎ目の面で模様が逆走します</b>。
+      回すのは、半径の表でなくてもかまいません。<b>閉じた輪郭</b>を回すと、穴のあいた輪になります。
+      ドーナツです。ただし、その輪郭を円にすると失敗します。ドーナツ.js のコメント：
+    </p>
+    <div class="note">
+      <b>「断面を単なる円（＝トーラス）にすると、それはドーナツではなく浮き輪になる。」</b>
+      焼きドーナツの断面には、型の縁を越えて溢れた跡（外側面の水平な筋）、
+      膨れた面の外土手・谷・内土手、型の底に沿った平たい底、の3つが必ず出る。
+      ここを省くと上下をひっくり返しても同じに見え、焼き物に見えなくなる。
+    </div>
+    <p>
+      ドーナツ.js の断面は20個の点でできていて、1点ごとに「横・高さ」に加えて
+      <b>その点が型に接していたかどうか</b>（0 = 型の面、1 = 膨れた面）を持っています。
+      この3つ目の数字が、そのまま焼き色と粗さの塗り分けに使われます（→ <a href="ch10.html">10章</a>）。
+      トップページで組み上がっていくドーナツが、この断面です。
+    </p>
+
+    <h3>型で抜く — 外形 × 縦断面</h3>
+    <p>
+      チョコレートのボンボンは、上から見ると丸や四角やハート、横から見るとドームです。
+      これは回転体ではありません。チョコレート.js は
+      <b>外形（上から見た輪郭）</b>と<b>縦断面（横から見た形）</b>を別々に定義して、掛け合わせています。
+      外形が抜き型、縦断面が生地の膨らみ方、と考えると分かりやすい。
+    </p>
+    <figure>
+<pre><span class="c">// 4. Shape : 外形（スーパー楕円）× 縦断面（赤道式）</span>
+<span class="c">// 上から見た輪郭。n を上げると四角に、下げると星形に近づく</span>
+<span class="k">const</span> outline = (a) =&gt; <span class="n">1</span> / Math.pow(
+    Math.pow(Math.abs(Math.cos(a)), n) + Math.pow(Math.abs(Math.sin(a)), n),
+    <span class="n">1</span> / n);
+<span class="c">// 高さ v での「赤道からの縮み」。1 なら外形そのまま</span>
+<span class="k">const</span> shrink = (v) =&gt; Math.sqrt(Math.max(<span class="n">0</span>, <span class="n">1</span> - v * v));
+<span class="k">const</span> radius = (a, v) =&gt; outline(a) * shrink(v);</pre>
+      <figcaption>チョコレート.js のやり方。輪郭と断面を掛けるだけで、丸も角丸四角もハートも作れる</figcaption>
+    </figure>
+
+    <h3>7種類のクッキーは、1本の式と7行の数値</h3>
+    <p>
+      クッキー.js は同じ考え方をもう一歩進めて、<b>丸・角丸四角・長方形・菊型を1本の式</b>で扱います。
+      スーパー楕円に縦横比 <code>aspect</code> を掛け、菊型のときだけ周方向に波 <code>cos(K·φ)</code> を乗せる。
+      縦断面のほうは、上面のドーム <code>dome</code> と縁のふくらみ <code>rimBulge</code> の2つで決まります。
+    </p>
+    <table>
+      <tr><th>種類</th><th>外形</th><th>縦断面</th></tr>
+      <tr><td>サブレ</td><td>半径 2.55、<code>nExp</code> 2（丸）</td><td>厚み 0.98、<code>dome</code> 0.20</td></tr>
+      <tr><td>型押し</td><td>半径 2.80、丸に 22 の波（<code>scallopAmp</code> 0.020）＝菊型</td><td>厚み 0.70、<code>dome</code> 0.06（ほぼ平ら）</td></tr>
+      <tr><td>クラッカー</td><td>半径 2.05、<code>aspect</code> 1.60、<code>nExp</code> 7（長方形）</td><td>厚み 0.52、<code>dome</code> 0.02</td></tr>
+    </table>
+    <p>
+      形を作るコードは7種類で1つしかありません。違いは <code>TYPES</code> という表の数値だけです。
+      01章で「途中の1層だけ差し替えれば別のお菓子になる」と書いたのは、こういうことです。
+      新しいクッキーを足したいときは、関数を書かずに<b>表に1行</b>足します。
+    </p>
+    <p>
+      たい焼きも型で抜くお菓子ですが、外形は魚なのでスーパー楕円では書けません。
+      たい焼き.js は魚の輪郭を <b>2. Outline</b> で引き、そこから<b>輪郭までの距離</b>を格子に焼いておき、
+      <b>3. Relief</b> で型の浮き彫り（鱗やヒレの筋）の高さを足しています。
+      外形が関数で書けないときは、「輪郭からどれだけ内側か」を表にしてしまえばよい。
+      この「距離」の考え方は、<a href="ch09.html">09章</a>でもう一度出てきます。
     </p>
     <div class="trap">
       <span class="label">つまずきポイント</span>
-      <p><b>法線マップの上下の符号は、環境によって逆です。</b>
-      高さの画像から法線を作るとき、縦方向の差を <code>(hd - hu)</code> と書くか
-      <code>(hu - hd)</code> と書くかで、凸が凹に化けます。
-      Babylon.js は V が下向きなので前者。いくつものサンプルのコメントに、
-      この符号を間違えて直した記録が残っています。</p>
-      <p><b>1mm の粒は、テクスチャでは描けません。</b>
-      たこ焼きの青のりを緑の点として描くと、遠くから見たときミップマップで溶けて
-      「緑がかった靄」になります。<a href="https://cx20.github.io/VirtualFoodCourt/view.html?f=%E3%81%9F%E3%81%93%E7%84%BC%E3%81%8D.js" title="姉妹編「たべもののつくりかた」のソース">たこ焼き.js</a> が青のりを板ポリゴンの実体として置いているのは、
-      それが理由です（→ <a href="ch09.html">09章</a>）。</p>
+      <p><b>断面の両端は、きちんと 0 まで絞ってください。</b>
+      団子の上下を半径 0.2 で止めると、そこが穴になって中が見えます。
+      回転体には自動でフタが付かないからです。</p>
+      <p><b>同じ高さに半径を2つ置けません。</b>
+      「t → r」の表は、ひとつの高さにひとつの半径しか持てません。
+      ドーナツの断面のように<b>ぐるっと閉じた輪郭</b>や、クッキーの縁のように<b>外へ膨らんでから戻る</b>形は、
+      (t, r) の2列ではなく (r, y) の2列で持つ必要があります。
+      プリン.js の <code>ctrl</code> も、ドーナツ.js の <code>PROFILE_PTS</code> も、この形です。</p>
+      <p><b>縁を直角にしないでください。</b>
+      クッキー.js のコメント：「上面をそのまま垂直に落として底へつなぐと、縁が直角の
+      『削り出したプラスチック板』になる。実物の生地は焼成中に広がって縁が膨らむので、
+      最大径は側面の中ほどに来る」。</p>
+      <p><b>点の番号で刻まず、長さで刻んでください。</b>
+      制御点の添字で v を割り振ると、丸めた縁のように点が密な所だけテクスチャが詰まって縞に見えます。
+      プリン.js とドーナツ.js は、輪郭を<b>弧長</b>（輪郭に沿った長さ）で等分し直しています。</p>
     </div>
 
     <div class="try">
       <span class="label">やってみよう</span>
       <ol>
-        <li>焼き加減を 0 から 1 まで動かし、3枚の画像がそれぞれどう変わるか見比べる。</li>
-        <li>「粗さ」だけを見て、焦げた部分と白い部分のどちらが明るいか確かめ、その理由を考える。</li>
-        <li>「立体に貼ってみる」を切り、画像だけを見たときに何の模様か分かるか試す。</li>
-        <li><a href="https://cx20.github.io/VirtualFoodCourt/view.html?f=%E3%83%88%E3%83%BC%E3%82%B9%E3%83%88.js" title="姉妹編「たべもののつくりかた」のソース">トースト.js</a> の TextureLab を開き、1枚のテクスチャに何色が混ぜられているか数える。</li>
+        <li>「団子」の真ん中の点を外へ引っぱって、月見団子のように横に広い形にしてみる。</li>
+        <li>「プリン」のいちばん上の点を外へ出して、型から抜く前（上が広い）の形にしてみる。</li>
+        <li>凹凸を 0.4 にしたとき、どのお菓子なら許せてどれが嘘に見えるか決める。</li>
+        <li>クッキー.js の TYPES から型押しとクラッカーの数値を探し、外形がどう違うか上の表と照らし合わせる。</li>
       </ol>
     </div>
 
   </div>
 </section>
   <div class="pager">
-    <a class="prev" href="ch05.html"><span class="dir">← まえの章</span><span class="ttl">05 三角形の向きと、面の傾き</span></a>
-    <a class="next" href="ch07.html"><span class="dir">つぎの章 →</span><span class="ttl">07 「照り」「ぬれ」「粉っぽさ」を数値で言う</span></a>
+    <a class="prev" href="ch05.html"><span class="dir">← まえの章</span><span class="ttl">05 模様も、その場で描く</span></a>
+    <a class="next" href="ch07.html"><span class="dir">つぎの章 →</span><span class="ttl">07 曲げる、巻く、絞る</span></a>
   </div>
 </div>
 </main>

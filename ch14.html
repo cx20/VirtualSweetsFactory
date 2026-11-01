@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>プルプルは、6本のばねの重ね合わせ — おかしのつくりかた</title>
-<meta name="description" content="プルプルは、6本のばねの重ね合わせ">
+<title>見せ方を決める（光と露出） — おかしのつくりかた</title>
+<meta name="description" content="見せ方を決める（光と露出）">
 <link rel="stylesheet" href="assets/site.css">
 <script src="assets/labs.js" defer></script>
 </head>
@@ -18,20 +18,21 @@
       <a href="ch01.html">01 生成</a>
       <a href="ch02.html">02 乱数</a>
       <a href="ch03.html">03 ノイズ</a>
-      <a href="ch04.html">04 かたち</a>
-      <a href="ch05.html">05 面</a>
-      <a href="ch06.html">06 模様</a>
-      <a href="ch07.html">07 質感</a>
-      <a href="ch08.html">08 物理</a>
-      <a href="ch09.html">09 部品</a>
-      <a href="ch10.html">10 曲がり</a>
-      <a href="ch11.html">11 光</a>
+      <a href="ch04.html">04 面</a>
+      <a href="ch05.html">05 模様</a>
+      <a href="ch06.html">06 かたち</a>
+      <a href="ch07.html">07 曲がり</a>
+      <a href="ch08.html">08 潰れ</a>
+      <a href="ch09.html">09 塊</a>
+      <a href="ch10.html">10 焼き色</a>
+      <a href="ch11.html">11 質感</a>
       <a href="ch12.html">12 たれ</a>
-      <a href="ch13.html">13 潰れ</a>
-      <a href="ch14.html" aria-current="page">14 揺れ</a>
-      <a href="ch15.html">15 透け</a>
-      <a href="ch16.html">16 塊</a>
-      <a href="ch17.html">17 糸</a>
+      <a href="ch13.html">13 透け</a>
+      <a href="ch14.html" aria-current="page">14 光</a>
+      <a href="ch15.html">15 盛る</a>
+      <a href="ch16.html">16 振る</a>
+      <a href="ch17.html">17 揺れ</a>
+      <a href="ch18.html">18 糸</a>
       <a href="zukan.html">図鑑</a>
       <a href="view.html">ソース</a>
       <a href="terms.html">用語</a>
@@ -40,172 +41,184 @@
 </header>
 
 <main id="top" class="page">
-<div class="wrap" style="--ch:var(--p-purin)">
+<div class="wrap" style="--ch:var(--p-roll)">
   <p class="crumbs"><a href="index.html">目次</a><span class="sep">/</span>第14章</p>
-<section class="chapter" id="ch14" style="--ch:var(--p-purin)">
+<section class="chapter" id="ch14" style="--ch:var(--p-roll)">
   <div class="chapter-head">
-    <div class="chnum">14<small>Jiggle</small></div>
+    <div class="chnum">14<small>Scene</small></div>
     <div>
-      <h2>プルプルは、6本のばねの重ね合わせ</h2>
-      <p class="sub">modal deformation — 物理エンジンに無い、やわらかさの作り方</p>
+      <h2>見せ方を決める（光と露出）</h2>
+      <p class="sub">IBL / exposure / tone mapping — 環境光と露出</p>
     </div>
   </div>
   <div class="body">
     <div class="recap">
       <span class="label">この章の3行まとめ</span>
       <ul>
-        <li>Havok には<b>ソフトボディ（やわらかい物体）が無い</b>ので、落ちる・着地するは Havok に、揺れは自前の計算に分けます。</li>
-        <li>揺れは<b>減衰するばね（振動子）</b>を数本だけ回し、決まった形の変形を足し合わせて作ります。</li>
-        <li>目に付くのは形の変化より<b>ハイライトが走ること</b>。だから法線も一緒に動かします。</li>
+        <li>同じお菓子でも、光の当て方で<b>別物になります</b>。形と同じくらい重要です。</li>
+        <li>点の光源だけでは足りません。<b>まわりの環境そのものを光として</b>当てます（IBL）。</li>
+        <li>明るすぎる部分をどう畳むか（<b>トーンマッピング</b>）で、お菓子か写真の失敗かが分かれます。</li>
       </ul>
     </div>
 
     <p>
-      皿の上に落としたプリンは、ぷるんと2〜3回揺れて止まります。
-      08章では盛り付けを物理エンジン（Havok）に任せましたが、Havok が扱えるのは<b>硬い物体</b>だけです。
-      プリン.js の冒頭にこうあります。
+      ここまでで形も模様も質感もできました。それでも、光の設定を間違えると、
+      作ったものは食品サンプルに見えます。逆に、光がよければ多少の粗は隠れます。
+      サンプルは、シーンの設定にほぼ同じ手を使っています。
     </p>
-    <div class="note">
-      <b>「Babylon の Havok プラグインが公開しているのは剛体・シェイプ・拘束までで、
-      ソフトボディは出ていない。そこで役割を分ける。
-      Havok … 落下・着地・皿との接触。自前 … 揺れそのもの」</b>
-    </div>
-    <p>
-      落ちてくる・皿に当たる・止まる、までは硬い物体として Havok が計算します。
-      Havok から「いま速度がどれだけ急に変わったか」（＝着地の衝撃）を受け取り、
-      それを入力にして<b>揺れだけを自分で計算</b>します。
-      揺れの計算に使うのは、ばねにおもりを付けて揺らしたときと同じ式です。
-    </p>
-    <figure>
-<pre><span class="c">// 減衰するばね。q は揺れの大きさ、qd はその速さ</span>
-<span class="c">// q'' + 2ζω q' + ω² q = 0   （ω = 2π × 周波数、ζ = 減衰比）</span>
-<span class="k">for</span> (<span class="k">let</span> k = <span class="n">0</span>; k &lt; NMODE; k++) {
-    <span class="k">const</span> w = <span class="k">this</span>.omega(k), z = <span class="k">this</span>.zeta(k);
-    <span class="k">this</span>.qd[k] += (-<span class="n">2</span> * z * w * <span class="k">this</span>.qd[k] - w * w * <span class="k">this</span>.q[k]) * h;
-    <span class="k">this</span>.q[k]  += <span class="k">this</span>.qd[k] * h;
-}</pre>
-      <figcaption>プリン.js の Jiggle.step()。h は 1/240 秒。この数行が「プルプル」の本体</figcaption>
-    </figure>
+    <ul>
+      <li><b>環境光（IBL）</b> — 空や壁からの光を1枚の環境マップとして与える。
+      食べ物は反射がやわらかいので、点光源だけだと影が黒く潰れます。</li>
+      <li><b>キーライト</b> — 主役の1灯。斜め上、やや後ろから当てると、
+      お菓子の輪郭が光って立体的になります（逆光ぎみ）。</li>
+      <li><b>影</b> — ESM ではなく PCF ＋ <code>forceBackFacesOnly</code>。
+      団子のように丸いものは、ESM だと自己遮蔽が痣のような黒い斑になります。</li>
+      <li><b>SSAO2</b> — 物と物の接するところに薄い陰りを入れる。接地感が出ます。</li>
+      <li><b>露出とトーンマッピング</b> — ACES というフィルム風の曲線で、
+      明るい部分をなめらかに畳みます。</li>
+    </ul>
 
-    <div class="lab" id="lab14">
-      <p class="lab-title">実験 — 揺れ方は、周波数と減衰比の2つで決まる</p>
+    <div class="lab" id="lab11">
+      <p class="lab-title">実験 — 露出とトーンマッピング</p>
       <div class="lab-cols side">
         <div class="controls">
-          <div class="chips" id="jigPreset">
-            <button class="chip" type="button" data-v="purin" aria-pressed="true">プリン</button>
-            <button class="chip" type="button" data-v="jelly">ゼリー</button>
-            <button class="chip" type="button" data-v="kanten">寒天</button>
-            <button class="chip" type="button" data-v="gomu">ゴム</button>
+          <div class="ctrl">
+            <label for="sceneExpo">露出<span class="v" id="sceneExpoV">1.00</span></label>
+            <input type="range" id="sceneExpo" min="0.3" max="2.6" step="0.02" value="1">
           </div>
           <div class="ctrl">
-            <label for="jigFreq">周波数（Hz）<span class="v" id="jigFreqV">2.90</span></label>
-            <input type="range" id="jigFreq" min="1" max="8" step="0.05" value="2.9">
+            <label for="sceneAmb">環境光の強さ<span class="v" id="sceneAmbV">1.00</span></label>
+            <input type="range" id="sceneAmb" min="0" max="2.2" step="0.02" value="1">
           </div>
           <div class="ctrl">
-            <label for="jigZeta">減衰比 ζ<span class="v" id="jigZetaV">0.105</span></label>
-            <input type="range" id="jigZeta" min="0.01" max="0.4" step="0.005" value="0.105">
+            <label for="sceneKey">キーライトの向き<span class="v" id="sceneKeyV">-40°</span></label>
+            <input type="range" id="sceneKey" min="-140" max="140" step="1" value="-40">
           </div>
-          <label class="switch"><input type="checkbox" id="jigNormal" checked>法線も一緒に動かす</label>
-          <button class="chip" type="button" id="jigShake">ゆらす</button>
-          <div class="readout" id="jigOut">—</div>
+          <label class="switch"><input type="checkbox" id="sceneTone" checked>トーンマッピングを使う</label>
+          <div class="readout" id="sceneOut">—</div>
         </div>
-        <canvas id="jigCanvas" width="640" height="360" aria-label="プリンを横から見て、せん断と縦の2つのモードで揺らす実験"></canvas>
+        <canvas id="sceneCanvas" width="640" height="360" aria-label="露出とトーンマッピングを変える実験"></canvas>
       </div>
       <p class="hint">
-        「ゆらす」かキャンバスのクリックで揺れます。右の線は揺れの大きさ q の記録です。
-        減衰比を 0.3 にすると寒天、0.03 にするとゴムになります。
-        「法線も一緒に動かす」を切ると、形は揺れているのにハイライトが止まったままになります。
+        トーンマッピングを切って露出を上げると、明るいところが真っ白に貼り付きます。
+        入れておくと、白くなる手前で色が残り続けます。<br><b>立体はドラッグで回せます</b>（触ると自動回転は止まります。ダブルクリックで戻ります）。
+        光源は動かないので、回すと「同じ光でも角度で別物になる」ことが見えます。
       </p>
     </div>
 
-    <h3>揺れの「形」は、先に決めておける</h3>
+    <h3>トーンマッピングは「明るさの畳み方」</h3>
     <p>
-      やわらかい物を本気で計算すると、1万個の頂点が互いに押し合う連立方程式になります。
-      それを毎フレーム解くのは重すぎます。そこで、揺れ方を<b>決まった数パターン（モード）</b>に限ります。
-      プリン.js が使っているのは6つです。
+      計算で出た明るさは 1 を超えます。画面は 1 までしか出せません。
+      1 を超えたぶんを単純に切り落とすと、<b>ハイライトが真っ白な板になります</b>。
+      お菓子でこれをやると、たれの照りが「白いシール」に見えます。
     </p>
-    <table>
-      <tr><th>#</th><th>揺れ方</th><th>形</th><th>周波数</th><th>減衰比</th></tr>
-      <tr><td>0, 1</td><td>横に首を振る（せん断 X / Z）</td><td>底を固定した片持ちのたわみ <code>1.5s² − 0.5s³</code></td><td>5.8 Hz</td><td>0.105</td></tr>
-      <tr><td>2</td><td>縦につぶれる・のびる</td><td>上が沈むぶん胴が太る（体積を保つ）</td><td>9.2 Hz</td><td>0.145</td></tr>
-      <tr><td>3, 4</td><td>上から見て楕円にゆがむ</td><td><code>cos 2θ</code> / <code>sin 2θ</code></td><td>12.5 Hz</td><td>0.175</td></tr>
-      <tr><td>5</td><td>天面が太鼓のように上下</td><td>天面の中心ほど大きい</td><td>15.5 Hz</td><td>0.240</td></tr>
-    </table>
     <p>
-      s は底からの高さを 0〜1 にしたもの、θ は上から見た角度です。
-      どのモードも「静止しているときの形」だけで決まる関数なので、頂点ごとの動き方 Φ<sub>k</sub> を
-      <b>組み立てるときに1回だけ計算して焼いておけます</b>（焼き込み）。
-      実行中にやることは、6本のばねの値 q<sub>k</sub> を掛けて足すだけです。
-    </p>
-    <figure>
-<pre><span class="c">// 頂点の変位 u = Σ q_k Φ_k(p)。Φ はビルド時に焼いてある</span>
-<span class="k">for</span> (<span class="k">let</span> k = <span class="n">0</span>; k &lt; NMODE; k++) {
-    <span class="k">const</span> q = Q[k];
-    <span class="k">if</span> (q === <span class="n">0</span>) <span class="k">continue</span>;
-    ux += q * M[b]; uy += q * M[b + <span class="n">1</span>]; uz += q * M[b + <span class="n">2</span>];
-}</pre>
-      <figcaption>プリン.js の Deformable.apply()。足し算だけなので、1万頂点でも 60fps に収まる</figcaption>
-    </figure>
-
-    <h3>減衰比が、素材を決める</h3>
-    <p>
-      周波数は「どれだけ速く揺れるか」、減衰比 ζ は「どれだけ早く収まるか」です。
-      プリン.js は周波数を実物から見積もっています。カスタードのかたさ（数 kPa）と密度から、
-      揺れが伝わる速さはおよそ 1 m/s。高さ 4.3cm の片持ちなら <code>f ≈ c / (4H) ≈ 5.8 Hz</code>。
-      「2〜3回揺れて1秒以内に収まる」のは、減衰比 0.10〜0.15 にあたります。
-    </p>
-    <ul>
-      <li><b>プリン</b> — ζ = 0.105。2〜3回で止まる</li>
-      <li><b>ゼリー</b> — ζ = 0.055、周波数は 8.0 Hz と高め。カスタードよりよく響き、3〜4回揺れる（ゼリー.js）</li>
-      <li><b>寒天</b> — ζ を 0.3 まで上げると、ほとんど揺れずに止まる</li>
-      <li><b>ゴム</b> — ζ を 0.03 まで下げると、いつまでも揺れ続ける</li>
-    </ul>
-    <p>
-      見た目の形は同じでも、この2つの数だけで「何でできているか」が伝わります。
-      どちらのサンプルにも、GUI でまとめて振れる <code>freqScale</code>（やわらかさ）があり、
-      プリンは 0.50、ゼリーは 0.70 を掛けて、写真より少しゆっくり大きく揺らしています。
+      そこで、切り落とすかわりになめらかに畳みます。
+      <code>x / (1 + x)</code> のような曲線を通すと、どれだけ明るくても 1 を超えず、
+      しかも色が残ります。実際のサンプルは ACES という、
+      映画用に作られた曲線を使っています。
     </p>
 
-    <h3>動いて見えるのは、ハイライト</h3>
+    <h3>逆光は、食べ物の常套手段</h3>
     <p>
-      頂点の位置だけを動かして法線を放っておくと、揺れているのに<b>濡れて見えません</b>。
-      プリン.js のコメントによれば、プルプル感の主成分は形の変化ではなく
-      <b>「ハイライトが表面を走ること」</b>です。05章で見たとおり、明るさを決めるのは法線です。
+      お菓子の写真が斜め後ろから光を当てるのには理由があります。
+      <b>光が食材を通り抜けるところが見えるから</b>です。
+      プリンの縁が琥珀色に抜け、団子の輪郭が白く光り、綿菓子がふわっと浮く。
+      これは <a href="ch11.html">11章</a>の subSurface と、<a href="ch13.html">13章</a>の透けと直結しています。
+      光の向きを変えるだけで、同じ材質が別物に見えます。上の実験で確かめてください。
+    </p>
+
+    <h3>白い皿は、0.88 で作る</h3>
+    <p>
+      お菓子は白い器にのることが多く、生クリームやアイスのように中身が白いこともあります。
+      ここで「白だから 1.0 に近い値」を入れると失敗します。プリン.js の皿の記録：
+    </p>
+    <div class="note">
+      <b>「『白い皿』だからと 0.97 を入れると、露出を上げたときに真っ先に飛んで階調が消える。
+      白磁の実反射率は 0.88 前後。暗くしたぶんは露出で戻す」</b>（プリン.js）
+    </div>
+    <p>
+      白い物は、いちばん明るい所が<b>真っ先に 1 に届いて</b>、そこから先の階調が消えます。
+      だから色は実物どおりに少し暗く作り、画面全体の明るさは露出で決める。
+      プリン.js の露出は 1.12 です。
+      ところが、同じ考え方をゼリーにそのまま持ち込むと、今度は逆の失敗をします。
+      ゼリー.js の色は「白い背景を通して見た写真」から逆算してあるので、
+      露出を上げるとその較正がずれて、<b>緑が白茶ける</b>。ゼリー.js のコメントは
+      「ここはプリンと考え方が逆になる」と書いて、露出を 1.06 に留めています。
+      露出は好みで決める値ではなく、<b>色をどう作ったか</b>とセットで決まる値です。
+    </p>
+
+    <h3>透けるものは、まわりを映して見えている</h3>
+    <p>
+      ゼリーやガラスの器は、自分の色をほとんど持ちません。見えているのは<b>まわりの映り込みと、透かした向こう</b>です。
+      ゼリー.js の記録：<b>「平坦な灰色や真っ白の環境は、ガラスにとって最悪の条件になる。
+      映り込む手がかりが無いと『白く濁った膜』にしかならない。ゼリー側も同じで、屈折で拾う環境が一様だと
+      中に階調が出ず、色の付いた消しゴムに見える」</b>。
+      明暗のある屋外の環境マップと、それを映す背景の箱を入れるだけで、両方が一気に直ったそうです。
     </p>
     <p>
-      変位 u が小さいとき、変形後の法線は <code>n' ≈ normalize(n − (∇u)ᵀ n)</code> で近似できます。
-      静止時の法線 n は決まっているので、この (∇Φ<sub>k</sub>)ᵀ n も頂点ごとに焼いておける。
-      結果として、頂点1つあたり「モード数 × 6個の数」を持っておけば、位置も法線も足し算だけで動きます。
+      花見団子.js のみたらしにも同じ判断があります。たれの飴の層は、映り込みをぼかすとガラス玉にならない代わりに深みが消える。
+      コメントは「飴の層は逆。周囲がはっきり映るのが正しい（実物の写真にも窓の形が映っている）」。
+      艶のあるお菓子ほど、<b>何を映すか</b>まで含めて光の設定です。
+      上の実験で環境光を 0.2 まで下げると、白い団子の影の側が沈んで、映すものが無いときの寂しさが見えます。
     </p>
     <div class="trap">
       <span class="label">つまずきポイント</span>
-      <p><b>表示のフレームごとに積分すると、速いモードが暴れます。</b>
-      60fps の 1/60 秒で 15.5Hz のモードを進めると、1歩で ω×h が 1.6 になって符号が振動し、発散します。
-      プリン.js は内部で 1/240 秒に刻んで回しています。</p>
-      <p><b>衝撃は「力」ではなく「速度の差」で渡す。</b>
-      着地の加速度を力として積分していたら、60fps と 144fps で揺れの大きさが2倍違いました。
-      Havok から受け取った速度の差 Δv をそのまま q の速さに足せば、刻み幅が効かなくなります。</p>
-      <p><b>大きく揺らすと裏返る。</b>
-      モードの形は小さな変形を前提にした近似なので、縦モードを高さ H まで押すと潰れきって裏返ります。
-      ばねは線形のまま回し、表示に渡すところで <code>tanh</code> を通して頭打ちにします。
-      実物のゲルも大きく歪むと硬くなるので、挙動としても外れていません。</p>
+      <p><b>被写界深度（ぼけ）の単位は m です。</b>
+      このプロジェクトは 1 unit = 1 cm で書かれています。
+      ところが Babylon.js の被写界深度は「1 unit = 1 m」でぼけの大きさを計算するので、
+      ピント位置に <code>radius × 1000</code> を渡す必要があります。
+      花見団子・月見団子・チョコバナナなど、被写界深度を使うサンプルのコメントに、この注意が書かれています。</p>
+      <p><b>環境光を上げれば明るくなる、ではありません。</b>
+      上げすぎると影が消え、平べったい絵になります。
+      「明るさが足りない」と感じたときに触るのは、たいてい露出のほうです。</p>
+    </div>
+
+    <h3>ポストプロセスは、GUI にも掛かってしまう</h3>
+    <p>
+      Bloom（にじみ）や被写界深度（ぼけ）は、<b>描き終えた絵の全体</b>に掛ける処理です。
+      だから何もしないと、右下のスライダーまで一緒ににじんでボケます。
+      クッキー.js も以前は、これを避けるために<b>GUI 専用のカメラをもう1台立てて</b>、
+      <code>layerMask</code> で描き分けていました。
+    </p>
+    <div class="trap">
+      <span class="label">つまずきポイント</span>
+      <p><b>カメラを2台にすると、思わぬところが壊れます。</b>
+      Babylon.js のいくつかの機能は「<code>activeCameras</code> のいちばん最後＝いま描いている基準のカメラ」
+      と考えて動きます。GUI 用のカメラを足すと、それが最後になるので、
+      <b>Playground の Inspector が3つまとめて動かなくなりました</b>。
+      物理の当たり判定の表示（Physics Helper）が出ない。選択の枠がずれる。
+      そして <code>scene.pick()</code> の光線が GUI カメラから飛ぶので、
+      <b>画面をクリックしても違うものが選ばれる</b>。</p>
+      <p><b>直し方は「カメラを増やさない」でした。</b>
+      GUI を載せているレイヤーに <code>applyPostProcess = false</code> を付けると、
+      そのレイヤーだけポストプロセスの<b>あと</b>で合成されます。
+      カメラ1台のままで、UI にだけ Bloom とぼけが掛からない。
+      ほとんどのサンプルは今この形になっています。</p>
+    </div>
+    <div class="note">
+      <b>ここで覚えておきたいこと。</b>
+      「見た目のための工夫」が、まったく関係なさそうな機能を壊すことがあります。
+      しかも壊れ方が「Inspector でクリックしても違うものが選ばれる」なので、
+      光の設定を疑うことはまずありません。
+      <b>おかしいと思ったら、まず自分が足したものを1つずつ外してみる</b>のが近道です。
     </div>
 
     <div class="try">
       <span class="label">やってみよう</span>
       <ol>
-        <li>プリン・ゼリー・寒天・ゴムを順に押し、「ゆらす」で止まるまでの回数を数える。</li>
-        <li>「法線も一緒に動かす」を切って揺らし、何が足りなく見えるかを1行で書く。</li>
-        <li>プリン.js で modeZeta を全部 0.03 にして Run し、皿の上で何に見えるか確かめる。</li>
-        <li>ゼリー.js の modeFreq / modeZeta をプリン.js と並べ、どのモードがどれだけ違うか表にする。</li>
+        <li>トーンマッピングを切り、露出を 2.6 にして、ハイライトがどうなるか見る。</li>
+        <li>キーライトを真正面（0°）にして、立体感がどれだけ失われるか確かめる。</li>
+        <li>環境光を 0 にして、影が黒く潰れることを確かめる。</li>
+        <li>花見団子.js で「被写界深度」を検索し、なぜ 1000 を掛けるのか読む。</li>
       </ol>
     </div>
 
   </div>
 </section>
   <div class="pager">
-    <a class="prev" href="ch13.html"><span class="dir">← まえの章</span><span class="ttl">13 触れ合うと、潰れる</span></a>
-    <a class="next" href="ch15.html"><span class="dir">つぎの章 →</span><span class="ttl">15 ゼリーの色は、中を通った距離で決まる</span></a>
+    <a class="prev" href="ch13.html"><span class="dir">← まえの章</span><span class="ttl">13 ゼリーの色は、中を通った距離で決まる</span></a>
+    <a class="next" href="ch15.html"><span class="dir">つぎの章 →</span><span class="ttl">15 盛り付けは、手で置かない</span></a>
   </div>
 </div>
 </main>

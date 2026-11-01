@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>三角形の向きと、面の傾き — おかしのつくりかた</title>
-<meta name="description" content="三角形の向きと、面の傾き">
+<title>模様も、その場で描く — おかしのつくりかた</title>
+<meta name="description" content="模様も、その場で描く">
 <link rel="stylesheet" href="assets/site.css">
 <script src="assets/labs.js" defer></script>
 </head>
@@ -18,20 +18,21 @@
       <a href="ch01.html">01 生成</a>
       <a href="ch02.html">02 乱数</a>
       <a href="ch03.html">03 ノイズ</a>
-      <a href="ch04.html">04 かたち</a>
-      <a href="ch05.html" aria-current="page">05 面</a>
-      <a href="ch06.html">06 模様</a>
-      <a href="ch07.html">07 質感</a>
-      <a href="ch08.html">08 物理</a>
-      <a href="ch09.html">09 部品</a>
-      <a href="ch10.html">10 曲がり</a>
-      <a href="ch11.html">11 光</a>
+      <a href="ch04.html">04 面</a>
+      <a href="ch05.html" aria-current="page">05 模様</a>
+      <a href="ch06.html">06 かたち</a>
+      <a href="ch07.html">07 曲がり</a>
+      <a href="ch08.html">08 潰れ</a>
+      <a href="ch09.html">09 塊</a>
+      <a href="ch10.html">10 焼き色</a>
+      <a href="ch11.html">11 質感</a>
       <a href="ch12.html">12 たれ</a>
-      <a href="ch13.html">13 潰れ</a>
-      <a href="ch14.html">14 揺れ</a>
-      <a href="ch15.html">15 透け</a>
-      <a href="ch16.html">16 塊</a>
-      <a href="ch17.html">17 糸</a>
+      <a href="ch13.html">13 透け</a>
+      <a href="ch14.html">14 光</a>
+      <a href="ch15.html">15 盛る</a>
+      <a href="ch16.html">16 振る</a>
+      <a href="ch17.html">17 揺れ</a>
+      <a href="ch18.html">18 糸</a>
       <a href="zukan.html">図鑑</a>
       <a href="view.html">ソース</a>
       <a href="terms.html">用語</a>
@@ -40,162 +41,147 @@
 </header>
 
 <main id="top" class="page">
-<div class="wrap" style="--ch:var(--p-yomogi)">
+<div class="wrap" style="--ch:var(--p-kitsune)">
   <p class="crumbs"><a href="index.html">目次</a><span class="sep">/</span>第05章</p>
-<section class="chapter" id="ch05" style="--ch:var(--p-yomogi)">
+<section class="chapter" id="ch05" style="--ch:var(--p-kitsune)">
   <div class="chapter-head">
-    <div class="chnum">05<small>Mesh</small></div>
+    <div class="chnum">05<small>Texture</small></div>
     <div>
-      <h2>三角形の向きと、面の傾き</h2>
-      <p class="sub">winding order / normals — 巻き順と法線</p>
+      <h2>模様も、その場で描く</h2>
+      <p class="sub">procedural texture — UV とテクスチャ生成</p>
     </div>
   </div>
   <div class="body">
     <div class="recap">
       <span class="label">この章の3行まとめ</span>
       <ul>
-        <li>3Dモデルの正体は、<b>座標の配列</b>と<b>三角形の番号表</b>の2つだけです。</li>
-        <li>三角形には表と裏があり、頂点を並べる向き（<b>巻き順</b>）で決まります。裏返ると消えます。</li>
-        <li>面がどちらを向いているかの矢印を<b>法線</b>といい、明るさはこれだけで決まります。</li>
+        <li>立体の表面と画像を対応づける座標を <b>UV</b> といいます。u が横、v が縦。</li>
+        <li>このプロジェクトは画像を1枚も読み込まず、<b>1ピクセルずつ計算して描いて</b>います。</li>
+        <li>描くのは色（アルベド）だけではありません。<b>光り方</b>と<b>凹凸</b>も別の画像として描きます。</li>
       </ul>
     </div>
 
     <p>
-      04章で作った断面を、実際に立体にします。やることは2つだけです。
-      <b>点を並べる</b>ことと、<b>どの3点で三角形を張るかを番号で書く</b>こと。
-      Babylon.js では前者を <code>positions</code>、後者を <code>indices</code> と呼びます。
+      立体ができたら、表面に模様を貼ります。そのために、
+      立体の表面のどの点が画像のどの点に対応するかを決めておきます。これが <b>UV</b> です。
+      回転体なら簡単で、<b>u は一周した角度、v は下から上への位置</b>にすればよい。
+      04章で <code>uvs.push(j / M, t)</code> と書いていたのがそれです。
+    </p>
+    <p>
+      次に画像を用意します。ふつうは写真を読み込みますが、このプロジェクトは
+      <code>RawTexture</code> という「生の数値の配列」を作って、
+      <b>1ピクセルずつ色を計算して詰めます</b>。パンケーキの焼き色なら、
+      その位置のノイズを見て、焼けていれば茶色、焼けていなければ生地の淡い色、というふうに。
     </p>
     <figure>
-<pre><span class="c">// 断面を N 段 × M 分割で回して、格子状に点を並べる</span>
-<span class="k">for</span> (<span class="k">let</span> i = <span class="n">0</span>; i &lt; N; i++) {
-    <span class="k">const</span> t = i / (N - <span class="n">1</span>);
-    <span class="k">for</span> (<span class="k">let</span> j = <span class="n">0</span>; j &lt;= M; j++) {
-        <span class="k">const</span> a = j / M * TAU;
-        <span class="k">const</span> r = radius(t, a);
-        positions.push(r * Math.cos(a), yAt(t), r * Math.sin(a));
-        uvs.push(j / M, t);
-    }
+<pre><span class="c">// 5. TextureLab : 焼き色を1ピクセルずつ描く（考え方だけを抜き出したもの）</span>
+<span class="k">const</span> data = <span class="k">new</span> Uint8Array(S * S * <span class="n">4</span>);
+<span class="k">for</span> (<span class="k">let</span> y = <span class="n">0</span>; y &lt; S; y++) <span class="k">for</span> (<span class="k">let</span> x = <span class="n">0</span>; x &lt; S; x++) {
+    <span class="k">const</span> u = x / S, v = y / S;
+    <span class="k">const</span> n = fbm(u * <span class="n">6</span>, v * <span class="n">6</span>, <span class="n">21</span>, <span class="n">5</span>);        <span class="c">// 焼きムラ</span>
+    <span class="k">const</span> heat = clamp(bake * <span class="n">1.4</span> + (n - <span class="n">0.5</span>) * <span class="n">0.6</span>, <span class="n">0</span>, <span class="n">1</span>);
+    <span class="k">const</span> c = heat &lt; <span class="n">0.5</span> ? mix3(DOUGH, GOLD,  heat * <span class="n">2</span>)
+                        : mix3(GOLD,  BROWN, heat * <span class="n">2</span> - <span class="n">1</span>);
+    <span class="k">const</span> i = (y * S + x) * <span class="n">4</span>;
+    data[i] = c[<span class="n">0</span>] * <span class="n">255</span>; data[i+<span class="n">1</span>] = c[<span class="n">1</span>] * <span class="n">255</span>;
+    data[i+<span class="n">2</span>] = c[<span class="n">2</span>] * <span class="n">255</span>; data[i+<span class="n">3</span>] = <span class="n">255</span>;
 }</pre>
-      <figcaption>j が M で終わらず M まで回るのは、継ぎ目の列を2重に持つため（06章で効いてくる）</figcaption>
+      <figcaption>1024×1024 なら100万回まわる。実行に数秒かかるのはこのため</figcaption>
     </figure>
 
-    <h3>巻き順 — 裏返ると、立体が消える</h3>
+    <h3>1枚では足りない。3枚要る</h3>
     <p>
-      三角形には表と裏があります。どちらが表かは、<b>3つの頂点を並べた向き</b>で決まります。
-      外から見て反時計回りなら表。3Dの世界では、裏側の面は描くのを省略します
-      （見えないところを描いても無駄なので）。だから<b>間違えると立体がまるごと消えます</b>。
-      正確には、内側だけが見えて、風船の内壁を見ているような妙な絵になります。
+      色の画像（<b>アルベド</b>）だけを貼っても、まだ紙に印刷したように見えます。
+      同じ焼き菓子でも、焼けていない生地はざらついて光を散らし、型に押しつけられて焼けた面は少し光る。
+      その差を伝えるのが2枚目の <b>ORM</b> です。
+      R に陰り（AO）、G に粗さ（Roughness）、B に金属度（Metallic）を詰めた1枚の画像で、
+      3つの情報を3つの色チャンネルに同居させています。
     </p>
     <p>
-      ほとんどのサンプルは、この間違いを<b>実行時に自分で検出して直します</b>。
-      作った直後にすべての面の法線を合計し、重心から外へ向いているかを調べる。
-      向いていなければ番号表を入れ替える。「気をつける」ではなく「測って直す」という方針です。
-    </p>
-    <figure>
-<pre><span class="c">// 3. Mesh utils : 巻き順の自動判定</span>
-<span class="c">// 【対策】1頂点で判定すると、たまたま凹んだ所に当たって全体が裏返る。
-//         全頂点ぶんの内積の総和で決める（クッキー.js の修正記録より）</span>
-<span class="k">let</span> dot = <span class="n">0</span>;
-<span class="k">for</span> (<span class="k">let</span> k = <span class="n">0</span>; k &lt; nv; k++) {
-    dot += nx[k] * (px[k] - cx) + ny[k] * (py[k] - cy) + nz[k] * (pz[k] - cz);
-}
-<span class="k">if</span> (dot &lt; <span class="n">0</span>) flipIndices(indices);</pre>
-      <figcaption>クッキー.js の cookie-A → A2 で直った箇所。1点で決めるとクラッカーが裏返っていた</figcaption>
-    </figure>
-
-    <h3>法線 — 明るさは、これだけで決まる</h3>
-    <p>
-      面がどちらを向いているかを表す矢印が<b>法線</b>です。
-      光の向きとの角度で明るさが決まるので、
-      <b>形は正しいのに法線が変だと、料理が金属や紙に見えます</b>。
-    </p>
-    <p>
-      法線には2通りの出し方があります。三角形ごとに1本持つ（フラット）と、
-      頂点ごとに、その頂点を囲む面の平均を持つ（スムーズ）。
-      団子はスムーズ、板チョコの角はフラットであってほしい。
-      料理によって、また同じ料理でも場所によって使い分けます。
+      3枚目が<b>法線マップ</b>。細かい凹凸を、頂点を増やさずに表現します。
+      本当は平らなのに、法線だけを傾けて「でこぼこしている」と光に嘘をつく。
+      パンケーキの気泡の穴も、クッキーの型押しも、これでやっています。
+      クッキー.js には「型押しや格子は 0.3mm ほどしかない。頂点で出すとモアレるので、
+      細かい起伏は法線マップに回す」とあります。
     </p>
 
-    <div class="lab" id="lab05">
-      <p class="lab-title">実験 — 巻き順と法線を切り替える</p>
+    <div class="lab" id="lab06">
+      <p class="lab-title">実験 — 3枚の画像を描き分ける</p>
       <div class="lab-cols side">
         <div class="controls">
-          <div class="chips" id="meshMode">
-            <button class="chip" type="button" data-v="solid" aria-pressed="true">ふつうに描く</button>
-            <button class="chip" type="button" data-v="wire">面の格子</button>
-            <button class="chip" type="button" data-v="normal">法線の向き</button>
-            <button class="chip" type="button" data-v="facing">表と裏</button>
-          </div>
-          <label class="switch"><input type="checkbox" id="meshSmooth" checked>法線をなめらかにする</label>
-          <label class="switch"><input type="checkbox" id="meshFlip">巻き順を裏返す</label>
-          <div class="ctrl">
-            <label for="meshN">段の数<span class="v" id="meshNV">40</span></label>
-            <input type="range" id="meshN" min="5" max="64" step="1" value="40">
+          <div class="chips" id="texMap">
+            <button class="chip" type="button" data-v="albedo" aria-pressed="true">色（アルベド）</button>
+            <button class="chip" type="button" data-v="rough">粗さ（ORM の G）</button>
+            <button class="chip" type="button" data-v="normal">凹凸（法線マップ）</button>
           </div>
           <div class="ctrl">
-            <label for="meshM">分割数<span class="v" id="meshMV">40</span></label>
-            <input type="range" id="meshM" min="4" max="64" step="1" value="40">
+            <label for="texBake">焼き加減<span class="v" id="texBakeV">0.45</span></label>
+            <input type="range" id="texBake" min="0" max="1" step="0.01" value="0.45">
           </div>
+          <div class="ctrl">
+            <label for="texPore">す（気泡）の多さ<span class="v" id="texPoreV">0.50</span></label>
+            <input type="range" id="texPore" min="0" max="1" step="0.01" value="0.5">
+          </div>
+          <label class="switch"><input type="checkbox" id="texApplyOn" checked>立体に貼ってみる</label>
         </div>
-        <canvas id="meshCanvas" width="640" height="360" aria-label="団子のメッシュを巻き順・法線・分割数で切り替える"></canvas>
+        <canvas id="texCanvas" width="640" height="340" aria-label="パンケーキの天面のテクスチャ3枚と、それを貼った結果"></canvas>
       </div>
       <p class="hint">
-        「表と裏」では、裏を向いた面が赤くなります。「巻き順を裏返す」を押すと全部赤くなり、
-        ふつうに描いたときは中身が透けて見えます。<br><b>立体はドラッグで回せます</b>（触ると自動回転は止まります。ダブルクリックで戻ります）。
-        上から覗くと、裏返した面がどこにあるかがよく分かります。
+        左が焼いている画像そのもの、右がそれを貼った結果。
+        「粗さ」の画像は、白いほどざらざら（光らない）という意味です。
       </p>
     </div>
 
-    <h3>法線を「溶接」する</h3>
+    <h3>継ぎ目をなくす</h3>
     <p>
-      いくつかの部品をくっつけて1つの料理にすると、つなぎ目に線が入ることがあります。
-      同じ場所に頂点が2つあり、それぞれが別の法線を持っているからです。
-      そこで、<b>ごく近い頂点どうしの法線を平均して揃える</b>処理を入れます。これを溶接といいます。
-      多くのサンプルに <code>weldNormals</code> という関数が入っているのはそのためです。
+      筒に模様を巻くと、一周して戻ったところで模様がぶつかります。
+      03章で出てきた「u 方向に折り返すノイズ」はこのためのものです。
+      さらに、04章で分割の列を M+1 本にしていたのも同じ理由で、
+      <b>u=0 の頂点と u=1 の頂点を別々に持たせないと、継ぎ目の面で模様が逆走します</b>。
     </p>
 
-    <h3>見た目の変形と、頂点の変形は別もの</h3>
+    <h3>1cm あたりの画素の数をそろえる</h3>
     <p>
-      いちばん短いサンプルの栗饅頭.js は、球を1つ作って楕円に伸ばし、底を平らにして上をふっくらさせるだけです。
-      ところが冒頭のコメントは、形ではなく<b>順番</b>の話をしています。
-    </p>
-    <div class="note">
-      <b>「mesh.scaling で楕円形にした後、bakeCurrentTransformIntoVertices() で頂点に焼き込む。
-      その後に底面平坦化などの頂点編集を行う → Playground表示 と glTFエクスポート の両方で一致する」</b>
-    </div>
-    <p>
-      <code>mesh.scaling</code> は、描くときに掛ける<b>拡大率</b>で、頂点の座標そのものは球のままです。
-      この状態で頂点を編集すると、「下から 15% を平らに」の 15% が<b>伸ばす前の球</b>に対して決まり、
-      あとから拡大率が掛かります。画面では合って見えても、拡大率を持たない形式へ書き出すとずれる。
-      <code>bakeCurrentTransformIntoVertices()</code> は拡大率を頂点に掛けて (1, 1, 1) に戻すので、
-      そのあとの編集は<b>見えている形</b>に対して効きます。
-      編集のあとに <code>ComputeNormals</code> で法線を計算し直すのも忘れずに。
-      頂点を動かしても、法線は勝手には付いてきません。
+      ドーナツは、外周が約 22cm、穴のまわりが約 7cm です。
+      ここに正方形の画像を貼ると、同じ1枚の画像が外周では3倍に引き伸ばされ、
+      <b>気泡が外周でだけ横に伸びます</b>。ドーナツ.js はテクスチャを 2:1（u が長い）にして、
+      1cm あたりの画素の数をなるべくそろえています。
+      パンケーキ.js の側面も同じ考え方で、周長を約 5.8cm ごとのタイルに割り、
+      1枚ぶんの実寸から画像の縦横比を決めています。
+      画像の大きさは「何枚ぶんの細かさが要るか」ではなく、<b>その面の実際の寸法</b>から決めます。
     </p>
     <div class="trap">
       <span class="label">つまずきポイント</span>
-      <p><b>分割数を上げれば良くなるわけではありません。</b>
-      上の実験で分割数を 64 にしても、団子はほとんど変わりません。
-      逆に細かくしすぎると、法線マップ（06章）で作った細かい凹凸と干渉してモアレます。
-      クッキー.js には「型押しや格子は 0.3mm しかないので、幾何は低周波だけ、
-      細かい起伏は法線マップに回す」と書いてあります。</p>
+      <p><b>法線マップの上下の符号は、環境によって逆です。</b>
+      高さの画像から法線を作るとき、縦方向の差を <code>(hd - hu)</code> と書くか
+      <code>(hu - hd)</code> と書くかで、凸が凹に化けます。
+      Babylon.js は V が下向きなので前者。いくつものサンプルのコメントに、
+      この符号を間違えて直した記録が残っています。</p>
+      <p><b>1mm の粒は、テクスチャでは描けません。</b>
+      ドーナツのカラースプレーを色の点として描くと、遠くから見たときミップマップで溶けて
+      「色のにじんだ靄」になります。チョコバナナ.js やドーナツ.js が粒を1個ずつ実体として置いているのは、
+      それが理由です（→ <a href="ch16.html">16章</a>）。</p>
+      <p><b>気泡と割れ目を、暗い色で描かないでください。</b>
+      ドーナツ.js とクッキー.js が同じことを書いています。割れ目の中や気泡の底は<b>焼けていない生地</b>なので、
+      むしろ周囲より明るい。暗く見えるのは窪みの陰りのぶんで、それは ORM の R（AO）と法線マップの担当です。
+      アルベドを暗く塗ると、カビか焦げ穴になります。</p>
     </div>
 
     <div class="try">
       <span class="label">やってみよう</span>
       <ol>
-        <li>「表と裏」に切り替えてから「巻き順を裏返す」を押し、色がどう変わるか見る。</li>
-        <li>分割数を 4 まで下げて、団子が何角形になるか数える。</li>
-        <li>「法線をなめらかにする」を切って、同じ形でも印象がどれだけ変わるか観察する。</li>
-        <li>クッキー.js の中で「巻き順」という語を検索し、なぜ実測しているのか読む。</li>
+        <li>焼き加減を 0 から 1 まで動かし、3枚の画像がそれぞれどう変わるか見比べる。</li>
+        <li>「粗さ」だけを見て、焦げた部分と白い部分のどちらが明るいか確かめ、その理由を考える。</li>
+        <li>「立体に貼ってみる」を切り、画像だけを見たときに何の模様か分かるか試す。</li>
+        <li>ドーナツ.js の doughOrm を開き、型に接した面と膨れた面で粗さがいくつからいくつまで変わるか読む。</li>
       </ol>
     </div>
 
   </div>
 </section>
   <div class="pager">
-    <a class="prev" href="ch04.html"><span class="dir">← まえの章</span><span class="ttl">04 断面を1枚描けば、立体になる</span></a>
-    <a class="next" href="ch06.html"><span class="dir">つぎの章 →</span><span class="ttl">06 模様も、その場で描く</span></a>
+    <a class="prev" href="ch04.html"><span class="dir">← まえの章</span><span class="ttl">04 三角形の向きと、面の傾き</span></a>
+    <a class="next" href="ch06.html"><span class="dir">つぎの章 →</span><span class="ttl">06 回す、型で抜く</span></a>
   </div>
 </div>
 </main>

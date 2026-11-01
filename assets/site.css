@@ -40,6 +40,13 @@
   --p-melon:#8EAB40;    /* ゼリー.js melon 写真A の胴 sRGB(142,171,64) */
   --p-ame:#FFA838;      /* 飴細工.js amber albedo [1.00,0.66,0.22] べっこう飴 */
   --p-wata:#FF9ECC;     /* 綿菓子.js pink body    [1.00,0.62,0.80] */
+  --p-taiyaki:#D79D55;  /* たい焼き.js 定番 gold   [0.845,0.615,0.335] きつね色 */
+  --p-pancake:#CA8516;  /* パンケーキ.js CR_LIP   [0.792,0.522,0.086] 側面の帯 */
+  --p-donut:#A9642B;    /* ドーナツ.js EDGE       [0.664,0.392,0.170] 型に接した面 */
+  --p-kuri:#99401A;     /* 栗饅頭.js redBrown     [0.60,0.25,0.10] */
+  --p-banana:#5D3322;   /* チョコバナナ.js milk base [0.365,0.200,0.135] */
+  --p-sprinkle:#F66B9E; /* チョコバナナ.js SPRINKLES ピンク [0.965,0.420,0.620] */
+  --p-roll:#BB7745;     /* ロールケーキ.js skin   [0.735,0.465,0.270] 焼き目 */
 
   --accent:var(--p-karaage);
 

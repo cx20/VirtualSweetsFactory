@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ゼリーの色は、中を通った距離で決まる — おかしのつくりかた</title>
-<meta name="description" content="ゼリーの色は、中を通った距離で決まる">
+<title>盛り付けは、手で置かない — おかしのつくりかた</title>
+<meta name="description" content="盛り付けは、手で置かない">
 <link rel="stylesheet" href="assets/site.css">
 <script src="assets/labs.js" defer></script>
 </head>
@@ -18,20 +18,21 @@
       <a href="ch01.html">01 生成</a>
       <a href="ch02.html">02 乱数</a>
       <a href="ch03.html">03 ノイズ</a>
-      <a href="ch04.html">04 かたち</a>
-      <a href="ch05.html">05 面</a>
-      <a href="ch06.html">06 模様</a>
-      <a href="ch07.html">07 質感</a>
-      <a href="ch08.html">08 物理</a>
-      <a href="ch09.html">09 部品</a>
-      <a href="ch10.html">10 曲がり</a>
-      <a href="ch11.html">11 光</a>
+      <a href="ch04.html">04 面</a>
+      <a href="ch05.html">05 模様</a>
+      <a href="ch06.html">06 かたち</a>
+      <a href="ch07.html">07 曲がり</a>
+      <a href="ch08.html">08 潰れ</a>
+      <a href="ch09.html">09 塊</a>
+      <a href="ch10.html">10 焼き色</a>
+      <a href="ch11.html">11 質感</a>
       <a href="ch12.html">12 たれ</a>
-      <a href="ch13.html">13 潰れ</a>
-      <a href="ch14.html">14 揺れ</a>
-      <a href="ch15.html" aria-current="page">15 透け</a>
-      <a href="ch16.html">16 塊</a>
-      <a href="ch17.html">17 糸</a>
+      <a href="ch13.html">13 透け</a>
+      <a href="ch14.html">14 光</a>
+      <a href="ch15.html" aria-current="page">15 盛る</a>
+      <a href="ch16.html">16 振る</a>
+      <a href="ch17.html">17 揺れ</a>
+      <a href="ch18.html">18 糸</a>
       <a href="zukan.html">図鑑</a>
       <a href="view.html">ソース</a>
       <a href="terms.html">用語</a>
@@ -40,158 +41,143 @@
 </header>
 
 <main id="top" class="page">
-<div class="wrap" style="--ch:var(--p-melon)">
+<div class="wrap" style="--ch:var(--p-kuri)">
   <p class="crumbs"><a href="index.html">目次</a><span class="sep">/</span>第15章</p>
-<section class="chapter" id="ch15" style="--ch:var(--p-melon)">
+<section class="chapter" id="ch15" style="--ch:var(--p-kuri)">
   <div class="chapter-head">
-    <div class="chnum">15<small>Path</small></div>
+    <div class="chnum">15<small>Havok</small></div>
     <div>
-      <h2>ゼリーの色は、中を通った距離で決まる</h2>
-      <p class="sub">path length — 塗れない色の作り方</p>
+      <h2>盛り付けは、手で置かない</h2>
+      <p class="sub">physics — 落として積むという設計</p>
     </div>
   </div>
   <div class="body">
     <div class="recap">
       <span class="label">この章の3行まとめ</span>
       <ul>
-        <li>プリンの色は<b>表面の色</b>（アルベド）で決まります。ゼリーの色は違います。</li>
-        <li>ゼリーは中身の詰まった色ガラスで、見える色は<b>光が中を何 cm 通ったか</b>だけで決まります。</li>
-        <li>だから厚みを<b>測って</b>シェーダに渡す。溝の底は薄いので明るく、山は厚いので濃い。</li>
+        <li>皿の上の位置を1個ずつ手で書くと、必ず「並べた」ように見えます。</li>
+        <li>そこで<b>上から落として、重力と摩擦に任せます</b>。物理エンジンは Havok。クッキー・チョコレート・ドーナツ・プリン・ゼリーが使っています。</li>
+        <li>ただし団子は、あえて物理を使いません。<b>積み方そのものが決まっているお菓子</b>があるからです。</li>
       </ul>
     </div>
 
     <p>
-      12章で、みたらしのたれを「色」ではなく「透明な層」として扱いました。
-      厚いところほど濃くなる、<code>exp(−吸収係数 × 厚み)</code> の話です。
-      ゼリーはその層が<b>まるごと全部</b>になったものです。ゼリー.js の冒頭にこうあります。
+      クッキーを皿に盛りたい。座標を手で書くと、どうやっても不自然になります。
+      隙間が均等すぎるか、めり込むか、どちらかです。実物の盛り付けは、
+      <b>落ちたものが下のものに引っかかって、たまたまそこで止まった</b>結果できています。
     </p>
-    <div class="note">
-      <b>「プリンの色は『表面のアルベド』で決まる。ゼリーの色は違う。
-      ゼリーは中身の詰まった色ガラスで、見えている色は
-      透過光 = 背景 × exp(−σ · d) の d、つまり『その画素で光が中を何 cm 通ったか』でしか決まらない。
-      ここを『濃い緑のアルベド』で塗ると、必ず緑のプラスチックになる」</b>
-    </div>
     <p>
-      σ（シグマ）は 1cm あたりにどれだけ光が吸われるかで、赤・緑・青で別の値を持ちます。
-      ゼリー.js では、味ごとの色を σ で直接書くのではなく、
-      <b>「基準の光路 4.5cm を通ったあとに何割残るか」</b>（T0）で持たせています。写真から拾えるのはこの値だからです。
+      だから、そのとおりにします。皿を置いて、重力を設定して、上から1枚ずつ落とす。
+      あとは物理エンジンが勝手に積んでくれます。書くのは「何を、どこから、どんな向きで落とすか」だけです。
     </p>
     <figure>
-<pre><span class="c">// 味は「色」ではなく「4.5cm 通ったあとの透過率」で持つ</span>
-melon:      { T0: [<span class="n">0.300</span>, <span class="n">0.440</span>, <span class="n">0.050</span>] },  <span class="c">// 赤は少し、緑はよく通す。青はほぼ消える</span>
-strawberry: { T0: [<span class="n">0.560</span>, <span class="n">0.030</span>, <span class="n">0.030</span>] },  <span class="c">// 赤だけ通す</span>
+<pre><span class="c">// 8. Scene / 物理（クッキー.js を短くしたもの）</span>
+<span class="k">const</span> hk = <span class="k">await</span> HavokPhysics();
+scene.enablePhysics(<span class="k">new</span> V3(<span class="n">0</span>, -GLOBAL.gravity, <span class="n">0</span>), <span class="k">new</span> BABYLON.HavokPlugin(<span class="k">true</span>, hk));
 
-<span class="c">// σ = −ln(T0) / 4.5  → メロンなら [0.27, 0.18, 0.67]（1cm あたり）</span>
-<span class="c">// 透過率 T(d) = exp(−σ·d) = T0 ^ (d / 4.5)</span></pre>
-      <figcaption>ゼリー.js のプリセット。メロンといちごは、吸うスペクトルがまったく逆</figcaption>
+<span class="c">// 【対策】cm 単位のシーンで実重力 981 を入れると、1ステップの
+//         めり込みが Havok の許容量を超えて震え続ける。数百に落とす</span>
+gravity: <span class="n">560</span>,
+<span class="c">// 【対策】クッキーは平たいので、摩擦が低いと皿の傾斜を全部滑り落ちて
+//         縁に沿ってドーナツ状に並ぶ。焼き菓子の表面はざらざらしている</span>
+friction: <span class="n">0.92</span>, restitution: <span class="n">0.02</span>,</pre>
+      <figcaption>クッキー.js とチョコレート.js は重力 560、プリン.js は 620。単位を cm にすると重力の値まで変わる</figcaption>
     </figure>
 
-    <div class="lab" id="lab15">
-      <p class="lab-title">実験 — 塗る / 光路で解く</p>
+    <div class="lab" id="lab08">
+      <p class="lab-title">実験 — 落として積む（トリュフの山）</p>
       <div class="lab-cols side">
         <div class="controls">
-          <div class="chips" id="jellyFlavor">
-            <button class="chip" type="button" data-v="melon" aria-pressed="true">メロン</button>
-            <button class="chip" type="button" data-v="strawberry">いちご</button>
-            <button class="chip" type="button" data-v="grape">ぶどう</button>
-            <button class="chip" type="button" data-v="orange">オレンジ</button>
-          </div>
-          <label class="switch"><input type="checkbox" id="jellyPaint">アルベドに色を塗る（プラスチック）</label>
           <div class="ctrl">
-            <label for="jellySigma">色の濃さ（σ の倍率）<span class="v" id="jellySigmaV">1.00</span></label>
-            <input type="range" id="jellySigma" min="0.2" max="2.5" step="0.01" value="1">
+            <label for="dropCount">個数<span class="v" id="dropCountV">18</span></label>
+            <input type="range" id="dropCount" min="4" max="40" step="1" value="18">
           </div>
-          <label class="switch"><input type="checkbox" id="jellyThin" checked>溝のぶん光路を短くする</label>
-          <div class="readout" id="jellyOut">—</div>
+          <div class="ctrl">
+            <label for="dropFric">摩擦<span class="v" id="dropFricV">0.58</span></label>
+            <input type="range" id="dropFric" min="0" max="1" step="0.01" value="0.58">
+          </div>
+          <div class="ctrl">
+            <label for="dropRest">跳ね返り<span class="v" id="dropRestV">0.06</span></label>
+            <input type="range" id="dropRest" min="0" max="0.8" step="0.01" value="0.06">
+          </div>
+          <button class="chip" type="button" id="dropRun">もう一度 落とす</button>
+          <div class="readout" id="dropOut">—</div>
         </div>
-        <canvas id="jellyCanvas" width="640" height="360" aria-label="菊型のゼリーを正面から見て、画素ごとの光路長から色を解く実験"></canvas>
+        <canvas id="dropCanvas" width="640" height="360" aria-label="トリュフを器に落として積む実験"></canvas>
       </div>
       <p class="hint">
-        右の小さい図は、その画素で光が通った距離（白いほど長い）です。
-        「塗る」に切り替えると、縁と溝がいちばん濃くなるか、全体が同じ色のままになります。
-        どちらも、本物のゼリーでは起きません。
+        断面（横から見た2D）での実験です。初期値はチョコレート.js の摩擦 0.58・跳ね返り 0.06。
+        摩擦を 0 にすると全部が器の縁まで流れて平らになり、
+        1 に近づけると落ちた場所でそのまま止まって、不自然に高い塔ができます。
       </p>
     </div>
 
-    <h3>Babylon に、吸収の式をそのまま渡す</h3>
+    <h3>落とし方にも、お菓子らしさがある</h3>
     <p>
-      Babylon の PBR マテリアルには、屈折した光を中で色づける機能があり、その計算は
-      <code>透過率 = tintColor ^ (thickness / tintColorAtDistance)</code> です。
-      これはランベルト・ベールの法則そのものなので、
-    </p>
-    <figure>
-<pre>tintColorAtDistance = <span class="n">1</span>          <span class="c">// 1cm</span>
-tintColor           = exp(−σ)    <span class="c">// 1cm 通ったときの透過率</span>
-thicknessTexture    = 母線から実測した弦長（＋溝のぶんの目減り）</pre>
-      <figcaption>ゼリー.js の方針。式を自分で書かず、エンジンの式に正しい値を入れる</figcaption>
-    </figure>
-    <p>
-      と入れれば、吸収の式がそのままシェーダで解かれます。
-      12章のたれは「エンジンの着色は厚み 0 で壊れるので CPU で焼く」でした。
-      同じ吸収の式でも、たれは表面の薄い膜で、ゼリーは中身の詰まった塊です。
-      ゼリーでは屈折（向こう側が歪んで見えること）も要るので、こちらはエンジンの機能を使っています。
+      物理に任せるといっても、放すときの向きは自分で決めます。クッキー.js の記録：
+      <b>「クッキーは平たいので、伏せるか仰向けるかの2択に落ち着く。全部を表向きで放すと
+      『盛った』ではなく『並べた』になる。4枚に1枚は最初から裏返して放し、底の焼き色を見せる」</b>。
+      10章で作った底の焼き色は、こうして初めて画面に出てきます。
     </p>
 
-    <h3>厚みは、近似せずに測る</h3>
+    <h3>当たり判定は、見た目のとおりでなくてよい</h3>
     <p>
-      難しいのは thickness のほうです。「半径の2倍」や定数で済ませると、
-      <b>シルエットのきわで厚みが最大</b>になり、いちばん薄いはずの縁がいちばん濃くなります。
-      ゼリー.js は、断面の形（母線）の内側へ<b>11本の光線を扇形に飛ばし</b>（±75°）、
-      壁に当たるまでの長さを、法線に近い向きほど重く平均しています。
-      法線1本だけで測ると、肩の丸みのような「外から見れば薄いのに、法線の向きには胴を斜めに貫く」場所で
-      値が跳ねるからです。
+      物理エンジンは、見た目の形をそのまま使うと重すぎます。
+      そこで、当たり判定だけ簡単な形に置き換えます。クッキーやチョコは<b>凸包</b>
+      （でっぱりだけを包んだ袋のような形）で十分です。
     </p>
     <p>
-      測った値にも、もうひと手間あります。照明は上半球が明るいので、上を向いた面は
-      <b>短い光路で光を集めます</b>。測った弦長をそのまま使うと、天面は全高 5.2cm ぶんが入って
-      いちばん濃くなり、写真といちばん食い違う場所になりました。
-      そこで上向きの面は <code>topThin: 0.42</code> だけ薄く扱います。
-      この値は、写真の天面と胴の色の比から逆算したものです。
+      ところがドーナツは凸包では駄目でした。ドーナツ.js の記録：
+      <b>「凸包にすると穴が埋まり、ただの円盤になる。重なったときに見えない肉で浮くうえ、
+      ドーナツ同士が串刺しに絡む一番の見どころが消える」</b>。
+      そこで、輪に沿って<b>カプセルを何個も並べたもの</b>を当たり判定にしています。
+      穴が残るので、皿の上でドーナツ同士が串刺しのように重なれます。
+      ついでに摩擦も 0.90 と高めです。ドーナツは輪なので、摩擦が低いと<b>転がって皿から落ちる</b>からです。
     </p>
 
-    <h3>溝の底は、両側から削れている</h3>
+    <h3>あえて物理を使わない</h3>
     <p>
-      菊型の溝は、単なる波ではありません。山は広く丸く、谷は細く深い。
-      <code>cos</code> をそのまま使うと洗濯板になるので、<code>g<sup>0.6</sup></code> にして谷だけを尖らせます。
-      さらに、彫った深さ d のぶん、溝の底の光路は <b>2d</b> 短くなります（手前と奥で1回ずつ）。
-      ここを入れないと、いちばん明るいはずの谷がいちばん濃くなり、
-      ゼリー.js の言葉でいえば<b>「緑に塗った菊の置物」</b>になります。
+      月見団子は、15個を9 + 4 + 2 と三方に積みます。これを物理で落とすと、丸い団子は転がって崩れます。
+      そもそも月見団子は<b>積み方が決まっている</b>お菓子で、偶然の山であってはいけません。
+      だから月見団子.js は物理を使わず、
     </p>
+    <ul>
+      <li>段ごとに、格子や三角の並びで位置を決める</li>
+      <li>大きさと位置を、正規分布で少しだけずらす（→ <a href="ch02.html">02章</a>）</li>
+      <li>高さは、<b>下の段の団子だけ</b>を見て、そこに乗る位置まで持ち上げる</li>
+      <li>触れ合った組を「接触面」に変換して、あとで潰す（→ <a href="ch08.html">08章</a>）</li>
+    </ul>
     <p>
-      溝を彫る向きにも工夫があります。<b>母線の法線方向に彫る</b>と、
-      天面（法線が真上）では高さの凹凸＝花びらに、側面（法線が横）では半径の凹凸＝溝に、自動的に変わる。
-      型は1枚のつながった面なので、天面と側面を別々に作ると位相がずれて、上と横で別の型に見えてしまいます。
+      という<b>決定論的な積み方</b>をしています。3つ目には【対策】があって、
+      「支持に『同じ段』を入れてはいけない。互いに乗り合って段全体がじりじり浮き上がる」。
+      花見団子は串に刺さっていて動かないので、これも物理は要りません。
+      チョコバナナは屋台の穴あき台に1本ずつ刺して立てます。
+      <b>物理を使うかどうかは、そのお菓子が皿の上でどう置かれるか</b>で決まります。
     </p>
     <div class="trap">
       <span class="label">つまずきポイント</span>
-      <p><b>ガラスの器を白く塗らない。</b>
-      ガラスは光を反射と透過に振り分けるだけで、拡散反射をほとんど持ちません。
-      アルベドを白にすると乳白色のすりガラスになり、中のゼリーを覆ってしまいます。
-      無色のガラスはアルベドを黒にして、見えるものは映り込みと屈折だけにします。</p>
-      <p><b>プリンのカラメルは、そのままだと暗すぎる。</b>
-      プリン.js のカラメルも同じ吸収の式で解いていますが、0.5mm の膜を往復するだけで橙、1.5mm で赤黒になるほど濃い。
-      ランベルト・ベールだけだと薄い縁まで濁った茶になるので、
-      膜の中で跳ね返る光を足す <b>Saunderson の補正</b>（内部反射率 0.45）を入れています。</p>
-      <p><b>透けるのに、不透明のパスで描く。</b>
-      屈折は透明（アルファ）と独立に効くので、ゼリーは不透明メッシュのままにしてあります。
-      深度を書くので、ガラスの器の奥の壁が正しく隠れ、前後のソートにも悩みません。</p>
+      <p><b>物理の結果は毎回変わります。</b>
+      02章で「同じ種なら同じ結果」を守ってきたのに、
+      物理を挟んだ瞬間に再現性が消えます（計算の順番が実行ごとに揺れるため）。
+      だから物理を使うサンプルは、落とす順番・初期位置・初速をすべて種から決めて、
+      揺れる余地を最小にしています。それでも完全には一致しません。</p>
     </div>
 
     <div class="try">
       <span class="label">やってみよう</span>
       <ol>
-        <li>「塗る」に切り替え、溝の谷と山のどちらが濃く見えるかを光路モードと見比べる。</li>
-        <li>いちごにして σ の倍率を 2.5 まで上げ、縁と胴の色がどう分かれるか見る。</li>
-        <li>メロンの T0 から σ を自分で計算し、本文の [0.27, 0.18, 0.67] と合うか確かめる。</li>
-        <li>ゼリー.js で topThin を 0 にして Run し、天面の色がどう変わるか見る。</li>
+        <li>摩擦を 0 にして落とし、山ではなく1層になることを確かめる。</li>
+        <li>跳ね返りを 0.8 にすると何が起きるか予想してから試す。</li>
+        <li>個数を 40 にして、いちばん上の1個がどこで止まるか3回見比べる。</li>
+        <li>月見団子.js で「同じ段」を検索し、なぜ下の段だけを見るのか読む。</li>
       </ol>
     </div>
 
   </div>
 </section>
   <div class="pager">
-    <a class="prev" href="ch14.html"><span class="dir">← まえの章</span><span class="ttl">14 プルプルは、6本のばねの重ね合わせ</span></a>
-    <a class="next" href="ch16.html"><span class="dir">つぎの章 →</span><span class="ttl">16 ひとつの塊は、距離の場から削り出す</span></a>
+    <a class="prev" href="ch14.html"><span class="dir">← まえの章</span><span class="ttl">14 見せ方を決める（光と露出）</span></a>
+    <a class="next" href="ch16.html"><span class="dir">つぎの章 →</span><span class="ttl">16 スプレーは、上から振ったところにだけ付く</span></a>
   </div>
 </div>
 </main>

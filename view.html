@@ -18,20 +18,21 @@
       <a href="ch01.html">01 生成</a>
       <a href="ch02.html">02 乱数</a>
       <a href="ch03.html">03 ノイズ</a>
-      <a href="ch04.html">04 かたち</a>
-      <a href="ch05.html">05 面</a>
-      <a href="ch06.html">06 模様</a>
-      <a href="ch07.html">07 質感</a>
-      <a href="ch08.html">08 物理</a>
-      <a href="ch09.html">09 部品</a>
-      <a href="ch10.html">10 曲がり</a>
-      <a href="ch11.html">11 光</a>
+      <a href="ch04.html">04 面</a>
+      <a href="ch05.html">05 模様</a>
+      <a href="ch06.html">06 かたち</a>
+      <a href="ch07.html">07 曲がり</a>
+      <a href="ch08.html">08 潰れ</a>
+      <a href="ch09.html">09 塊</a>
+      <a href="ch10.html">10 焼き色</a>
+      <a href="ch11.html">11 質感</a>
       <a href="ch12.html">12 たれ</a>
-      <a href="ch13.html">13 潰れ</a>
-      <a href="ch14.html">14 揺れ</a>
-      <a href="ch15.html">15 透け</a>
-      <a href="ch16.html">16 塊</a>
-      <a href="ch17.html">17 糸</a>
+      <a href="ch13.html">13 透け</a>
+      <a href="ch14.html">14 光</a>
+      <a href="ch15.html">15 盛る</a>
+      <a href="ch16.html">16 振る</a>
+      <a href="ch17.html">17 揺れ</a>
+      <a href="ch18.html">18 糸</a>
       <a href="zukan.html">図鑑</a>
       <a href="view.html" aria-current="page">ソース</a>
       <a href="terms.html">用語</a>
@@ -87,15 +88,15 @@
         <tr><td>0. CONFIG</td><td>種類プリセット。焼き加減や寸法の数値</td><td><a href="ch01.html">01 手続き生成</a></td></tr>
         <tr><td>1. Rng</td><td>シード付き擬似乱数</td><td><a href="ch02.html">02 乱数</a></td></tr>
         <tr><td>2. Noise</td><td>値ノイズ / 周期ノイズ / fBm / セルノイズ</td><td><a href="ch03.html">03 ノイズ</a></td></tr>
-        <tr><td>3. Mesh utils</td><td>巻き順の判定・法線の溶接・掃引</td><td><a href="ch05.html">05 面と法線</a> / <a href="ch10.html">10 曲がり</a></td></tr>
-        <tr><td>4. Fields / Section / Shape</td><td>断面のテーブル、外形、焼き色の場、垂れの輪郭</td><td><a href="ch04.html">04 かたち</a></td></tr>
-        <tr><td>（Profile のあと）Jiggle / Flute</td><td>揺れのモード、菊型の溝と光路長（プリン・ゼリー）</td><td><a href="ch14.html">14 揺れ</a> / <a href="ch15.html">15 透け</a></td></tr>
-        <tr><td>距離関数 / サーフェスネット</td><td>部品を溶かし合わせた形と、格子からの面張り（アイス・飴細工）</td><td><a href="ch16.html">16 塊</a></td></tr>
-        <tr><td>乱数・曲面 / 芯と糸 / シェーダ</td><td>帯を巻いた回転体と、その上に並べる糸（綿菓子）</td><td><a href="ch17.html">17 糸</a></td></tr>
-        <tr><td>5. TextureLab</td><td>アルベド・ORM・法線・厚みの生成</td><td><a href="ch06.html">06 テクスチャ</a> / <a href="ch12.html">12 たれ</a></td></tr>
-        <tr><td>6〜7. 本体 / トッピング</td><td>そのお菓子そのものの組み立てと、上に乗るもの</td><td><a href="ch09.html">09 部品</a></td></tr>
-        <tr><td>7〜8. 皿 / 板 / トレイ / 盛り付け</td><td>器と、その上への配置</td><td><a href="ch08.html">08 物理</a> / <a href="ch13.html">13 潰れ</a></td></tr>
-        <tr><td>8〜9. Scene</td><td>光・影・露出・被写界深度</td><td><a href="ch11.html">11 光</a></td></tr>
+        <tr><td>3. Mesh utils</td><td>巻き順の判定・法線の溶接・掃引</td><td><a href="ch04.html">04 面と法線</a> / <a href="ch07.html">07 曲がり</a></td></tr>
+        <tr><td>4. Profile / Section / Shape / Outline</td><td>断面のテーブル、外形、閉じた輪郭</td><td><a href="ch06.html">06 回す・型で抜く</a> / <a href="ch07.html">07 曲がり</a></td></tr>
+        <tr><td>（Profile のあと）Jiggle / Flute</td><td>揺れのモード、菊型の溝と光路長（プリン・ゼリー）</td><td><a href="ch17.html">17 揺れ</a> / <a href="ch13.html">13 透け</a></td></tr>
+        <tr><td>距離関数 / サーフェスネット</td><td>部品を溶かし合わせた形と、格子からの面張り（アイス・飴細工）</td><td><a href="ch09.html">09 塊</a></td></tr>
+        <tr><td>乱数・曲面 / 芯と糸 / シェーダ</td><td>帯を巻いた回転体と、その上に並べる糸（綿菓子）</td><td><a href="ch18.html">18 糸</a></td></tr>
+        <tr><td>5. TextureLab</td><td>アルベド・ORM・法線・厚みの生成。焼き色の場とたれの吸収もここ</td><td><a href="ch05.html">05 模様</a> / <a href="ch10.html">10 焼き色</a> / <a href="ch12.html">12 たれ</a></td></tr>
+        <tr><td>6〜7. 本体 / トッピング</td><td>そのお菓子そのものの組み立てと、上に乗るもの</td><td><a href="ch16.html">16 トッピング</a></td></tr>
+        <tr><td>7〜8. 皿 / 板 / トレイ / 盛り付け</td><td>器と、その上への配置</td><td><a href="ch15.html">15 盛り付け</a> / <a href="ch08.html">08 潰れ</a></td></tr>
+        <tr><td>8〜9. Scene</td><td>光・影・露出・被写界深度</td><td><a href="ch14.html">14 光</a></td></tr>
         <tr><td>9〜10. GUI</td><td>右下のスライダー</td><td>—</td></tr>
       </table>
       <div class="note">

@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>見せ方を決める（光と露出） — おかしのつくりかた</title>
-<meta name="description" content="見せ方を決める（光と露出）">
+<title>「照り」「ぬれ」「粉っぽさ」を数値で言う — おかしのつくりかた</title>
+<meta name="description" content="「照り」「ぬれ」「粉っぽさ」を数値で言う">
 <link rel="stylesheet" href="assets/site.css">
 <script src="assets/labs.js" defer></script>
 </head>
@@ -18,20 +18,21 @@
       <a href="ch01.html">01 生成</a>
       <a href="ch02.html">02 乱数</a>
       <a href="ch03.html">03 ノイズ</a>
-      <a href="ch04.html">04 かたち</a>
-      <a href="ch05.html">05 面</a>
-      <a href="ch06.html">06 模様</a>
-      <a href="ch07.html">07 質感</a>
-      <a href="ch08.html">08 物理</a>
-      <a href="ch09.html">09 部品</a>
-      <a href="ch10.html">10 曲がり</a>
-      <a href="ch11.html" aria-current="page">11 光</a>
+      <a href="ch04.html">04 面</a>
+      <a href="ch05.html">05 模様</a>
+      <a href="ch06.html">06 かたち</a>
+      <a href="ch07.html">07 曲がり</a>
+      <a href="ch08.html">08 潰れ</a>
+      <a href="ch09.html">09 塊</a>
+      <a href="ch10.html">10 焼き色</a>
+      <a href="ch11.html" aria-current="page">11 質感</a>
       <a href="ch12.html">12 たれ</a>
-      <a href="ch13.html">13 潰れ</a>
-      <a href="ch14.html">14 揺れ</a>
-      <a href="ch15.html">15 透け</a>
-      <a href="ch16.html">16 塊</a>
-      <a href="ch17.html">17 糸</a>
+      <a href="ch13.html">13 透け</a>
+      <a href="ch14.html">14 光</a>
+      <a href="ch15.html">15 盛る</a>
+      <a href="ch16.html">16 振る</a>
+      <a href="ch17.html">17 揺れ</a>
+      <a href="ch18.html">18 糸</a>
       <a href="zukan.html">図鑑</a>
       <a href="view.html">ソース</a>
       <a href="terms.html">用語</a>
@@ -40,169 +41,133 @@
 </header>
 
 <main id="top" class="page">
-<div class="wrap" style="--ch:var(--p-sanma)">
+<div class="wrap" style="--ch:var(--p-choco)">
   <p class="crumbs"><a href="index.html">目次</a><span class="sep">/</span>第11章</p>
-<section class="chapter" id="ch11" style="--ch:var(--p-sanma)">
+<section class="chapter" id="ch11" style="--ch:var(--p-choco)">
   <div class="chapter-head">
-    <div class="chnum">11<small>Scene</small></div>
+    <div class="chnum">11<small>PBR</small></div>
     <div>
-      <h2>見せ方を決める（光と露出）</h2>
-      <p class="sub">IBL / exposure / tone mapping — 環境光と露出</p>
+      <h2>「照り」「ぬれ」「粉っぽさ」を数値で言う</h2>
+      <p class="sub">physically based rendering — 物理ベースの質感</p>
     </div>
   </div>
   <div class="body">
     <div class="recap">
       <span class="label">この章の3行まとめ</span>
       <ul>
-        <li>同じ料理でも、光の当て方で<b>別物になります</b>。形と同じくらい重要です。</li>
-        <li>点の光源だけでは足りません。<b>まわりの環境そのものを光として</b>当てます（IBL）。</li>
-        <li>明るすぎる部分をどう畳むか（<b>トーンマッピング</b>）で、料理か写真の失敗かが分かれます。</li>
+        <li>PBR では、質感を<b>粗さ</b>・<b>金属度</b>・<b>透け</b>などの数値の組で表します。</li>
+        <li>お菓子でいちばん効くのは<b>粗さ</b>と、上に乗った透明な膜（<b>クリアコート</b>）です。</li>
+        <li>「おいしそう」は、たいてい<b>膜の艶</b>と<b>光の通り</b>の2つで決まります。</li>
       </ul>
     </div>
 
     <p>
-      ここまでで形も模様も質感もできました。それでも、光の設定を間違えると、
-      作ったものは食品サンプルに見えます。逆に、光がよければ多少の粗は隠れます。
-      サンプルは、シーンの設定にほぼ同じ手を使っています。
+      同じ形の団子でも、艶があれば茹でたて、粉をふいていれば時間が経っている。
+      同じチョコでも、型から抜いたばかりなら鏡のように照り、古くなると白く粉をふく。
+      その差を、絵ではなく<b>数値</b>で言えるようにしたのが PBR です。
+      色（アルベド）とは別に、次のような数値を面ごとに持たせます。
     </p>
-    <ul>
-      <li><b>環境光（IBL）</b> — 空や壁からの光を1枚の環境マップとして与える。
-      食べ物は反射がやわらかいので、点光源だけだと影が黒く潰れます。</li>
-      <li><b>キーライト</b> — 主役の1灯。斜め上、やや後ろから当てると、
-      料理の輪郭が光って立体的になります（逆光ぎみ）。</li>
-      <li><b>影</b> — ESM ではなく PCF ＋ <code>forceBackFacesOnly</code>。
-      団子のように丸いものは、ESM だと自己遮蔽が痣のような黒い斑になります。</li>
-      <li><b>SSAO2</b> — 物と物の接するところに薄い陰りを入れる。接地感が出ます。</li>
-      <li><b>露出とトーンマッピング</b> — ACES というフィルム風の曲線で、
-      明るい部分をなめらかに畳みます。</li>
-    </ul>
+    <table>
+      <tr><th>数値</th><th>意味</th><th>サンプルでの使いどころ</th></tr>
+      <tr><td>roughness</td><td>表面のざらつき。0 で鏡、1 で完全につや消し</td><td>ほぼ全部。焼けた所とそうでない所、型に接した面と膨れた面で必ず変える</td></tr>
+      <tr><td>metallic</td><td>金属かどうか。お菓子はふつう 0</td><td>チョコの照りも、金属ではなく膜で出す</td></tr>
+      <tr><td>clearCoat</td><td>上に乗った透明な膜</td><td>チョコの艶・アイシング・ジャム・プリンの型に接した面・団子の濡れ艶</td></tr>
+      <tr><td>subSurface</td><td>光が中に入って散る。厚みで色が変わる</td><td>団子・プリン・ゼリー・クッキーやドーナツの薄い縁</td></tr>
+      <tr><td>sheen</td><td>布のような、縁がふわっと光る反射</td><td>団子の粉っぽさ・ドーナツの乾いた面</td></tr>
+    </table>
 
-    <div class="lab" id="lab11">
-      <p class="lab-title">実験 — 露出とトーンマッピング</p>
+    <div class="lab" id="lab07">
+      <p class="lab-title">実験 — 粗さ・膜・透けを動かす</p>
       <div class="lab-cols side">
         <div class="controls">
-          <div class="ctrl">
-            <label for="sceneExpo">露出<span class="v" id="sceneExpoV">1.00</span></label>
-            <input type="range" id="sceneExpo" min="0.3" max="2.6" step="0.02" value="1">
+          <div class="chips" id="pbrPreset">
+            <button class="chip" type="button" data-v="dango" aria-pressed="true">団子</button>
+            <button class="chip" type="button" data-v="choco">チョコ</button>
+            <button class="chip" type="button" data-v="purin">プリン</button>
+            <button class="chip" type="button" data-v="cookie">クッキー</button>
           </div>
           <div class="ctrl">
-            <label for="sceneAmb">環境光の強さ<span class="v" id="sceneAmbV">1.00</span></label>
-            <input type="range" id="sceneAmb" min="0" max="2.2" step="0.02" value="1">
+            <label for="pbrRough">粗さ roughness<span class="v" id="pbrRoughV">0.40</span></label>
+            <input type="range" id="pbrRough" min="0.03" max="1" step="0.01" value="0.4">
           </div>
           <div class="ctrl">
-            <label for="sceneKey">キーライトの向き<span class="v" id="sceneKeyV">-40°</span></label>
-            <input type="range" id="sceneKey" min="-140" max="140" step="1" value="-40">
+            <label for="pbrCoat">膜の強さ clearCoat<span class="v" id="pbrCoatV">0.30</span></label>
+            <input type="range" id="pbrCoat" min="0" max="1" step="0.01" value="0.3">
           </div>
-          <label class="switch"><input type="checkbox" id="sceneTone" checked>トーンマッピングを使う</label>
-          <div class="readout" id="sceneOut">—</div>
+          <div class="ctrl">
+            <label for="pbrSss">透け subSurface<span class="v" id="pbrSssV">0.20</span></label>
+            <input type="range" id="pbrSss" min="0" max="1" step="0.01" value="0.2">
+          </div>
+          <div class="readout" id="pbrOut">—</div>
         </div>
-        <canvas id="sceneCanvas" width="640" height="360" aria-label="露出とトーンマッピングを変える実験"></canvas>
+        <canvas id="pbrCanvas" width="640" height="360" aria-label="粗さ・クリアコート・透けを変える実験"></canvas>
       </div>
       <p class="hint">
-        トーンマッピングを切って露出を上げると、明るいところが真っ白に貼り付きます。
-        入れておくと、白くなる手前で色が残り続けます。<br><b>立体はドラッグで回せます</b>（触ると自動回転は止まります。ダブルクリックで戻ります）。
-        光源は動かないので、回すと「同じ光でも角度で別物になる」ことが見えます。
+        粗さを 0.05 まで下げると、どのお菓子もプラスチックの成型品になります。
+        お菓子の艶は「鋭い」のではなく「広くにじむ」ものです。<br><b>立体はドラッグで回せます</b>（触ると自動回転は止まります。ダブルクリックで戻ります）。
+        艶の見え方は角度でまるで変わるので、回しながら決めてください。
       </p>
     </div>
 
-    <h3>トーンマッピングは「明るさの畳み方」</h3>
+    <h3>粗さは、一様であってはいけない</h3>
     <p>
-      計算で出た明るさは 1 を超えます。画面は 1 までしか出せません。
-      1 を超えたぶんを単純に切り落とすと、<b>ハイライトが真っ白な板になります</b>。
-      料理でこれをやると、たれの照りが「白いシール」に見えます。
+      いちばんよくある失敗が、粗さを1つの数値で決めてしまうことです。
+      10章のドーナツでは、型に接した面と膨れた面とで粗さが 0.575 から 0.900 まで変わりました。
+      チョコレート.js にも同じことが書いてあります。
+      <b>「底面は型やシートに接していた面なので、天面より必ず鈍い。ここを同じ艶にすると、
+      どちらが上か分からない置物になる」</b>。
+      だから粗さは1つの数値ではなく、05章で作った<b>1枚の画像</b>として持たせます。
     </p>
     <p>
-      そこで、切り落とすかわりになめらかに畳みます。
-      <code>x / (1 + x)</code> のような曲線を通すと、どれだけ明るくても 1 を超えず、
-      しかも色が残ります。実際のサンプルは ACES という、
-      映画用に作られた曲線を使っています。
-    </p>
-
-    <h3>逆光は、食べ物の常套手段</h3>
-    <p>
-      料理写真が斜め後ろから光を当てるのには理由があります。
-      <b>光が食材を通り抜けるところが見えるから</b>です。
-      赤身の縁が赤く抜け、団子の輪郭が白く光り、大根おろしがふわっと浮く。
-      これは 07章の subSurface と、たべもの編<a href="https://cx20.github.io/VirtualFoodCourt/ch13.html">13章</a>の透けと直結しています。
-      光の向きを変えるだけで、同じ材質が別物に見えます。上の実験で確かめてください。
+      逆に、粗さを場所ごとに<b>上げる</b>ことで出す質感もあります。
+      チョコの<b>ブルーム</b>（白い粉ふき）です。チョコレート.js：「ブルームはくぼみと底から出る。
+      ごく薄く入れると『本物っぽさ』が跳ね上がるが、入れすぎると古い在庫になる」。
+      ココアをまぶしたトリュフだけは例外で、粗さ 0.9 の完全なマットにしてあります。
     </p>
 
-    <h3>白いごはんが灰色に見えるとき — 照明比</h3>
+    <h3>照りは、膜で出す</h3>
     <p>
-      <a href="https://cx20.github.io/VirtualFoodCourt/view.html?f=%E3%81%94%E9%A3%AF.js" title="姉妹編「たべもののつくりかた」のソース">ご飯.js</a> は、白飯がどうしても灰色に見えるという問題に長く悩んでいました。
-      米のマテリアルを何度直しても治りません。答えが出たのは、ごはんの横に
-      <b>参照用の白い球と白いキューブ</b>（反射率 90%）を並べたときでした。
-      白球も同じように灰色に見えていたのです。つまり米の設定は間違っておらず、
-      「この照明では白がこう出る」というだけでした。
+      チョコの照りを、粗さを下げるだけで出そうとすると失敗します。チョコバナナ.js の記録：
+      <b>「チョコの照りはカカオバターの層。粗さを下げるだけでは濡れた石になる」</b>。
+      照りは下地そのものの反射ではなく、<b>上に乗った薄い膜</b>の反射です。
+      それを表すのがクリアコートで、下地の粗さとは別に、膜の強さと膜の粗さを持ちます。
+      プリンも同じで、プリン.js は「型に接していた面はつるつるだが、鏡ではない。薄い層として乗せる」と書いて、
+      膜の強さ 0.38、膜の粗さ 0.10 にしています。
     </p>
-    <div class="note">
-      <b>「白キューブが答えを持っている。天面（キーライト正面）と正面・側面（環境光と逆光のみ）の明るさの比が照明比そのもので、
-      rice-G ではここが 2.5 倍以上あった。実物の料理写真は大きなソフトボックスとレフ板で撮るので、この比はせいぜい 1.3〜1.6 倍。
-      白い被写体は照明比が高いと必ず灰色に見える」</b>（<a href="https://cx20.github.io/VirtualFoodCourt/view.html?f=%E3%81%94%E9%A3%AF.js" title="姉妹編「たべもののつくりかた」のソース">ご飯.js</a> rice-H）
-    </div>
     <p>
-      直す場所はマテリアルでも露出でもなく、<b>キーライトと回り込みの光の比</b>でした。
-      露出で持ち上げると、天面が先に飽和して階調が消えます。そこで露出はほぼそのままにして、
-      キーライトを弱め（2.40 → 1.70）、レフ板にあたる半球光を強めました（0.34 → 0.80）。
-      この結論は、<a href="https://cx20.github.io/VirtualFoodCourt/view.html?f=%E3%82%AB%E3%83%AC%E3%83%BC.js" title="姉妹編「たべもののつくりかた」のソース">カレー.js</a> と<a href="https://cx20.github.io/VirtualFoodCourt/view.html?f=%E3%83%81%E3%83%A3%E3%83%BC%E3%83%8F%E3%83%B3.js" title="姉妹編「たべもののつくりかた」のソース">チャーハン.js</a> にもそのまま引き継がれています（<a href="https://cx20.github.io/VirtualFoodCourt/view.html?f=%E3%82%AB%E3%83%AC%E3%83%BC.js" title="姉妹編「たべもののつくりかた」のソース">カレー.js</a> の初期の版は、比が 14.2 もありました）。
-      上の実験で環境光を 0.2 まで下げると、白い団子の影の側が沈んで、同じことが起きます。
+      ここで必ずはまるのが、<b>膜の強さを上げると下地まで一緒に明るくなる</b>ことです。
+      膜が反射した光と、下地から返ってきた光が足し算されるためで、
+      黒いチョコレートに強い膜をかけると、真っ黒なのに白く光る妙なものになります。
+      そして 10章で見たとおり、焼き菓子の生地には膜を付けません。
     </p>
     <div class="trap">
       <span class="label">つまずきポイント</span>
-      <p><b>被写界深度（ぼけ）の単位は m です。</b>
-      このプロジェクトは 1 unit = 1 cm で書かれています。
-      ところが Babylon.js の被写界深度は「1 unit = 1 m」でぼけの大きさを計算するので、
-      ピント位置に <code>radius × 1000</code> を渡す必要があります。
-      団子シリーズ4本すべてのコメントに、この注意が書かれています。</p>
-      <p><b>環境光を上げれば明るくなる、ではありません。</b>
-      上げすぎると影が消え、平べったい絵になります。
-      「明るさが足りない」と感じたときに触るのは、たいてい露出のほうです。</p>
-    </div>
-
-    <h3>ポストプロセスは、GUI にも掛かってしまう</h3>
-    <p>
-      Bloom（にじみ）や被写界深度（ぼけ）は、<b>描き終えた絵の全体</b>に掛ける処理です。
-      だから何もしないと、右下のスライダーまで一緒ににじんでボケます。
-      たべもの編の最初の14本のサンプルは、これを避けるために<b>GUI 専用のカメラをもう1台立てて</b>、
-      <code>layerMask</code> で描き分けていました。
-    </p>
-    <div class="trap">
-      <span class="label">つまずきポイント</span>
-      <p><b>カメラを2台にすると、思わぬところが壊れます。</b>
-      Babylon.js のいくつかの機能は「<code>activeCameras</code> のいちばん最後＝いま描いている基準のカメラ」
-      と考えて動きます。GUI 用のカメラを足すと、それが最後になるので、
-      <b>Playground の Inspector が3つまとめて動かなくなりました</b>。
-      物理の当たり判定の表示（Physics Helper）が出ない。選択の枠がずれる。
-      そして <code>scene.pick()</code> の光線が GUI カメラから飛ぶので、
-      <b>画面をクリックしても違うものが選ばれる</b>。</p>
-      <p><b>直し方は「カメラを増やさない」でした。</b>
-      GUI を載せているレイヤーに <code>applyPostProcess = false</code> を付けると、
-      そのレイヤーだけポストプロセスの<b>あと</b>で合成されます。
-      カメラ1台のままで、UI にだけ Bloom とぼけが掛からない。
-      ほとんどのサンプルは今この形になっています。</p>
-    </div>
-    <div class="note">
-      <b>ここで覚えておきたいこと。</b>
-      「見た目のための工夫」が、まったく関係なさそうな機能を壊すことがあります。
-      しかも壊れ方が「Inspector でクリックしても違うものが選ばれる」なので、
-      光の設定を疑うことはまずありません。
-      <b>おかしいと思ったら、まず自分が足したものを1つずつ外してみる</b>のが近道です。
+      <p><b>濡れ艶は、鋭く強くするほど嘘になります。</b>
+      月見団子.js の最初の版は、膜の強さ 0.92・実効の粗さ 0.06 でした。記録には
+      「暗い夜の環境をそのまま映して灰色のゴムボールになった。濡れ艶は『小さく強いハイライトが 1〜2 個』
+      くらいが実物に近い」とあります。いまは強さ 0.20〜0.50、粗さ 0.24〜0.44 を、乾き具合のノイズで場所ごとに振っています。
+      決め手は実測ではなく<b>見え方</b>です。</p>
+      <p><b>透けは、上げすぎても嘘になります。</b>
+      プリン.js の記録：「プリンらしさの大半は『透けること』。translucency を切ると着色した石膏になる」。
+      ところが反対側には「0.80 まで上げると、プリンではなく琥珀のガラス細工になる。
+      実物は『縁がわずかに光を通す不透明体』」とあり、いまは 0.40 です。
+      ちょうどよい所は、両側の失敗のあいだにあります。</p>
     </div>
 
     <div class="try">
       <span class="label">やってみよう</span>
       <ol>
-        <li>トーンマッピングを切り、露出を 2.6 にして、ハイライトがどうなるか見る。</li>
-        <li>キーライトを真正面（0°）にして、立体感がどれだけ失われるか確かめる。</li>
-        <li>環境光を 0 にして、影が黒く潰れることを確かめる。</li>
-        <li>花見団子.js で「被写界深度」を検索し、なぜ 1000 を掛けるのか読む。</li>
+        <li>「チョコ」を選び、粗さを 0.03 にして、お菓子に見えるかどうか判定する。</li>
+        <li>「団子」で透けを 0 にすると何に見えるか、言葉にしてみる（石膏か消しゴム）。</li>
+        <li>「プリン」で透けを 0.8 まで上げ、琥珀のガラス細工に見えはじめる所を探す。</li>
+        <li>チョコレート.js で bloom を検索し、種類ごとに値がいくつになっているか調べる。</li>
       </ol>
     </div>
 
   </div>
 </section>
   <div class="pager">
-    <a class="prev" href="ch10.html"><span class="dir">← まえの章</span><span class="ttl">10 曲がったものを作る</span></a>
+    <a class="prev" href="ch10.html"><span class="dir">← まえの章</span><span class="ttl">10 焼き色は、熱の届き方の地図</span></a>
     <a class="next" href="ch12.html"><span class="dir">つぎの章 →</span><span class="ttl">12 たれは、色ではなく層</span></a>
   </div>
 </div>

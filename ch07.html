@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>「照り」「ぬれ」「粉っぽさ」を数値で言う — おかしのつくりかた</title>
-<meta name="description" content="「照り」「ぬれ」「粉っぽさ」を数値で言う">
+<title>曲げる、巻く、絞る — おかしのつくりかた</title>
+<meta name="description" content="曲げる、巻く、絞る">
 <link rel="stylesheet" href="assets/site.css">
 <script src="assets/labs.js" defer></script>
 </head>
@@ -18,20 +18,21 @@
       <a href="ch01.html">01 生成</a>
       <a href="ch02.html">02 乱数</a>
       <a href="ch03.html">03 ノイズ</a>
-      <a href="ch04.html">04 かたち</a>
-      <a href="ch05.html">05 面</a>
-      <a href="ch06.html">06 模様</a>
-      <a href="ch07.html" aria-current="page">07 質感</a>
-      <a href="ch08.html">08 物理</a>
-      <a href="ch09.html">09 部品</a>
-      <a href="ch10.html">10 曲がり</a>
-      <a href="ch11.html">11 光</a>
+      <a href="ch04.html">04 面</a>
+      <a href="ch05.html">05 模様</a>
+      <a href="ch06.html">06 かたち</a>
+      <a href="ch07.html" aria-current="page">07 曲がり</a>
+      <a href="ch08.html">08 潰れ</a>
+      <a href="ch09.html">09 塊</a>
+      <a href="ch10.html">10 焼き色</a>
+      <a href="ch11.html">11 質感</a>
       <a href="ch12.html">12 たれ</a>
-      <a href="ch13.html">13 潰れ</a>
-      <a href="ch14.html">14 揺れ</a>
-      <a href="ch15.html">15 透け</a>
-      <a href="ch16.html">16 塊</a>
-      <a href="ch17.html">17 糸</a>
+      <a href="ch13.html">13 透け</a>
+      <a href="ch14.html">14 光</a>
+      <a href="ch15.html">15 盛る</a>
+      <a href="ch16.html">16 振る</a>
+      <a href="ch17.html">17 揺れ</a>
+      <a href="ch18.html">18 糸</a>
       <a href="zukan.html">図鑑</a>
       <a href="view.html">ソース</a>
       <a href="terms.html">用語</a>
@@ -40,119 +41,151 @@
 </header>
 
 <main id="top" class="page">
-<div class="wrap" style="--ch:var(--p-choco)">
+<div class="wrap" style="--ch:var(--p-banana)">
   <p class="crumbs"><a href="index.html">目次</a><span class="sep">/</span>第07章</p>
-<section class="chapter" id="ch07" style="--ch:var(--p-choco)">
+<section class="chapter" id="ch07" style="--ch:var(--p-banana)">
   <div class="chapter-head">
-    <div class="chnum">07<small>PBR</small></div>
+    <div class="chnum">07<small>Sweep</small></div>
     <div>
-      <h2>「照り」「ぬれ」「粉っぽさ」を数値で言う</h2>
-      <p class="sub">physically based rendering — 物理ベースの質感</p>
+      <h2>曲げる、巻く、絞る</h2>
+      <p class="sub">sweep along a spine — 軸に沿った掃引</p>
     </div>
   </div>
   <div class="body">
     <div class="recap">
       <span class="label">この章の3行まとめ</span>
       <ul>
-        <li>PBR では、質感を<b>粗さ</b>・<b>金属度</b>・<b>透け</b>などの数値の組で表します。</li>
-        <li>食べ物でいちばん効くのは<b>粗さ</b>と、上に乗った透明な膜（<b>クリアコート</b>）です。</li>
-        <li>「おいしそう」は、たいてい<b>膜の艶</b>と<b>光の通り</b>の2つで決まります。</li>
+        <li>バナナはまっすぐではありません。中ほどがいちばん強く<b>弓なり</b>に曲がっています。</li>
+        <li>回転体では作れないので、先に<b>軸（背骨）</b>を決め、断面を軸に垂直に置いていきます。これを<b>掃引</b>といいます。</li>
+        <li>軸を円にすればロールケーキの側面、螺旋にすれば絞り出しクッキー。<b>軸と断面の組み合わせ</b>で、曲げる・巻く・絞るが全部書けます。</li>
       </ul>
     </div>
 
     <p>
-      同じ形の団子でも、艶があれば茹でたて、粉をふいていれば時間が経っている。
-      その差を、絵ではなく<b>数値</b>で言えるようにしたのが PBR です。
-      色（アルベド）とは別に、次のような数値を面ごとに持たせます。
+      チョコバナナを作ります。バナナを回転体で作ると、まっすぐな棒になります。
+      実物はまっすぐではありません。しかも、むいた実の断面は丸ではなく、
+      <b>4〜5本のゆるい稜</b>が残っています。チョコバナナ.js の冒頭のコメントにこうあります。
     </p>
-    <table>
-      <tr><th>数値</th><th>意味</th><th>サンプルでの使いどころ</th></tr>
-      <tr><td>roughness</td><td>表面のざらつき。0 で鏡、1 で完全につや消し</td><td>ほぼ全部。焼けた所とそうでない所で必ず変える</td></tr>
-      <tr><td>metallic</td><td>金属かどうか。食べ物はふつう 0</td><td>秋刀魚の銀でも 0.22 までしか上げない</td></tr>
-      <tr><td>clearCoat</td><td>上に乗った透明な膜。ワックスや水の膜</td><td>たれ・ソース・米の水膜・チョコの艶</td></tr>
-      <tr><td>subSurface</td><td>光が中に入って散る。厚みで色が変わる</td><td>団子・赤身・大根おろし・米</td></tr>
-      <tr><td>sheen</td><td>布のような、縁がふわっと光る反射</td><td>かつお節・大根おろし・衣</td></tr>
-      <tr><td>iridescence</td><td>薄い膜の干渉で出る虹色</td><td>秋刀魚の銀（構造色）</td></tr>
-    </table>
+    <div class="note">
+      <b>「バナナは真っ直ぐではなく弧。しかも断面は丸ではなく、むいた実でも 4〜5 本のゆるい稜が残る。
+      コーティングで稜は鈍るが消えはしない。チョコは『先端を下にして』引き上げて垂らすので、
+      先端側ほど厚く、先端に滴が溜まり、先端へ向かって縦の垂れ筋が残る」</b>
+    </div>
+    <p>
+      そこで作り方を変えます。まず<b>軸（スパイン、中心線）</b>を1本決めます。
+      次に、軸上の各点で「そこでの断面」を作り、<b>軸に垂直な平面の上に</b>置きます。
+      これを軸に沿って何十枚も並べ、隣どうしをつなげば立体になります。これを<b>掃引</b>といいます。
+    </p>
+    <figure>
+<pre><span class="c">// 4. Banana : 中心線（弧）× 断面（五角気味）× コーティングの厚み（チョコバナナ.js を短くしたもの）</span>
+<span class="k">for</span> (<span class="k">let</span> i = <span class="n">0</span>; i &lt; N; i++) {
+    <span class="k">const</span> s = i / (N - <span class="n">1</span>);
+    <span class="k">const</span> F = frame(s);                <span class="c">// 軸の上の点と、そこでの断面の平面（N と B）</span>
+    <span class="k">for</span> (<span class="k">let</span> j = <span class="n">0</span>; j &lt;= M; j++) {
+        <span class="k">const</span> th = j / M * TAU;
+        <span class="c">// 太さの形 × むいた実の稜（5本）</span>
+        <span class="k">let</span> r = R * profile(s) * (<span class="n">1</span> + ridgeAmp * Math.cos(<span class="n">5</span> * th + ridgePh));
+        <span class="c">// チョコの塗り厚。先端へ向かうほど垂れ筋のぶん厚くなる</span>
+        r += coat(s, th);
+        push(F.p + (F.b * Math.cos(th) + F.n * Math.sin(th)) * r);
+    }
+}</pre>
+      <figcaption>断面は円とは限らない。バナナは「5本の稜がある円」に、場所ごとのチョコの厚みを足したもの</figcaption>
+    </figure>
 
-    <div class="lab" id="lab07">
-      <p class="lab-title">実験 — 粗さ・膜・透けを動かす</p>
+    <div class="lab" id="lab10">
+      <p class="lab-title">実験 — 軸を曲げて、断面を並べる</p>
       <div class="lab-cols side">
         <div class="controls">
-          <div class="chips" id="pbrPreset">
-            <button class="chip" type="button" data-v="dango" aria-pressed="true">団子</button>
-            <button class="chip" type="button" data-v="choco">チョコ</button>
-            <button class="chip" type="button" data-v="wiener">ウィンナー</button>
-            <button class="chip" type="button" data-v="rice">ごはん</button>
+          <div class="chips" id="sweepShape">
+            <button class="chip" type="button" data-v="peeled" aria-pressed="true">むいた実</button>
+            <button class="chip" type="button" data-v="coated">チョコを掛けた</button>
           </div>
           <div class="ctrl">
-            <label for="pbrRough">粗さ roughness<span class="v" id="pbrRoughV">0.40</span></label>
-            <input type="range" id="pbrRough" min="0.03" max="1" step="0.01" value="0.4">
+            <label for="sweepBend">曲がり bend（rad）<span class="v" id="sweepBendV">1.85</span></label>
+            <input type="range" id="sweepBend" min="0" max="2.6" step="0.05" value="1.85">
           </div>
           <div class="ctrl">
-            <label for="pbrCoat">膜の強さ clearCoat<span class="v" id="pbrCoatV">0.30</span></label>
-            <input type="range" id="pbrCoat" min="0" max="1" step="0.01" value="0.3">
+            <label for="sweepRidge">稜（5本）の強さ<span class="v" id="sweepRidgeV">0.030</span></label>
+            <input type="range" id="sweepRidge" min="0" max="0.12" step="0.002" value="0.03">
           </div>
           <div class="ctrl">
-            <label for="pbrSss">透け subSurface<span class="v" id="pbrSssV">0.20</span></label>
-            <input type="range" id="pbrSss" min="0" max="1" step="0.01" value="0.2">
+            <label for="sweepCoat">先端の垂れ<span class="v" id="sweepCoatV">0.50</span></label>
+            <input type="range" id="sweepCoat" min="0" max="1" step="0.01" value="0.5">
           </div>
-          <div class="readout" id="pbrOut">—</div>
+          <label class="switch"><input type="checkbox" id="sweepRing">断面の輪を描く</label>
         </div>
-        <canvas id="pbrCanvas" width="640" height="360" aria-label="粗さ・クリアコート・透けを変える実験"></canvas>
+        <canvas id="sweepCanvas" width="640" height="360" aria-label="軸を曲げて断面を掃引する実験（チョコバナナ）"></canvas>
       </div>
       <p class="hint">
-        粗さを 0.05 まで下げると、どの料理もプラスチックの成型品になります。
-        食べ物の艶は「鋭い」のではなく「広くにじむ」ものです。<br><b>立体はドラッグで回せます</b>（触ると自動回転は止まります。ダブルクリックで戻ります）。
-        艶の見え方は角度でまるで変わるので、回しながら決めてください。
+        「断面の輪を描く」を押すと、軸に垂直な平面が何枚も並んでいるのが見えます。
+        曲がりの初期値 1.85 はチョコバナナ.js の値です。0.95 まで下げると「太いきゅうり」に戻ります。
+        「先端の垂れ」は「チョコを掛けた」のときだけ効きます。右（先端）ほどチョコが厚くなります。<br><b>立体はドラッグで回せます</b>（触ると自動回転は止まります。ダブルクリックで戻ります）。
+        真上から見ると、軸の曲がりがそのまま輪郭に出ているのが分かります。
       </p>
     </div>
 
-    <h3>粗さは、一様であってはいけない</h3>
+    <h3>曲がりは、一定ではない</h3>
     <p>
-      いちばんよくある失敗が、粗さを1つの数値で決めてしまうことです。
-      <a href="https://cx20.github.io/VirtualFoodCourt/view.html?f=%E3%81%9F%E3%81%93%E7%84%BC%E3%81%8D.js" title="姉妹編「たべもののつくりかた」のソース">たこ焼き.js</a> のコメントにこうあります。
-      <b>「均一な鏡面はプラスチックの成型品。乾きかけた縁はざらつき、たまりだけが鏡になる」</b>。
-      ソースの艶にムラを入れて初めてソースに見える。
-      だから粗さは1つの数値ではなく、06章で作った<b>1枚の画像</b>として持たせます。
+      最初に思いつくのは、円の一部（一定の曲がりの弧）を軸にすることです。チョコバナナ.js の記録：
+      <b>「一定曲率の弧だと定規で曲げたパイプに見える。実物は中ほどが最も曲がり、両端は比較的まっすぐ」</b>。
+      そこで、軸の向きの角度を位置 s の関数にして、真ん中で変化が速くなるようにしています。
+      曲がりの量そのものにも記録があり、<b>「0.95 では全体で 40° しか曲がらず、太いきゅうりに見えた」</b>ので、
+      いまは 1.85 です。掃引で作る形は、<b>軸のどこがどれだけ曲がっているか</b>がほとんどすべてです。
     </p>
 
-    <h3>クリアコートは、掛け算で効く</h3>
+    <h3>両端と、塗り厚の閉じ方</h3>
     <p>
-      クリアコートは「下地の上に透明な膜を1枚のせる」機能です。
-      強さ（intensity）と、その膜自体の粗さ（roughness）を別々に持ちます。
-      ここで初心者が必ずはまるのが、<b>強さを上げると下地まで一緒に明るくなる</b>ことです。
-      膜が反射した光と、下地から返ってきた光が足し算されるためで、
-      黒いチョコレートに強い膜をかけると、真っ黒なのに白く光る妙なものになります。
+      掃引で作った筒は、両端が開いています。バナナは端で半径を 0 まで絞って閉じますが、
+      そこにチョコの厚みを「一定のまま」足すと、<b>半径 0 のはずの端に厚みだけが残って穴があきます</b>。
+      チョコバナナ.js は塗り厚に、太さの形の平方根 <code>√env</code> を掛けて、端では必ず 0 に落としています。
+      さらに、端は曲がりが急なので、断面の輪を等間隔に並べると先端が角ばる。
+      そこだけ<b>輪の間隔を詰めて</b>います。
+    </p>
+
+    <h3>軸を閉じると「巻く」、螺旋にすると「絞る」</h3>
+    <p>
+      軸は開いた弧である必要はありません。
+    </p>
+    <ul>
+      <li><b>ロールケーキ</b> — 切り分けた1切れを、「断面 → 面取り → 側面 → 面取り → 断面」と<b>1枚の格子で</b>掃引しています。
+      ロールケーキ.js の記録：「断面と側面を別メッシュにすると、隙間・蓋の欠け・片側だけの裏返りが同時に起きる」。
+      断面の渦巻きは、線ではなく<b>巻いたシート</b>として断面関数に書いてあり、形とテクスチャが同じ関数を引きます。</li>
+      <li><b>絞り出しクッキー</b> — 星口金から出た生地は、<b>星形の断面</b>（山が8つ）を<b>螺旋の軸</b>に沿って掃引したものです。
+      クッキー.js には、巻きどうしが必ずくっつく条件が書いてあります。「半径方向のピッチ &lt; 縄の太さ」。
+      ピッチ 0.70cm に対して太さ 1.20cm で、重なったところが深さ約1mmの螺旋の溝として残ります。</li>
+    </ul>
+    <p>
+      曲げる・巻く・絞るは、お菓子作りでは別の作業ですが、コードでは同じ掃引です。
+      違うのは<b>軸の形と断面の形</b>だけです。
     </p>
     <div class="trap">
       <span class="label">つまずきポイント</span>
-      <p><b>粗さ 0.055 は車の塗装の値です。</b>
-      <a href="https://cx20.github.io/VirtualFoodCourt/view.html?f=%E3%81%94%E9%A3%AF.js" title="姉妹編「たべもののつくりかた」のソース">ご飯.js</a> に、米粒の水膜をこの値にしたときの記録が残っています。
-      「この鋭さだと1粒に1つ小さな鏡ができ、白い錠剤が並んでいるように見える。
-      炊飯米の水膜はもっと広くにじんだ照りになる」。実測ではなく<b>見え方</b>で決めています。</p>
-      <p><b>metallic を上げてはいけません。</b>
-      秋刀魚の銀色は色素ではなく、グアニンの結晶による構造色（薄膜干渉）です。
-      metallic を上げると「魚の形をしたスプーン」になります。
-      <a href="https://cx20.github.io/VirtualFoodCourt/view.html?f=%E7%84%BC%E3%81%8D%E9%AD%9A%EF%BC%88%E3%82%B5%E3%83%B3%E3%83%9E%EF%BC%89.js" title="姉妹編「たべもののつくりかた」のソース">焼き魚（サンマ）.js</a> は metallic を 0.42 から 0.22 に落とし、
-      代わりに iridescence（虹彩）を使うように直した経緯が書かれています。</p>
+      <p><b>断面の向きは、勝手に決まってくれません。</b>
+      軸に垂直な平面は、軸のまわりに無数の回り方ができます。
+      よくある「毎回、真上（UP）との外積で決める」やり方は簡単ですが、
+      軸が真上を向いた瞬間に外積が 0 になって破綻し、断面がねじれます。</p>
+      <p>チョコバナナ.js は、この問題を<b>形の側で避けて</b>います。中心線はいつも YZ 平面の中にあるので、
+      X 軸は必ず軸に垂直です。そこで断面の向きを <code>N = X × T</code>（T は軸の向き）で決めれば、
+      どれだけ曲げても破綻しません。螺旋のように平面に収まらない軸では、
+      前の断面の向きを少しずつ引き継ぐ方法（平行移動枠）を使います。</p>
     </div>
 
     <div class="try">
       <span class="label">やってみよう</span>
       <ol>
-        <li>「チョコ」を選び、粗さを 0.03 にして、食べ物に見えるかどうか判定する。</li>
-        <li>「団子」で透けを 0 にすると何に見えるか、言葉にしてみる（石膏か消しゴム）。</li>
-        <li>膜の強さを上げたとき、下地の色が変わって見えるかどうか確かめる。</li>
-        <li><a href="https://cx20.github.io/VirtualFoodCourt/view.html?f=%E7%84%BC%E3%81%8D%E9%AD%9A%EF%BC%88%E3%82%B5%E3%83%B3%E3%83%9E%EF%BC%89.js" title="姉妹編「たべもののつくりかた」のソース">焼き魚（サンマ）.js</a> で iridescence を検索し、なぜ metallic ではないのか読む。</li>
+        <li>曲がりを 0 にして、チョコバナナが何に見えるか判定する。</li>
+        <li>稜の強さを 0 と 0.12 にして、むいた実に見える範囲を探す。</li>
+        <li>「チョコを掛けた」で先端の垂れを 1 にし、輪を描いて、先端側の断面が太っていることを確かめる。</li>
+        <li>チョコバナナ.js で「√env」の近くを読み、塗り厚が端でどう 0 に落ちているか確かめる。</li>
       </ol>
     </div>
 
   </div>
 </section>
   <div class="pager">
-    <a class="prev" href="ch06.html"><span class="dir">← まえの章</span><span class="ttl">06 模様も、その場で描く</span></a>
-    <a class="next" href="ch08.html"><span class="dir">つぎの章 →</span><span class="ttl">08 盛り付けは、手で置かない</span></a>
+    <a class="prev" href="ch06.html"><span class="dir">← まえの章</span><span class="ttl">06 回す、型で抜く</span></a>
+    <a class="next" href="ch08.html"><span class="dir">つぎの章 →</span><span class="ttl">08 触れ合うと、潰れる</span></a>
   </div>
 </div>
 </main>

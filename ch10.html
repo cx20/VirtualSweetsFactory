@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>曲がったものを作る — おかしのつくりかた</title>
-<meta name="description" content="曲がったものを作る">
+<title>焼き色は、熱の届き方の地図 — おかしのつくりかた</title>
+<meta name="description" content="焼き色は、熱の届き方の地図">
 <link rel="stylesheet" href="assets/site.css">
 <script src="assets/labs.js" defer></script>
 </head>
@@ -18,20 +18,21 @@
       <a href="ch01.html">01 生成</a>
       <a href="ch02.html">02 乱数</a>
       <a href="ch03.html">03 ノイズ</a>
-      <a href="ch04.html">04 かたち</a>
-      <a href="ch05.html">05 面</a>
-      <a href="ch06.html">06 模様</a>
-      <a href="ch07.html">07 質感</a>
-      <a href="ch08.html">08 物理</a>
-      <a href="ch09.html">09 部品</a>
-      <a href="ch10.html" aria-current="page">10 曲がり</a>
-      <a href="ch11.html">11 光</a>
+      <a href="ch04.html">04 面</a>
+      <a href="ch05.html">05 模様</a>
+      <a href="ch06.html">06 かたち</a>
+      <a href="ch07.html">07 曲がり</a>
+      <a href="ch08.html">08 潰れ</a>
+      <a href="ch09.html">09 塊</a>
+      <a href="ch10.html" aria-current="page">10 焼き色</a>
+      <a href="ch11.html">11 質感</a>
       <a href="ch12.html">12 たれ</a>
-      <a href="ch13.html">13 潰れ</a>
-      <a href="ch14.html">14 揺れ</a>
-      <a href="ch15.html">15 透け</a>
-      <a href="ch16.html">16 塊</a>
-      <a href="ch17.html">17 糸</a>
+      <a href="ch13.html">13 透け</a>
+      <a href="ch14.html">14 光</a>
+      <a href="ch15.html">15 盛る</a>
+      <a href="ch16.html">16 振る</a>
+      <a href="ch17.html">17 揺れ</a>
+      <a href="ch18.html">18 糸</a>
       <a href="zukan.html">図鑑</a>
       <a href="view.html">ソース</a>
       <a href="terms.html">用語</a>
@@ -40,124 +41,172 @@
 </header>
 
 <main id="top" class="page">
-<div class="wrap" style="--ch:var(--p-salmon)">
+<div class="wrap" style="--ch:var(--p-taiyaki)">
   <p class="crumbs"><a href="index.html">目次</a><span class="sep">/</span>第10章</p>
-<section class="chapter" id="ch10" style="--ch:var(--p-salmon)">
+<section class="chapter" id="ch10" style="--ch:var(--p-taiyaki)">
   <div class="chapter-head">
-    <div class="chnum">10<small>Sweep</small></div>
+    <div class="chnum">10<small>Bake</small></div>
     <div>
-      <h2>曲がったものを作る</h2>
-      <p class="sub">sweep along a spine — 軸に沿った掃引</p>
+      <h2>焼き色は、熱の届き方の地図</h2>
+      <p class="sub">browning field — 焼き色の場</p>
     </div>
   </div>
   <div class="body">
     <div class="recap">
       <span class="label">この章の3行まとめ</span>
       <ul>
-        <li>ウィンナーも秋刀魚も、まっすぐではありません。ゆるく<b>弓なり</b>に曲がっています。</li>
-        <li>回転体では作れないので、先に<b>軸（背骨）</b>を決め、断面を軸に垂直に置いていきます。</li>
-        <li>軸に垂直な向きを取り違えると、断面がねじれて<b>メビウスの輪</b>になります。</li>
+        <li>焼き色を<b>茶色く塗る</b>と、どの焼き菓子も同じ茶色い樹脂になります。</li>
+        <li>焼き色は<b>熱がどこにどれだけ届いたか</b>の結果です。鉄板や型に触れた所、薄い所、出っぱった所が濃く、窪みと厚い所が淡い。</li>
+        <li>だから焼き色は、形から計算する<b>場</b>（場所ごとの数値）として持ち、色・粗さ・凹凸の3枚に同時に配ります。</li>
       </ul>
     </div>
 
     <p>
-      ウィンナーを回転体で作ると、まっすぐな棒になります。実物はまっすぐではありません。
-      ケーシングに詰めるときの押し具合で、ゆるく弓なりに曲がり、太さも長手方向に ±4% ほどうねります。
-      これが無いと、オレンジ色の棒にしか見えません。
+      15本のうち7本は、焼いたお菓子です。クッキー・パンケーキ・ドーナツ・ロールケーキ・たい焼き・栗饅頭、
+      それに花見団子の「焼き」。生地の表面は熱でメイラード反応を起こし、茶色くなります。
+      ここで大事なのは、<b>熱が届いた所ほど濃くなる</b>ということです。
+      熱は、鉄板や型に触れた面から入り、薄い所には早く回り、厚い所の真ん中には届きにくい。
+      焼き色は、その<b>熱の届き方の地図</b>です。
     </p>
     <p>
-      そこで作り方を変えます。まず<b>軸（スパイン）</b>を1本決めます。
-      次に、軸上の各点で「そこでの断面」を作り、<b>軸に垂直な平面の上に</b>置きます。
-      これを軸に沿って何十枚も並べ、隣どうしをつなげば立体になります。これを<b>掃引</b>といいます。
+      だからこのプロジェクトでは、焼き色を色として描きません。まず場所ごとに
+      「どれだけ焼けたか」を表す数値 <code>bake</code>（0〜1 くらい）を計算し、
+      それを色に変えます。数値で持っておくと、同じ <code>bake</code> を
+      粗さ（焦げるほどざらつく）にも凹凸にも使えるからです。
+    </p>
+
+    <h3>たい焼き — 焼き色は「理由の足し算」</h3>
+    <p>
+      たい焼き.js の焼き色は、熱が届く理由をひとつずつ足し引きして作っています。
+      どの1行にも、たい焼きを焼いたことのある人なら頷ける理由がついています。
     </p>
     <figure>
-<pre><span class="c">// 3. Mesh utils : 掃引（ウィンナー.js / 焼き魚（サンマ）.js に共通）</span>
-<span class="k">for</span> (<span class="k">let</span> i = <span class="n">0</span>; i &lt;= NS; i++) {
-    <span class="k">const</span> u = i / NS;
-    <span class="k">const</span> c = spine(u);           <span class="c">// 軸の上の点</span>
-    <span class="k">const</span> T = normalize(dSpine(u)); <span class="c">// 進行方向（接線）</span>
-    <span class="k">const</span> N = normalize(cross(T, UP));
-    <span class="k">const</span> B = cross(N, T);         <span class="c">// この2本が断面の平面をつくる</span>
-    <span class="k">for</span> (<span class="k">let</span> j = <span class="n">0</span>; j &lt;= NC; j++) {
-        <span class="k">const</span> a = j / NC * TAU;
-        <span class="k">const</span> r = section(u, a);
-        push(c + N * (r * Math.cos(a)) + B * (r * Math.sin(a)));
-    }
-}</pre>
-      <figcaption>断面は円とは限らない。秋刀魚は「横倒しにした平たい楕円」</figcaption>
+<pre><span class="c">// 5. Taiyaki : 焼き色の場（たい焼き.js を短くしたもの）</span>
+<span class="k">let</span> b = <span class="n">0.40</span> + tone                          <span class="c">// 1個ごとの基準</span>
+      + <span class="n">0.20</span> * mottle + <span class="n">0.09</span> * mottle2            <span class="c">// 焼きムラ（大と小、03章のノイズ）</span>
+      + thinBurn * (<span class="n">1</span> - smooth(<span class="n">0.18</span>, <span class="n">0.95</span>, T))  <span class="c">// 薄いヒレほど濃い</span>
+      + <span class="n">1.25</span> * rel                               <span class="c">// 型の浮き彫りの山（鱗）ほど濃い</span>
+      - <span class="n">0.7</span>  * cav                               <span class="c">// 窪みは熱が回らず淡い</span>
+      + burnEdge * smooth(<span class="n">0.40</span>, <span class="n">0.0</span>, -dO);        <span class="c">// ミミ（型からはみ出した縁）の焦げ</span>
+b += <span class="n">0.16</span> * <span class="c">/* 尾の先と背ビレの先 */</span> tailTip;     <span class="c">// 鉄板の熱が回りやすい</span>
+b -= <span class="n">0.10</span> * <span class="c">/* 胴の中央 */</span> bodyCore;            <span class="c">// 厚く、熱が逃げて淡い</span>
+bake = clamp(b * doneness, <span class="n">0</span>, <span class="n">1</span>);              <span class="c">// 焼き加減は最後に1回だけ掛ける</span></pre>
+      <figcaption>T は厚み、dO は外形（ミミ込み）までの距離。どの項も、06章で作った形の数値から引いている</figcaption>
     </figure>
+    <p>
+      焼き加減 <code>doneness</code> が最後の掛け算1つにまとまっているのがポイントです。
+      プリセットの「定番」は 1.00、「こんがり」は 1.32。
+      焼き加減を変えても<b>どこが濃くてどこが淡いかという地図は変わらず</b>、全体の濃さだけが変わる。
+      実物の「焼きすぎ」もそうなっています。
+    </p>
 
-    <div class="lab" id="lab10">
-      <p class="lab-title">実験 — 軸を曲げて、断面を並べる</p>
+    <h3>パンケーキ — 鉄板に触れた所だけが焼ける</h3>
+    <p>
+      パンケーキの天面は、裏返す前に鉄板に押しつけられていた面です。
+      ところが縁のあたりは生地が持ち上がっていて、鉄板にきちんと触れていません。
+      だから<b>縁に淡い環</b>が残ります。パンケーキ.js はこれを、縁からの距離で決めています。
+    </p>
+    <figure>
+<pre><span class="c">// パンケーキ.js : 天面の焼き色（d は縁から内側への距離 cm）</span>
+<span class="k">const</span> rim = rimPale * (<span class="n">0.52</span> + <span class="n">0.98</span> * rimN) * (<span class="n">0.86</span> + <span class="n">0.28</span> * rimN2); <span class="c">// 環の幅もゆらぐ</span>
+<span class="k">const</span> contact = smooth(<span class="n">0.02</span>, rim, d);                <span class="c">// 縁ほど鉄板に触れていない</span>
+<span class="k">const</span> macroBake = contact * (<span class="n">0.80</span> + <span class="n">0.42</span> * pan);     <span class="c">// 鉄板の熱ムラ</span>
+bake = macroBake * speck * poreShade * bakeGain;        <span class="c">// 細かい斑 × 気泡の穴は淡い × 焼き加減</span></pre>
+      <figcaption>rimPale は「縁の淡い環の幅」。浅め 1.62cm、きつね色 0.78cm、よく焼き 0.62cm</figcaption>
+    </figure>
+    <p>
+      側面はまた別です。側面は鉄板に触れていないので、ほとんど焼けていない淡い生地の色です。
+      ただし<b>上と下の縁だけ</b>は、両面を焼いたときに鉄板に近かったので濃い帯になります。
+      パンケーキ.js の <code>lipDeep</code>（側面の上下の帯の濃さ）がそれで、
+      「よく焼き」ほど帯が濃くなります。
+    </p>
+
+    <div class="lab" id="labBake">
+      <p class="lab-title">実験 — 焼き色を、理由ごとに足していく</p>
       <div class="lab-cols side">
         <div class="controls">
-          <div class="chips" id="sweepShape">
-            <button class="chip" type="button" data-v="wiener" aria-pressed="true">ウィンナー</button>
-            <button class="chip" type="button" data-v="sanma">秋刀魚</button>
+          <div class="chips" id="bakeKind">
+            <button class="chip" type="button" data-v="pancake" aria-pressed="true">パンケーキ</button>
+            <button class="chip" type="button" data-v="cookie">型押しクッキー</button>
           </div>
+          <label class="switch"><input type="checkbox" id="bakeEdge" checked>縁の熱（触れ方・回り方）</label>
+          <label class="switch"><input type="checkbox" id="bakeRelief" checked>高さ（山は濃く、窪みは淡く）</label>
+          <label class="switch"><input type="checkbox" id="bakeMott" checked>焼きムラ</label>
           <div class="ctrl">
-            <label for="sweepBend">曲がり<span class="v" id="sweepBendV">0.06</span></label>
-            <input type="range" id="sweepBend" min="0" max="0.30" step="0.005" value="0.06">
+            <label for="bakeDone">焼き加減<span class="v" id="bakeDoneV">1.00</span></label>
+            <input type="range" id="bakeDone" min="0.3" max="1.5" step="0.01" value="1">
           </div>
-          <div class="ctrl">
-            <label for="sweepPlump">太さのうねり<span class="v" id="sweepPlumpV">0.06</span></label>
-            <input type="range" id="sweepPlump" min="0" max="0.25" step="0.005" value="0.06">
-          </div>
-          <div class="ctrl">
-            <label for="sweepFlat">断面のひらたさ<span class="v" id="sweepFlatV">1.00</span></label>
-            <input type="range" id="sweepFlat" min="0.35" max="1" step="0.01" value="1">
-          </div>
-          <label class="switch"><input type="checkbox" id="sweepRing">断面の輪を描く</label>
+          <div class="readout" id="bakeOut">—</div>
         </div>
-        <canvas id="sweepCanvas" width="640" height="360" aria-label="軸を曲げて断面を掃引する実験"></canvas>
+        <canvas id="bakeCanvas" width="640" height="340" aria-label="焼き色の場を理由ごとに足していく実験"></canvas>
       </div>
       <p class="hint">
-        「断面の輪を描く」を押すと、軸に垂直な平面が何枚も並んでいるのが見えます。
-        秋刀魚は断面のひらたさを 0.6 くらいにすると、それらしくなります。<br><b>立体はドラッグで回せます</b>（触ると自動回転は止まります。ダブルクリックで戻ります）。
-        真上から見ると、軸の曲がりがそのまま輪郭に出ているのが分かります。
+        左が焼き色の場そのもの（白いほどよく焼けた）、右がそれを色に変えて、凹凸の陰影をつけた結果です。
+        3つのスイッチを全部切ると、一様な茶色の円盤になります。それが「茶色く塗った」状態です。
       </p>
     </div>
 
-    <h3>両端は、半球ではない</h3>
+    <h3>クッキー — 縁と山が濃く、型押しの凹みが白い</h3>
     <p>
-      掃引で作った筒の両端を、そのまま半球で閉じたくなります。ウィンナーではこれが失敗します。
-      実物の端には<b>ケーシングをねじって留めた結び目</b>があり、そこへ向かって放射状のひだが収束しています。
-      <a href="https://cx20.github.io/VirtualFoodCourt/view.html?f=%E3%82%A6%E3%82%A3%E3%83%B3%E3%83%8A%E3%83%BC.js" title="姉妹編「たべもののつくりかた」のソース">ウィンナー.js</a> のコメントに「この数mmが最も『らしさ』を出す」とあります。
-      全体の 3% に満たない部分に、いちばん手間がかかっています。
+      クッキー.js の冒頭に、焼き色の地図がそのまま書いてあります。
+      <b>「焼き色は一様ではない。縁・高いところ・底が濃く、型押しの凹部は熱が回らないので白く残る。
+      ここが逆だと一気に嘘になる」</b>。
+      絞り出しクッキーも同じ理屈で、<b>星口金の谷には焼き色が入らず、山だけ濃い</b>。
+      07章で掃引した星形の断面が、そのまま焼き色の地図になっています。
     </p>
 
-    <h3>体型のピークをどこに置くか</h3>
+    <h3>ドーナツ — 1個の中に、焼け方が2つある</h3>
     <p>
-      秋刀魚は全長 30cm に対して体高 4cm。極端に細長い魚です。
-      <a href="https://cx20.github.io/VirtualFoodCourt/view.html?f=%E7%84%BC%E3%81%8D%E9%AD%9A%EF%BC%88%E3%82%B5%E3%83%B3%E3%83%9E%EF%BC%89.js" title="姉妹編「たべもののつくりかた」のソース">焼き魚（サンマ）.js</a> の修正記録には、
-      <b>「体高のピークが u=0.30 にあり、頭が全長の1/3に見えていた。実写は鰓蓋直後 u≒0.22」</b>
-      とあります。0.30 を 0.22 にずらしただけで、別の魚が秋刀魚になる。
-      掃引で作る形は、<b>軸方向のどこに何を置くか</b>がほとんどすべてです。
+      06章で、ドーナツの断面の点に「型に接していたか」という3つ目の数字を持たせました。
+      焼き色はここから決まります。型に接した面は熱をもらって<b>濃く、滑らか</b>。
+      空気に膨れた面は<b>浅い色で、ざらつく</b>。ドーナツ.js の記録：
+      <b>「膨れた面まで型の面と同じ濃さで焼くと、断面の 2 面性が消えて全体がのっぺりした茶色になる」</b>。
+    </p>
+    <p>
+      そして、この差は色だけでなく<b>粗さ</b>にも同時に出します。
+      ドーナツ.js の ORM では、粗さが型の面の 0.575 から膨れた面の 0.900 まで変わります。
+      コメントには「この 2 面の粗さの差が焼きドーナツの正体」とまで書いてあります。
+      焼き色を<b>数値の場</b>として持っておくのは、こうして同じ場から色・粗さ・凹凸の3枚を一緒に作るためです。
+      ドーナツ.js は、アルベドと法線を別々に計算すると「気泡の位置が数テクセルずれて、模様の上に
+      ぼんやりした汚れが乗ったように見える」ので、場を1回だけ計算して3枚に配っています。
+    </p>
+
+    <h3>栗饅頭 — いちばん短い焼き色</h3>
+    <p>
+      逆に、いちばん簡単な焼き色の場は「高さだけの関数」です。
+      栗饅頭.js は、テクスチャを1枚も焼かずに、<b>頂点の色</b>だけで焼き色をつけています。
+      頂点の高さを 0〜1 に直した <code>ny</code> を見て、下の 62% は淡いクリーム、
+      0.62〜0.72 で淡い茶色へ移り、上へ行くほど赤茶から焦げ茶へ。卵黄を塗って焼いた上面だけが濃い、
+      という栗饅頭の焼き色は、これで十分に出ます。
+      色を持てるのは頂点の数だけなので、ピクセルごとの細かいムラは出せません。
+      そのかわり<b>1024×1024 の画像を焼く数秒が丸ごと要らない</b>。どこまで細かく持つかも、焼き色の設計のうちです。
     </p>
     <div class="trap">
       <span class="label">つまずきポイント</span>
-      <p><b>断面の向きは、勝手に決まってくれません。</b>
-      軸に垂直な平面は無数の回り方ができます。上のコードのように
-      「毎回 UP との外積で決める」やり方は簡単ですが、
-      軸が真上を向いた瞬間に外積が 0 になって破綻します。
-      軸が大きく曲がる形では、前の断面の向きを引き継ぐ方法（平行移動枠）を使います。</p>
+      <p><b>焼き菓子の生地に、クリアコートを付けないでください。</b>
+      ドーナツ.js のコメント：「生地にクリアコートは絶対に付けない。焼き菓子に艶を足すと
+      一発で樹脂成型の食品サンプルになる」。照りは焼き色の濃い所の粗さを少し下げるだけで足ります。
+      膜が要るのは、チョコやアイシングのように<b>本当に膜が乗っている</b>ものだけです（→ <a href="ch11.html">11章</a>）。</p>
+      <p><b>割れ目と気泡を、焼き色で暗くしないでください。</b>
+      中は焼けていない生地なので、周囲より明るい（→ <a href="ch05.html">05章</a>）。
+      上のたい焼きの式でも、窪み <code>cav</code> は焼き色を<b>引いて</b>います。</p>
     </div>
 
     <div class="try">
       <span class="label">やってみよう</span>
       <ol>
-        <li>曲がりを 0 にして、ウィンナーが何に見えるか判定する。</li>
-        <li>太さのうねりを 0.25 にすると何に見えるか（ひょうたん）を確かめる。</li>
-        <li>「秋刀魚」で断面のひらたさを 1.00 のままにすると、どんな魚に見えるか。</li>
-        <li><a href="https://cx20.github.io/VirtualFoodCourt/view.html?f=%E3%82%A6%E3%82%A3%E3%83%B3%E3%83%8A%E3%83%BC.js" title="姉妹編「たべもののつくりかた」のソース">ウィンナー.js</a> で「結び目」を検索し、端の処理に何行使っているか数える。</li>
+        <li>実験の3つのスイッチを全部切ってから1つずつ入れ、どれがいちばん「焼き菓子らしさ」に効くか順位をつける。</li>
+        <li>パンケーキで焼き加減を 0.4 と 1.5 にして、縁の淡い環が消えないことを確かめる。</li>
+        <li>型押しクッキーで「高さ」だけを切り、模様がどれだけ読めなくなるか見る。</li>
+        <li>たい焼き.js で doneness を検索し、「定番」「こんがり」「羽根つき」で値がいくつか調べる。</li>
       </ol>
     </div>
 
   </div>
 </section>
   <div class="pager">
-    <a class="prev" href="ch09.html"><span class="dir">← まえの章</span><span class="ttl">09 部品を作って、たくさん並べる</span></a>
-    <a class="next" href="ch11.html"><span class="dir">つぎの章 →</span><span class="ttl">11 見せ方を決める（光と露出）</span></a>
+    <a class="prev" href="ch09.html"><span class="dir">← まえの章</span><span class="ttl">09 ひとつの塊は、距離の場から削り出す</span></a>
+    <a class="next" href="ch11.html"><span class="dir">つぎの章 →</span><span class="ttl">11 「照り」「ぬれ」「粉っぽさ」を数値で言う</span></a>
   </div>
 </div>
 </main>

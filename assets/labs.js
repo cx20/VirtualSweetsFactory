@@ -13,8 +13,8 @@
      3. 形           … 断面 → 回転体 / 格子メッシュ
      4. ミニレンダラ  … 画家のアルゴリズム + 簡易PBR
      5. キャンバスの下ごしらえ
-     6. 料理のプリセット（断面と材質）
-     HERO / 02〜17 の実験 / 図鑑 / ソースビューア / 用語集の絞り込み
+     6. お菓子のプリセット（断面と材質）
+     HERO / 02〜18 の実験（番号は章番号） / 図鑑 / ソースビューア / 用語集の絞り込み
    ======================================================================= */
 (function () {
 "use strict";
@@ -513,58 +513,55 @@ function pixelPanel(w, h) {
 }
 
 /* --------------------------------------------------------------
-   6. 料理のプリセット（断面と材質）
+   6. お菓子のプリセット（断面と材質）
    数値は各サンプルの CONFIG から拾って、この実験の尺度に直したもの
    -------------------------------------------------------------- */
 var PROFILES = {
     // 団子。球ではなく、上下がわずかに詰まっている
     dango: [{ t: 0, r: 0.02 }, { t: 0.04, r: 0.30 }, { t: 0.13, r: 0.52 }, { t: 0.28, r: 0.63 },
             { t: 0.50, r: 0.66 }, { t: 0.72, r: 0.63 }, { t: 0.87, r: 0.52 }, { t: 0.96, r: 0.30 }, { t: 1, r: 0.02 }],
-    // 茶碗。高台 → 胴 → 口縁。ご飯.js の Bowl に合わせた
-    bowl: [{ t: 0, r: 0.30 }, { t: 0.07, r: 0.29 }, { t: 0.12, r: 0.20 }, { t: 0.18, r: 0.28 },
-           { t: 0.36, r: 0.52 }, { t: 0.60, r: 0.72 }, { t: 0.84, r: 0.88 }, { t: 1, r: 0.95 }],
+    // プリン。プリン.js の母線（rBot 3.30 / rTop 2.30 / H 4.30）を、接地が少し広がり樽型に膨らんだ形で
+    purin: [{ t: 0, r: 0.02 }, { t: 0.015, r: 0.70 }, { t: 0.05, r: 0.795 }, { t: 0.22, r: 0.775 },
+            { t: 0.50, r: 0.71 }, { t: 0.80, r: 0.625 }, { t: 0.93, r: 0.575 }, { t: 0.985, r: 0.42 }, { t: 1, r: 0.02 }],
     // クッキー。最大径は側面の中ほど（縁が丸く膨らむ）。底は平ら
     cookie: [{ t: 0, r: 0.80 }, { t: 0.10, r: 0.86 }, { t: 0.30, r: 0.90 }, { t: 0.50, r: 0.895 },
              { t: 0.72, r: 0.86 }, { t: 0.88, r: 0.76 }, { t: 0.97, r: 0.55 }, { t: 1, r: 0.30 }],
-    // たこ焼き。下半分は型の写しでほぼ正確な半球、上半分は折り込んだ不定形
-    tako: [{ t: 0, r: 0.16 }, { t: 0.06, r: 0.42 }, { t: 0.18, r: 0.60 }, { t: 0.34, r: 0.685 },
-           { t: 0.50, r: 0.70 }, { t: 0.66, r: 0.675 }, { t: 0.82, r: 0.58 }, { t: 0.94, r: 0.36 }, { t: 1, r: 0.05 }]
+    // 栗饅頭。栗饅頭.js は底の 15% を平らにして、上をふっくらさせる
+    kuri: [{ t: 0, r: 0.02 }, { t: 0.02, r: 0.52 }, { t: 0.08, r: 0.66 }, { t: 0.24, r: 0.72 },
+           { t: 0.45, r: 0.70 }, { t: 0.66, r: 0.61 }, { t: 0.84, r: 0.44 }, { t: 0.96, r: 0.20 }, { t: 1, r: 0.02 }]
 };
-var PROFILE_H = { dango: 1.20, bowl: 1.05, cookie: 0.42, tako: 1.30 };
+var PROFILE_H = { dango: 1.20, purin: 1.30, cookie: 0.42, kuri: 1.00 };
+// 手のあとの凹凸の初期値。手で丸める団子は大きく、型から抜くプリンはほぼ 0
+var PROFILE_BUMP = { dango: 0.10, purin: 0.01, cookie: 0.04, kuri: 0.04 };
 function cloneProfile(p) { return p.map(function (o) { return { t: o.t, r: o.r }; }); }
 
 // 材質。値は各サンプルの CONFIG から
 var MATS = {
     dango:  { rough: 0.36, coat: 0.42, sss: 0.45, sheen: 0, col: [0.955, 0.930, 0.860], sssCol: [1.0, 0.88, 0.72] },
     choco:  { rough: 0.14, coat: 0.55, sss: 0.02, sheen: 0, col: [0.226, 0.130, 0.088], sssCol: [0.6, 0.3, 0.2] },
-    wiener: { rough: 0.30, coat: 0.30, sss: 0.16, sheen: 0, col: [0.800, 0.395, 0.155], sssCol: [1.0, 0.45, 0.25] },
-    rice:   { rough: 0.30, coat: 0.55, sss: 0.42, sheen: 0, col: [0.952, 0.932, 0.878], sssCol: [1.0, 0.93, 0.80] },
-    akami:  { rough: 0.34, coat: 0.22, sss: 0.55, sheen: 0, col: [0.560, 0.088, 0.098], sssCol: [1.0, 0.14, 0.12] },
-    tako:   { rough: 0.44, coat: 0.26, sss: 0.10, sheen: 0, col: [0.808, 0.565, 0.243], sssCol: [1.0, 0.7, 0.35] },
-    karaage:{ rough: 0.55, coat: 0.20, sss: 0.05, sheen: 0.12, col: [0.670, 0.335, 0.090], sssCol: [1.0, 0.6, 0.3] }
+    // プリン.js の custardMat（膜 0.38 / 透け 0.40）と CUSTARD.body
+    purin:  { rough: 0.32, coat: 0.38, sss: 0.40, sheen: 0, col: [0.955, 0.840, 0.550], sssCol: [1.0, 0.85, 0.55] },
+    // クッキー.js のサブレ（roughBase 0.80、膜なし、薄い縁だけ透ける）と baked
+    cookie: { rough: 0.80, coat: 0.0, sss: 0.08, sheen: 0.10, col: [0.760, 0.560, 0.320], sssCol: [0.92, 0.72, 0.46] },
+    // 栗饅頭.js の warmBrown
+    kuri:   { rough: 0.48, coat: 0.12, sss: 0.10, sheen: 0, col: [0.720, 0.380, 0.150], sssCol: [1.0, 0.7, 0.4] },
+    // チョコバナナ.js のバナナの実（cream）と、ミルクチョコの base
+    banana: { rough: 0.55, coat: 0.0, sss: 0.30, sheen: 0, col: [0.940, 0.870, 0.640], sssCol: [1.0, 0.9, 0.6] },
+    coat:   { rough: 0.30, coat: 0.50, sss: 0.02, sheen: 0, col: [0.365, 0.200, 0.135], sssCol: [0.6, 0.3, 0.2] }
 };
 function copyMat(m) {
     return { rough: m.rough, coat: m.coat, sss: m.sss, sheen: m.sheen, col: m.col, sssCol: m.sssCol };
 }
 
-/* トーストの色。トースト.js の TextureLab から */
-var CRUMB = [0.948, 0.910, 0.812], CPORE = [0.930, 0.888, 0.775];
-var CBR1 = [0.945, 0.848, 0.638], CBR2 = [0.878, 0.608, 0.325], CBR3 = [0.762, 0.452, 0.208];
-var CCHAR = [0.310, 0.161, 0.063];
+/* 焼き色。生地はドーナツ.js の RAW、そこから先はたい焼き.js「定番」の5段 */
+var CRUMB = [0.948, 0.884, 0.744], CPORE = [0.930, 0.860, 0.715];
+var CBR1 = [0.910, 0.765, 0.525], CBR2 = [0.845, 0.615, 0.335], CBR3 = [0.660, 0.410, 0.180];
+var CCHAR = [0.440, 0.250, 0.105];
 function bakeColor(heat) {
     if (heat < 0.34) return mix3(CRUMB, CBR1, heat / 0.34);
     if (heat < 0.68) return mix3(CBR1, CBR2, (heat - 0.34) / 0.34);
     if (heat < 0.90) return mix3(CBR2, CBR3, (heat - 0.68) / 0.22);
     return mix3(CBR3, CCHAR, (heat - 0.90) / 0.10);
-}
-
-/* たこ焼きの「折り込み」の場。形にもテクスチャにも同じものを使う（たべもの編12章） */
-function foldField(u, v, seed) {
-    // 上半分ほど折り込みが強い。下半分は型の写しなので平ら
-    var top = smooth(0.30, 0.95, v);
-    var n = Noise.fbmu(u * 5, v * 4.2, 5, seed || 31, 4);
-    var ridged = 1 - Math.abs(n - 0.5) * 2;      // 尾根状にして「折り目」らしくする
-    return clamp(0.5 + (ridged - 0.5) * 1.5 * top, 0, 1);
 }
 
 /* ======================================================================
@@ -738,7 +735,7 @@ function foldField(u, v, seed) {
 })();
 
 /* ======================================================================
-   02 — 種（シード）。ウィンナー8本の個体差
+   02 — 種（シード）。クッキー8枚の個体差
    ====================================================================== */
 (function () {
     var cv = $("#seedCanvas"); if (!cv) return;
@@ -746,48 +743,43 @@ function foldField(u, v, seed) {
     var seed = 7, useRng = true, mark;
     var out = $("#seedOut");
 
-    function drawOne(x, y, len, rad, bend, R) {
-        // 弓なりの軸に沿って断面を並べる（10章の掃引の2D版）
-        var N = 48, top = [], bot = [];
-        for (var i = 0; i <= N; i++) {
-            var s = i / N;
-            var cx = x + (s - 0.5) * len;
-            var cy = y - Math.sin(Math.PI * s) * bend * len;
-            // 端に向かって細る。両端は結び目
-            var taper = Math.pow(Math.sin(Math.PI * clamp(s * 1.04 - 0.02, 0, 1)), 0.30);
-            var wob = 1 + 0.045 * Math.sin(s * 11 + rad * 30);
-            var r = rad * taper * wob;
-            var ang = Math.atan2(-Math.PI * Math.cos(Math.PI * s) * bend * len, len);
-            var nx = -Math.sin(ang), ny = -Math.cos(ang);
-            top.push([cx + nx * r, cy + ny * r]);
-            bot.push([cx - nx * r, cy - ny * r]);
+    // クッキー.js のチョコチップ（doughA / baked / edge）から
+    var DOUGH = "rgb(223,194,139)", BAKED = "rgb(194,143,82)", EDGE = "rgb(143,90,43)";
+
+    function drawOne(x, y, rad, warp, tilt, bake, R) {
+        // 輪郭。丸に、低い周波数のゆがみを2つだけ足す（振りすぎると星形になる）
+        var N = 64, ph2 = R() * TAU, ph3 = R() * TAU, pts = [];
+        for (var i = 0; i < N; i++) {
+            var a = i / N * TAU;
+            var r = rad * (1 + warp * Math.cos(2 * a + ph2) + warp * 0.5 * Math.cos(3 * a + ph3));
+            pts.push([x + Math.cos(a) * r, y + Math.sin(a) * r * tilt]);
         }
         ctx.beginPath();
-        ctx.moveTo(top[0][0], top[0][1]);
-        for (var a = 1; a <= N; a++) ctx.lineTo(top[a][0], top[a][1]);
-        for (var b = N; b >= 0; b--) ctx.lineTo(bot[b][0], bot[b][1]);
+        pts.forEach(function (p, k) { k ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); });
         ctx.closePath();
-        var g = ctx.createLinearGradient(0, y - rad, 0, y + rad);
-        g.addColorStop(0, "#E8A16C"); g.addColorStop(0.42, "#CC6528"); g.addColorStop(1, "#8E3E15");
+        // 焼き色は縁ほど濃い（10章）。中心は生地の色
+        var g = ctx.createRadialGradient(x - rad * 0.15, y - rad * 0.2 * tilt, rad * 0.1, x, y, rad * 1.05);
+        g.addColorStop(0, DOUGH); g.addColorStop(0.62 - bake * 0.25, BAKED); g.addColorStop(1, EDGE);
         ctx.fillStyle = g; ctx.fill();
         ctx.save(); ctx.clip();
-        // 焼き色は「斑」。等高線状のグラデーションにしない
-        for (var k = 0; k < 26; k++) {
-            var s2 = R(), rr = R();
-            var px = x + (s2 - 0.5) * len, py = y - Math.sin(Math.PI * s2) * bend * len + (rr - 0.5) * rad * 1.7;
-            var rad2 = rad * (0.16 + R() * 0.34);
-            ctx.fillStyle = R() > 0.72 ? "rgba(48,21,10,.55)" : "rgba(142,62,21,.42)";
-            ctx.beginPath(); ctx.ellipse(px, py, rad2 * 1.5, rad2, R() * 3, 0, TAU); ctx.fill();
+        // 焼きムラの斑。等高線状のグラデーションにしない
+        for (var k = 0; k < 14; k++) {
+            var aa = R() * TAU, rr = Math.sqrt(R()) * rad;
+            ctx.fillStyle = "rgba(143,90,43," + (0.10 + bake * 0.18).toFixed(2) + ")";
+            ctx.beginPath();
+            ctx.ellipse(x + Math.cos(aa) * rr, y + Math.sin(aa) * rr * tilt, rad * (0.12 + R() * 0.2), rad * (0.08 + R() * 0.12) * tilt, R() * 3, 0, TAU);
+            ctx.fill();
         }
-        // 脂の膜のハイライトは点ではなく、稜に沿って長く伸びる筋
-        ctx.strokeStyle = "rgba(255,238,214,.5)"; ctx.lineWidth = rad * 0.30;
-        ctx.beginPath();
-        for (var m = 0; m <= N; m++) {
-            var p = top[m], q = bot[m];
-            var hx = p[0] * 0.72 + q[0] * 0.28, hy = p[1] * 0.72 + q[1] * 0.28;
-            m ? ctx.lineTo(hx, hy) : ctx.moveTo(hx, hy);
+        // チョコチップ。数も位置も乱数。半分沈んでいるので、上に出ているのは頭だけ
+        var nChip = 4 + Math.floor(R() * 4);
+        for (var m = 0; m < nChip; m++) {
+            var ca = R() * TAU, cr = Math.sqrt(R()) * rad * 0.78, cs = rad * (0.10 + R() * 0.05);
+            var cx = x + Math.cos(ca) * cr, cy = y + Math.sin(ca) * cr * tilt;
+            ctx.fillStyle = "#3A2116";
+            ctx.beginPath(); ctx.ellipse(cx, cy, cs, cs * 0.8 * tilt, R() * 3, 0, TAU); ctx.fill();
+            ctx.fillStyle = "rgba(255,240,220,.35)";
+            ctx.beginPath(); ctx.ellipse(cx - cs * 0.3, cy - cs * 0.3 * tilt, cs * 0.3, cs * 0.2 * tilt, 0, 0, TAU); ctx.fill();
         }
-        ctx.stroke();
         ctx.restore();
     }
 
@@ -797,19 +789,20 @@ function foldField(u, v, seed) {
         for (var i = 0; i < 8; i++) {
             var rng = useRng ? new Rng(seed + i * 1013) : null;
             var R = useRng ? function () { return rng.next(); } : Math.random;
-            var len = 122 + R() * 34;
-            var rad = 13 + R() * 5.5;
-            var bend = 0.03 + R() * 0.09;
-            var col = i % 2, row = (i / 2) | 0;
-            drawOne(60 + col * 150 + (R() - 0.5) * 10, 52 + row * 76, len, rad, bend, R);
-            if (i === 0) first = [len, rad, bend];
+            // クッキー.js の幅：半径 ±5.5%。工業製品なので揺らしすぎない
+            var rad = 33 * (0.945 + R() * 0.11);
+            var warp = 0.012 + R() * 0.02;
+            var bake = R();
+            var col = i % 4, row = (i / 4) | 0;
+            drawOne(84 + col * 158 + (R() - 0.5) * 12, 92 + row * 150 + (R() - 0.5) * 12, rad, warp, 0.78, bake, R);
+            if (i === 0) first = [rad * 2 / 33 * 5.1, warp, bake];
         }
         if (out) {
             out.innerHTML = (useRng ? "Rng(" + seed + ")" : "Math.random()") +
-                "<br>1本目 … 長さ " + first[0].toFixed(1) +
-                " / 太さ " + first[1].toFixed(2) + " / 曲がり " + first[2].toFixed(3) +
-                "<br>" + (useRng ? "何度作っても同じ8本になります" :
-                    "<b style='color:#8F1619'>作り直すたびに別の8本になります</b>");
+                "<br>1枚目 … 直径 " + first[0].toFixed(2) + "cm / ゆがみ " + first[1].toFixed(3) +
+                " / 焼き " + first[2].toFixed(2) +
+                "<br>" + (useRng ? "何度作っても同じ8枚になります" :
+                    "<b style='color:#8F1619'>作り直すたびに別の8枚になります</b>");
         }
     }
     mark = lazyLoop(cv, draw);
@@ -835,7 +828,8 @@ function foldField(u, v, seed) {
             var col;
             if (use === "raw") col = [n, n, n];
             else if (use === "bake") col = bakeColor(clamp(n * 1.25 - 0.05, 0, 1));
-            else col = n < 0.45 ? mix3(CPORE, [0.42, 0.34, 0.26], (0.45 - n) / 0.45) : CRUMB;
+            // 生地の肌理。気泡を暗い点で描くとカビになる（05章）ので、濃淡はごく浅く
+            else col = mix3(CPORE, CBR1, smooth(0.30, 0.75, n) * 0.8);
             pn.set(y * S + x, col[0], col[1], col[2]);
         }
         pn.flush();
@@ -868,7 +862,7 @@ function foldField(u, v, seed) {
 })();
 
 /* ======================================================================
-   04 — 断面エディタ + 回転体プレビュー
+   06 — 断面エディタ + 回転体プレビュー
    ====================================================================== */
 (function () {
     var pcv = $("#profCanvas"), rcv = $("#revCanvas");
@@ -937,9 +931,11 @@ function foldField(u, v, seed) {
         key = k;
         ctrl = cloneProfile(PROFILES[k]);
         height = PROFILE_H[k];
-        // 茶碗だけは、既定でもう少し見下ろしたほうが中が見える。
+        var sb = $("#profBump");
+        if (sb && PROFILE_BUMP[k] != null) { sb.value = PROFILE_BUMP[k]; sb.dispatchEvent(new Event("input")); }
+        // クッキーは平たいので、既定でもう少し見下ろしたほうが上面が見える。
         // ただし自分で角度を決めたあとは上書きしない
-        orb.setElev(k === "bowl" ? 0.45 : 0.25);
+        orb.setElev(k === "cookie" ? 0.45 : 0.25);
         rebuild(); drawProfile();
     }
 
@@ -974,7 +970,7 @@ function foldField(u, v, seed) {
         var ctx = rc.ctx;
         ctx.clearRect(0, 0, rc.W, rc.H);
         if (!mesh) return;
-        var m = key === "cookie" ? MATS.tako : (key === "bowl" ? MATS.rice : MATS.dango);
+        var m = MATS[key] || MATS.dango;
         renderMesh(ctx, rc.W, rc.H, mesh, {
             rot: orb.rot(now), elev: orb.elev, zoom: 0.9,
             mat: m, albedo: function () { return m.col; }
@@ -986,7 +982,7 @@ function foldField(u, v, seed) {
 })();
 
 /* ======================================================================
-   05 — 巻き順と法線
+   04 — 巻き順と法線
    ====================================================================== */
 (function () {
     var cv = $("#meshCanvas"); if (!cv) return;
@@ -1021,7 +1017,7 @@ function foldField(u, v, seed) {
 })();
 
 /* ======================================================================
-   06 — テクスチャ（トーストの3枚）
+   05 — テクスチャ（パンケーキの天面の3枚）
    ====================================================================== */
 (function () {
     var cv = $("#texCanvas"); if (!cv) return;
@@ -1038,7 +1034,7 @@ function foldField(u, v, seed) {
         return h;
     }
     function heat(u, v) {
-        // 焼き色は高いところほど濃い（たべもの編12章）。ムラも少し混ぜる
+        // 焼き色は高いところほど濃く、気泡の穴は淡い（10章）。ムラも少し混ぜる
         var h = height(u, v);
         var n = Noise.fbm(u * 3.2, v * 3.2, 21, 4);
         return clamp(bake * 1.35 * (0.45 + 0.75 * h) + (n - 0.5) * 0.34, 0, 1);
@@ -1105,7 +1101,7 @@ function foldField(u, v, seed) {
 })();
 
 /* ======================================================================
-   07 — PBR（粗さ・クリアコート・透け）
+   11 — PBR（粗さ・クリアコート・透け）
    ====================================================================== */
 (function () {
     var cv = $("#pbrCanvas"); if (!cv) return;
@@ -1146,13 +1142,141 @@ function foldField(u, v, seed) {
 })();
 
 /* ======================================================================
-   08 — 落として積む（唐揚げの山）
+   10 — 焼き色の場（理由ごとに足す）
+   パンケーキは パンケーキ.js の sample()、型押しクッキーは クッキー.js の冒頭の観察から
+   ====================================================================== */
+(function () {
+    var cv = $("#bakeCanvas"); if (!cv) return;
+    var c = setupCanvas(cv), ctx = c.ctx;
+    var S = 170;
+    var pnField = pixelPanel(S, S), pnOut = pixelPanel(S, S);
+    var kind = "pancake", edgeOn = true, reliefOn = true, mottOn = true, done = 1.0, mark;
+    var out = $("#bakeOut");
+    var BG = [0.960, 0.945, 0.910];
+
+    // パンケーキの気泡の穴。fbm のしきい値ではなく、1個ずつの球冠（03章）
+    var PITS = (function () {
+        var R = new Rng(2026), list = [];
+        for (var i = 0; i < 70; i++) {
+            var a = R.next() * TAU, r = Math.sqrt(R.next()) * 0.92;
+            list.push([Math.cos(a) * r, Math.sin(a) * r, 0.018 + R.next() * 0.035]);
+        }
+        return list;
+    })();
+    function pitAt(x, y) {
+        var p = 0;
+        for (var i = 0; i < PITS.length; i++) {
+            var q = PITS[i], dx = x - q[0], dy = y - q[1], d2 = (dx * dx + dy * dy) / (q[2] * q[2]);
+            if (d2 < 1) p = Math.max(p, 1 - d2);
+        }
+        return p;
+    }
+    // 型押しクッキーの凹み（0〜1）。内側の輪の溝・放射状の溝・ピケ穴
+    function recessAt(x, y, r) {
+        var a = Math.atan2(y, x);
+        var ring = 1 - smooth(0.0, 0.030, Math.abs(r - 0.74));
+        var spokeA = Math.abs(((a / TAU * 12) % 1 + 1) % 1 - 0.5) * 2;      // 0 が溝の中心
+        var spoke = (1 - smooth(0.0, 0.12, 1 - spokeA)) * smooth(0.22, 0.28, r) * (1 - smooth(0.64, 0.68, r));
+        var hole = 0;
+        for (var k = 0; k < 5; k++) {
+            var ha = k / 5 * TAU + 0.3, hx = Math.cos(ha) * 0.12, hy = Math.sin(ha) * 0.12;
+            hole = Math.max(hole, 1 - smooth(0.0, 0.035, Math.hypot(x - hx, y - hy)));
+        }
+        return Math.max(ring, spoke * 0.8, hole);
+    }
+    function edgeAt(a) {
+        if (kind === "cookie") return 0.94 * (1 + 0.020 * Math.cos(22 * a));   // 菊型（scallopK 22 / amp 0.020）
+        return 0.94 * (1 + 0.035 * (Noise.fbmu(a / TAU * 6, 3.3, 6, 5, 2) - 0.5) * 2);   // お玉で落とした輪郭
+    }
+
+    // 1点ぶんの [焼き色, 高さ]。高さは陰影用で、スイッチに関係なく形は同じ
+    function sample(x, y, o) {
+        var r = Math.hypot(x, y), a = Math.atan2(y, x), re = edgeAt(a);
+        if (r >= re) { o.inside = false; return o; }
+        o.inside = true;
+        var d = re - r, bake, h;
+        if (kind === "pancake") {
+            // 縁の淡い環の幅。きつね色 0.78cm を半径 5.55cm で割った 0.14 を、ノイズでゆらす
+            var rimN = Noise.fbm(x * 1.6 + 12, y * 1.6 + 44, 97, 3), rimN2 = Noise.fbm(x * 4 + 71, y * 4 + 5, 103, 2);
+            var rim = 0.14 * (0.52 + 0.98 * rimN) * (0.86 + 0.28 * rimN2);
+            var contact = edgeOn ? smooth(0.004, rim, d) : 1;
+            var pan = mottOn ? 0.80 + 0.42 * Noise.fbm(x * 1.4 + 210, y * 1.4 + 133, 107, 2) : 1.0;
+            var speck = mottOn ? 0.86 + 0.28 * smooth(0.32, 0.70, Noise.fbm(x * 9 + 5, y * 9 + 15, 71, 2)) : 1.0;
+            var pore = pitAt(x, y);
+            var poreShade = reliefOn ? 1 - 0.30 * smooth(0.14, 0.72, pore) : 1;
+            bake = contact * pan * speck * poreShade * done * 0.74;
+            h = 1 - 0.9 * pore + 0.05 * smooth(0.0, 0.10, d);
+        } else {
+            var rec = recessAt(x, y, r);
+            bake = 0.36;
+            if (edgeOn) bake += 0.42 * smooth(0.78, 1.0, r / re);          // 縁ほど濃い
+            if (reliefOn) bake -= 0.30 * rec;                              // 型押しの凹部は白く残る
+            if (mottOn) bake += 0.16 * (Noise.fbm(x * 3 + 7, y * 3 + 2, 44, 3) - 0.5) * 2;
+            bake *= done;
+            h = 1 - 0.8 * rec - 0.6 * (1 - smooth(0.0, 0.06, d));
+        }
+        o.bake = clamp(bake, 0, 1); o.h = h;
+        return o;
+    }
+
+    var A = {}, B = {}, C2 = {};
+    function draw() {
+        ctx.clearRect(0, 0, c.W, c.H);
+        var e = 2.2 / S;
+        for (var py = 0; py < S; py++) for (var px = 0; px < S; px++) {
+            var x = (px / S - 0.5) * 2.2, y = (py / S - 0.5) * 2.2, i = py * S + px;
+            sample(x, y, A);
+            if (!A.inside) { pnField.set(i, BG[0], BG[1], BG[2]); pnOut.set(i, BG[0], BG[1], BG[2]); continue; }
+            var b = A.bake;
+            pnField.set(i, b, b, b);
+            // 右：焼き色を色に変えて、高さから陰影をつける
+            sample(x + e, y, B); sample(x, y + e, C2);
+            var hx = B.inside ? B.h : A.h - 0.6, hy = C2.inside ? C2.h : A.h - 0.6;
+            var nx = (A.h - hx) * 2.4, ny = (A.h - hy) * 2.4, nz = 1, L = Math.hypot(nx, ny, nz);
+            var ndl = Math.max(0, (nx * -0.45 + ny * -0.55 + nz * 0.70) / L);
+            var col = bakeColor(b), lit = 0.42 + 0.72 * ndl;
+            pnOut.set(i, col[0] * lit, col[1] * lit, col[2] * lit);
+        }
+        pnField.flush(); pnOut.flush();
+
+        var w = 250, h = 250, y0 = 46;
+        ctx.imageSmoothingEnabled = true;
+        ctx.drawImage(pnField.cv, 40, y0, w, h);
+        ctx.drawImage(pnOut.cv, 40 + w + 50, y0, w, h);
+        ctx.fillStyle = "#57493C"; ctx.font = "12px ui-monospace, Consolas, monospace";
+        ctx.fillText("焼き色の場 bake（白いほど焼けた）", 40, y0 - 12);
+        ctx.fillText("色に変えて、凹凸の陰影をつけた結果", 40 + w + 50, y0 - 12);
+
+        if (out) {
+            var t = [];
+            if (kind === "pancake") {
+                t.push(edgeOn ? "縁：鉄板に触れていない環が淡く残る" : "<b style='color:#8F1619'>縁：縁まで同じ濃さ（環が無い）</b>");
+                t.push(reliefOn ? "高さ：気泡の穴は淡い" : "高さ：穴も同じ濃さ");
+            } else {
+                t.push(edgeOn ? "縁：縁ほど熱が回って濃い" : "<b style='color:#8F1619'>縁：縁まで同じ濃さ</b>");
+                t.push(reliefOn ? "高さ：型押しの凹みが白く残る" : "<b style='color:#8F1619'>高さ：凹みも山も同じ色（模様が読めない）</b>");
+            }
+            t.push(mottOn ? "ムラ：鉄板の熱ムラと細かい斑" : "ムラ：なし（一様）");
+            if (!edgeOn && !reliefOn && !mottOn) t = ["<b style='color:#8F1619'>理由がひとつも無い。茶色く塗っただけの円盤です</b>"];
+            out.innerHTML = t.join("<br>");
+        }
+    }
+    mark = lazyLoop(cv, draw);
+    chipGroup("#bakeKind", function (v) { kind = v; mark(); });
+    toggle("#bakeEdge", function (v) { edgeOn = v; if (mark) mark(); });
+    toggle("#bakeRelief", function (v) { reliefOn = v; if (mark) mark(); });
+    toggle("#bakeMott", function (v) { mottOn = v; if (mark) mark(); });
+    slider("#bakeDone", "#bakeDoneV", f2, function (n) { done = n; if (mark) mark(); });
+})();
+
+/* ======================================================================
+   15 — 落として積む（トリュフの山）
    断面（横から見た2D）での簡易シミュレーション
    ====================================================================== */
 (function () {
     var cv = $("#dropCanvas"); if (!cv) return;
     var c = setupCanvas(cv), ctx = c.ctx;
-    var count = 18, fric = 0.55, rest = 0.04;
+    var count = 18, fric = 0.58, rest = 0.06;     // チョコレート.js の friction / restitution
     var out = $("#dropOut");
     var bodies = [], queue = 0, timer = 0, R = null;
 
@@ -1165,7 +1289,7 @@ function foldField(u, v, seed) {
     reset();
 
     function spawn() {
-        var r = 15 + R.next() * 7;
+        var r = 15 + R.next() * 5;
         bodies.push({
             x: BOWL.x + (R.next() - 0.5) * 120, y: 26,
             vx: (R.next() - 0.5) * 18, vy: 0, r: r,
@@ -1228,22 +1352,28 @@ function foldField(u, v, seed) {
     }
 
     function drawPiece(b) {
-        // 唐揚げ1個。衣のでこぼこを7角形のゆらぎで作る
+        // トリュフ1粒。手で丸めたので真円ではない。3つに1つはココア掛け（粗さ 0.9 のマット）
+        var dusted = b.k < 0.34;
         ctx.save();
         ctx.translate(b.x, b.y); ctx.rotate(b.a);
         ctx.beginPath();
         for (var i = 0; i <= 22; i++) {
             var a = i / 22 * TAU;
-            var rr = b.r * (0.86 + 0.20 * Noise.v2u(a / TAU * 7, b.k * 40, 7, 5, 3));
-            var x = Math.cos(a) * rr, y = Math.sin(a) * rr * 0.86;
+            var rr = b.r * (0.94 + 0.08 * Noise.v2u(a / TAU * 5, b.k * 40, 5, 5, 3));
+            var x = Math.cos(a) * rr, y = Math.sin(a) * rr * 0.96;
             i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
         }
         ctx.closePath();
-        var g = ctx.createRadialGradient(-b.r * 0.3, -b.r * 0.4, b.r * 0.15, 0, 0, b.r * 1.3);
-        g.addColorStop(0, "#D9A14E"); g.addColorStop(0.55, "#AB5517"); g.addColorStop(1, "#6E320B");
+        var g = ctx.createRadialGradient(-b.r * 0.3, -b.r * 0.4, b.r * 0.1, 0, 0, b.r * 1.2);
+        if (dusted) { g.addColorStop(0, "#8A5A3C"); g.addColorStop(0.6, "#6B4129"); g.addColorStop(1, "#47291A"); }
+        else { g.addColorStop(0, "#6A3F2A"); g.addColorStop(0.5, "#3A2116"); g.addColorStop(1, "#1F120C"); }
         ctx.fillStyle = g; ctx.fill();
-        ctx.strokeStyle = "rgba(70,32,10,.35)"; ctx.lineWidth = 1; ctx.stroke();
         ctx.restore();
+        if (!dusted) {
+            // 照りは膜の反射（11章）。光源は動かないので、回転させずに左上へ置く
+            ctx.fillStyle = "rgba(255,236,214,.38)";
+            ctx.beginPath(); ctx.ellipse(b.x - b.r * 0.32, b.y - b.r * 0.38, b.r * 0.30, b.r * 0.16, -0.6, 0, TAU); ctx.fill();
+        }
     }
 
     addLoop(cv, function (dt, now) {
@@ -1254,7 +1384,8 @@ function foldField(u, v, seed) {
         // 皿
         ctx.beginPath();
         ctx.arc(BOWL.x, BOWL.y, BOWL.r, 0.10 * Math.PI, 0.90 * Math.PI);
-        ctx.strokeStyle = "#3A3A3C"; ctx.lineWidth = 7; ctx.stroke();
+        ctx.strokeStyle = "#E9E4DA"; ctx.lineWidth = 7; ctx.stroke();
+        ctx.strokeStyle = "rgba(36,28,21,.25)"; ctx.lineWidth = 1; ctx.stroke();
         for (var i = 0; i < bodies.length; i++) drawPiece(bodies[i]);
         if (out) {
             var moving = 0, top = 999;
@@ -1273,14 +1404,29 @@ function foldField(u, v, seed) {
 })();
 
 /* ======================================================================
-   09 — トッピングを撒いて、重なりをほぐす
+   16 — トッピングを撒いて、重なりをほぐす
    ====================================================================== */
 (function () {
     var cv = $("#scatterCanvas"); if (!cv) return;
     var c = setupCanvas(cv), ctx = c.ctx;
     var n = 90, iter = 0, mode = "random", mark;
     var out = $("#scatterOut");
-    var CX = 320, CY = 178, RAD = 148;
+    var CX = 320, CY = 178, RAD = 148, HOLE = 52;
+    // チョコバナナ.js の SPRINKLES.colorful。[色, 重み]
+    var SPR = [["#F76B9E", 1.2], ["#FBDB40", 1.1], ["#F6F1E7", 1.0], ["#FB8A2B", 0.8],
+               ["#6BC75C", 0.8], ["#4C8FED", 0.8], ["#9C61CC", 0.7], ["#E0303D", 0.7]];
+    var SPR_SUM = SPR.reduce(function (a, c) { return a + c[1]; }, 0);
+    function pickColor(k) {
+        var r = k * SPR_SUM;
+        for (var i = 0; i < SPR.length; i++) { r -= SPR[i][1]; if (r <= 0) return SPR[i][0]; }
+        return SPR[SPR.length - 1][0];
+    }
+    // 輪の中（穴とふちを避けた帯）に押し戻す
+    function keepOnRing(p) {
+        var dx = p.x - CX, dy = p.y - CY, d = Math.hypot(dx, dy) || 1;
+        var lo = HOLE + 8, hi = RAD - 10;
+        if (d < lo || d > hi) { var t = clamp(d, lo, hi) / d; p.x = CX + dx * t; p.y = CY + dy * t; }
+    }
 
     function build() {
         var R = new Rng(4649), pts = [];
@@ -1290,12 +1436,14 @@ function foldField(u, v, seed) {
                 for (var j = 0; j < side && pts.length < n; j++) {
                     var x = CX + (i / (side - 1) - 0.5) * RAD * 2;
                     var y = CY + (j / (side - 1) - 0.5) * RAD * 2;
-                    if (Math.hypot(x - CX, y - CY) < RAD - 8) pts.push({ x: x, y: y, a: 0, k: R.next() });
+                    var dd0 = Math.hypot(x - CX, y - CY);
+                    if (dd0 < RAD - 10 && dd0 > HOLE + 8) pts.push({ x: x, y: y, a: 0, k: R.next() });
                 }
         } else {
             for (var k = 0; k < n; k++) {
-                // 面積で一様にするため sqrt をとる。とらないと中心に集まる
-                var t = R.next() * TAU, rr = Math.sqrt(R.next()) * (RAD - 8);
+                // 面積で一様にするため、半径の2乗で一様にとる。とらないと穴のまわりに集まる
+                var lo2 = (HOLE + 8) * (HOLE + 8), hi2 = (RAD - 10) * (RAD - 10);
+                var t = R.next() * TAU, rr = Math.sqrt(lo2 + R.next() * (hi2 - lo2));
                 pts.push({ x: CX + Math.cos(t) * rr, y: CY + Math.sin(t) * rr, a: R.next() * TAU, k: R.next() });
             }
         }
@@ -1311,10 +1459,7 @@ function foldField(u, v, seed) {
                     pts[b].x += ux * push; pts[b].y += uy * push;
                 }
             }
-            for (var q = 0; q < pts.length; q++) {
-                var ddx = pts[q].x - CX, ddy = pts[q].y - CY, dd = Math.hypot(ddx, ddy);
-                if (dd > RAD - 8) { pts[q].x = CX + ddx / dd * (RAD - 8); pts[q].y = CY + ddy / dd * (RAD - 8); }
-            }
+            for (var q = 0; q < pts.length; q++) keepOnRing(pts[q]);
         }
         return pts;
     }
@@ -1322,10 +1467,16 @@ function foldField(u, v, seed) {
     function draw() {
         var pts = build();
         ctx.clearRect(0, 0, c.W, c.H);
-        // たこ焼きの玉（上から見たところ）
-        var g = ctx.createRadialGradient(CX - 40, CY - 50, 20, CX, CY, RAD);
-        g.addColorStop(0, "#C98B3E"); g.addColorStop(0.7, "#965821"); g.addColorStop(1, "#5E3210");
-        ctx.beginPath(); ctx.arc(CX, CY, RAD, 0, TAU); ctx.fillStyle = g; ctx.fill();
+        // チョコがけドーナツ（上から見たところ）。外周に生地がのぞき、上面はチョコ
+        ctx.beginPath(); ctx.arc(CX, CY, RAD + 6, 0, TAU); ctx.arc(CX, CY, HOLE - 4, 0, TAU, true);
+        ctx.fillStyle = "#C98A4E"; ctx.fill("evenodd");
+        var g = ctx.createRadialGradient(CX - 50, CY - 60, 20, CX, CY, RAD);
+        g.addColorStop(0, "#5A3424"); g.addColorStop(0.7, "#3A2116"); g.addColorStop(1, "#24140D");
+        ctx.beginPath(); ctx.arc(CX, CY, RAD - 4, 0, TAU); ctx.arc(CX, CY, HOLE, 0, TAU, true);
+        ctx.fillStyle = g; ctx.fill("evenodd");
+        // 膜の照り（11章）。輪に沿って細く
+        ctx.strokeStyle = "rgba(255,236,214,.16)"; ctx.lineWidth = 10;
+        ctx.beginPath(); ctx.arc(CX, CY, (RAD + HOLE) / 2, 3.6, 4.6); ctx.stroke();
 
         var overlap = 0;
         for (var i = 0; i < pts.length; i++) {
@@ -1335,14 +1486,14 @@ function foldField(u, v, seed) {
             var p = pts[i];
             ctx.save();
             ctx.translate(p.x, p.y); ctx.rotate(p.a + p.k * 3);
-            // 青のりは板ポリゴン。細長いかけら
-            var w = 8 + p.k * 9, h = 2.4 + p.k * 2.2;
-            ctx.fillStyle = p.k > 0.82 ? "rgba(232,222,196,.95)" : "rgba(46,86,34,.92)";
-            ctx.fillRect(-w / 2, -h / 2, w, h);
+            // スプレーは両端の丸い棒（カプセル）。長さと太さも1本ずつ揺らす
+            var w = 9 + (p.k * 7.3 % 1) * 5, h = 3.0 + (p.k * 3.1 % 1) * 0.8;
+            ctx.strokeStyle = pickColor(p.k); ctx.lineWidth = h; ctx.lineCap = "round";
+            ctx.beginPath(); ctx.moveTo(-w / 2, 0); ctx.lineTo(w / 2, 0); ctx.stroke();
             ctx.restore();
         }
         if (out) {
-            out.innerHTML = pts.length + " 枚 / 重なっている組 " + overlap +
+            out.innerHTML = pts.length + " 本 / 重なっている組 " + overlap +
                 "<br>" + (mode === "grid" ? "<b style='color:#8F1619'>重なりは 0。でも「並べた」に見えます</b>"
                     : iter === 0 ? "撒いたまま。濃い染みができています"
                         : iter > 20 ? "<b style='color:#8F1619'>ほぐしすぎ。格子に近づいています</b>"
@@ -1356,58 +1507,77 @@ function foldField(u, v, seed) {
 })();
 
 /* ======================================================================
-   10 — 軸に沿った掃引（ウィンナー / 秋刀魚）
+   07 — 軸に沿った掃引（チョコバナナ）
    ====================================================================== */
 (function () {
     var cv = $("#sweepCanvas"); if (!cv) return;
     var c = setupCanvas(cv), ctx = c.ctx;
-    var kind = "wiener", bend = 0.06, plump = 0.06, flat = 1.0, ring = false;
+    var kind = "peeled", bend = 1.85, ridge = 0.03, drip = 0.5, ring = false;
     var orb = orbit(cv, { elev: 0.30, speed: 0.105 });
     var mesh = null;
 
-    // 秋刀魚の体高。焼き魚（サンマ）.js が線画から実測した表をそのまま使う
-    // （最大体高を 1 とした比。u=0 が吻端、u=1 が尾柄）
-    // 【対策】ここは以前、山を1つ置いた式（ピーク u=0.22、幅 0.30）で
-    //         近似していた。2か所まちがえていて、木の葉に見えていた。
-    //         ・最大体高は u≒0.22 ではなく u≒0.39。鰓蓋のすぐ後ろではなく、
-    //           胴の中ほど
-    //         ・胴の後半が早く細りすぎ。実測では u=0.48 でまだ 0.99 あるのに、
-    //           山の式では 0.60 まで落ちていた。だから頭寄りだけが膨らんだ
-    var SANMA_D = [
-        { t: 0.000, r: 0.075 }, { t: 0.030, r: 0.190 }, { t: 0.060, r: 0.360 },
-        { t: 0.095, r: 0.545 }, { t: 0.130, r: 0.720 }, { t: 0.175, r: 0.888 },
-        { t: 0.225, r: 0.972 }, { t: 0.300, r: 0.996 }, { t: 0.390, r: 1.000 },
-        { t: 0.480, r: 0.988 }, { t: 0.570, r: 0.945 }, { t: 0.665, r: 0.858 },
-        { t: 0.760, r: 0.712 }, { t: 0.850, r: 0.458 }, { t: 0.920, r: 0.302 },
-        { t: 0.965, r: 0.226 }, { t: 1.000, r: 0.180 }
-    ];
-    // 【対策】比だけ合っていても、全長との釣り合いを外すと魚に見えない。
-    //         秋刀魚は全長 30cm に対し体高 4.15cm で、7:1 を超える細長さ。
-    //         軸の長さ LEN=2.5 が 30cm ぶんなので、最大半径は
-    //         4.15 / 2 / 12 = 0.173。以前は 0.45 あり、2.8:1 の魚だった
-    var SANMA_R = 0.173;
-
-    // 体型。u=0 が頭（左）、u=1 が尾
-    function bodyR(u) {
-        if (kind === "sanma") return sampleProfile(SANMA_D, u) * SANMA_R;
-        // ウィンナー。ほぼ平行で、端は結び目に向かって細る
-        return 0.30 * Math.pow(Math.sin(Math.PI * clamp(u * 1.06 - 0.03, 0, 1)), 0.28) + 0.004;
+    // 太さの形。チョコバナナ.js の profile（maxAt 0.54 / pBase 1.75 / pTip 2.70）。
+    // u=0 が根元（左）、u=1 が先端（右）
+    var MAX_AT = 0.54, P_BASE = 1.75, P_TIP = 2.70, RAD = 0.27;
+    function envelope(u) {
+        var q = u < MAX_AT ? (MAX_AT - u) / MAX_AT : (u - MAX_AT) / (1 - MAX_AT);
+        var p = u < MAX_AT ? P_BASE : P_TIP;
+        var r = Math.pow(Math.max(0, 1 - Math.pow(q, p)), 0.5);
+        // 根元は軸（果柄）の名残りで首が細い
+        if (u < MAX_AT) r *= 1 - 0.14 * smooth(0.55, 0.95, q);
+        return r;
+    }
+    // チョコの厚み。先端を下にして垂らすので、先端側ほど厚く、縦の垂れ筋が出る
+    function coatAt(u, a) {
+        var t = 0.030;
+        var streak = Noise.fbmu(a / TAU * 7, u * 1.6, 7, 23, 2);
+        t += 0.060 * drip * smooth(0.42, 0.97, u) * smooth(0.50, 0.78, streak);
+        return t;
     }
 
+    // 軸。チョコバナナ.js と同じく、向きの角度 φ を位置 s の関数にして積分する。
+    // 【対策】一定曲率の弧だと定規で曲げたパイプに見える。中ほどが最も曲がり、両端は比較的まっすぐ。
+    //         全体の曲がりは bend の 0.75 倍になる
+    var LEN = 2.5, NSP = 200;
+    var SX = new Float32Array(NSP + 1), SY = new Float32Array(NSP + 1), SA = new Float32Array(NSP + 1);
+    function buildSpine() {
+        var x = 0, y = 0;
+        for (var i = 0; i <= NSP; i++) {
+            var s = i / NSP;
+            var phi = bend * (s - 0.5) * (1 + 0.25 * Math.cos(Math.PI * (s - 0.5) * 2));
+            SX[i] = x; SY[i] = y; SA[i] = phi;
+            x += Math.cos(phi) * LEN / NSP; y += Math.sin(phi) * LEN / NSP;
+        }
+        // 弓の真ん中あたりが原点に来るようにずらす
+        var mx = (SX[0] + SX[NSP]) / 2, my = (SY[0] + SY[NSP / 2]) / 2;
+        for (var k = 0; k <= NSP; k++) { SX[k] -= mx; SY[k] -= my; }
+    }
+    function spineAt(s, out) {
+        var f = clamp(s, 0, 1) * NSP, i = Math.min(NSP - 1, Math.floor(f)), t = f - i;
+        out[0] = mix(SX[i], SX[i + 1], t); out[1] = mix(SY[i], SY[i + 1], t); out[2] = mix(SA[i], SA[i + 1], t);
+        return out;
+    }
+    var SP = [0, 0, 0];
+
     function rebuild() {
-        var LEN = 2.5;
-        mesh = buildGrid(72, 40, function (s, w, out) {
+        buildSpine();
+        mesh = buildGrid(90, 44, function (s, w, out) {
             var a = w * TAU;
-            // 軸（スパイン）。ゆるい弓なり
-            var cx = (s - 0.5) * LEN;
-            var cy = -Math.sin(Math.PI * s) * bend * LEN;
-            // 接線 → 断面の平面（面内の N と、奥行きの B）
-            var dx = LEN, dy = -Math.PI * Math.cos(Math.PI * s) * bend * LEN;
-            var dl = Math.hypot(dx, dy) || 1;
-            var nx = -dy / dl, ny = dx / dl;
-            var r = bodyR(s) * (1 + plump * Math.sin(s * 13.7) + plump * 0.6 * (Noise.v2(s * 9, 3, 12) - 0.5) * 2);
-            var co = Math.cos(a) * r, si = Math.sin(a) * r * flat;
-            out[0] = cx + nx * co; out[1] = cy + ny * co; out[2] = si;
+            spineAt(s, SP);
+            var cx = SP[0], cy = SP[1];
+            // 接線 (cos φ, sin φ) → 断面の平面（面内の N と、奥行きの Z）。
+            // 軸は XY 平面の中にあるので、Z はどれだけ曲げても軸に垂直（N = Z × T）
+            var nx = -Math.sin(SP[2]), ny = Math.cos(SP[2]);
+            var env = envelope(s);
+            // むいた実の稜（5本）。端では消す
+            var fade = smooth(0.0, 0.16, Math.min(s, 1 - s));
+            var r = RAD * env * (1 + ridge * Math.cos(5 * a + 0.4) * fade);
+            // 【対策】塗り厚を一定のまま足すと端で穴が開く。√env を掛けて端では 0 に落とす
+            if (kind === "coated") r += coatAt(s, a) * Math.sqrt(env);
+            // 【対策】奥行きを +Z で回すと、周の向きが s に対して逆回りになり、面が内向きに張られる
+            //         （裏面だけが描かれて、むいた実が裏返しに見える）。−Z で回して外向きにそろえる
+            var co = Math.cos(a) * r, si = Math.sin(a) * r;
+            out[0] = cx + nx * co; out[1] = cy + ny * co; out[2] = -si;
             return out;
         });
     }
@@ -1415,43 +1585,31 @@ function foldField(u, v, seed) {
 
     addLoop(cv, function (dt, now) {
         ctx.clearRect(0, 0, c.W, c.H);
-        var m = kind === "sanma"
-            ? { rough: 0.30, coat: 0.30, sss: 0.10, sheen: 0.10, sssCol: [0.9, 0.9, 1.0] }
-            : MATS.wiener;
+        var coated = kind === "coated";
         renderMesh(ctx, c.W, c.H, mesh, {
             rot: orb.rot(now) + 0.25, elev: orb.elev, zoom: 1.15, cull: true,
             mode: ring ? "wire" : "solid",
-            mat: m,
+            mat: coated ? MATS.coat : MATS.banana,
             albedo: function (u, v) {
-                if (kind === "sanma") {
-                    // 背は青黒、体側は銀、腹は白銀。u は周方向
-                    var up = Math.cos(u * TAU);
-                    var t = clamp(up * 0.5 + 0.5, 0, 1);
-                    var col = t > 0.62 ? mix3([0.605, 0.665, 0.700], [0.078, 0.142, 0.150], (t - 0.62) / 0.38)
-                        : mix3([0.882, 0.868, 0.822], [0.605, 0.665, 0.700], t / 0.62);
-                    // 焼き目は「点在する丸い斑」。全面を覆わせない
-                    var n = Noise.fbmu(u * 6, v * 5, 6, 66, 4);
-                    var burn = smooth(0.60, 0.78, n);
-                    return mix3(col, [0.758, 0.606, 0.372], burn * 0.75);
+                if (coated) {
+                    // 厚い所（先端側）ほど深い色。ミルクチョコの base → deep
+                    return mix3(MATS.coat.col, [0.275, 0.142, 0.095], smooth(0.42, 0.97, v) * drip);
                 }
-                var n2 = Noise.fbmu(u * 5, v * 4, 5, 33, 4);
-                return mix3([0.865, 0.520, 0.290], [0.560, 0.245, 0.095], smooth(0.38, 0.72, n2));
+                // むいた実。筋状のわずかな色むら
+                var n2 = Noise.fbmu(u * 5, v * 6, 5, 33, 3);
+                return mix3(MATS.banana.col, [0.905, 0.800, 0.540], smooth(0.40, 0.75, n2) * 0.6);
             }
         });
     });
-    chipGroup("#sweepShape", function (v) {
-        kind = v; rebuild();
-        var f = $("#sweepFlat");
-        if (f) { f.value = v === "sanma" ? 0.6 : 1.0; f.dispatchEvent(new Event("input")); }
-    });
-    slider("#sweepBend", "#sweepBendV", function (n) { return n.toFixed(3); }, function (n) { bend = n; rebuild(); });
-    slider("#sweepPlump", "#sweepPlumpV", function (n) { return n.toFixed(3); }, function (n) { plump = n; rebuild(); });
-    slider("#sweepFlat", "#sweepFlatV", f2, function (n) { flat = n; rebuild(); });
+    chipGroup("#sweepShape", function (v) { kind = v; rebuild(); });
+    slider("#sweepBend", "#sweepBendV", f2, function (n) { bend = n; rebuild(); });
+    slider("#sweepRidge", "#sweepRidgeV", function (n) { return n.toFixed(3); }, function (n) { ridge = n; rebuild(); });
+    slider("#sweepCoat", "#sweepCoatV", f2, function (n) { drip = n; if (kind === "coated") rebuild(); });
     toggle("#sweepRing", function (v) { ring = v; });
 })();
 
 /* ======================================================================
-   11 — シーン（露出・環境光・トーンマッピング）
+   14 — シーン（露出・環境光・トーンマッピング）
    ====================================================================== */
 (function () {
     var cv = $("#sceneCanvas"); if (!cv) return;
@@ -1599,7 +1757,7 @@ function foldField(u, v, seed) {
 })();
 
 /* ======================================================================
-   13 — 触れ合うと潰れる（接触変形）
+   08 — 触れ合うと潰れる（接触変形）
    ====================================================================== */
 (function () {
     var cv = $("#squashCanvas"); if (!cv) return;
@@ -1717,7 +1875,7 @@ function foldField(u, v, seed) {
 })();
 
 /* ======================================================================
-   14 — 揺れはばねの重ね合わせ（モーダル変形）
+   17 — 揺れはばねの重ね合わせ（モーダル変形）
    プリンを真横から見る。せん断（横揺れ）と縦の2モードだけ回す
    ====================================================================== */
 (function () {
@@ -1867,7 +2025,7 @@ function foldField(u, v, seed) {
 })();
 
 /* ======================================================================
-   15 — ゼリーの色は光路長で決まる
+   13 — ゼリーの色は光路長で決まる
    菊型のゼリーを正面から見て、画素ごとに中を通る距離を数える
    ====================================================================== */
 (function () {
@@ -2023,7 +2181,7 @@ function foldField(u, v, seed) {
 })();
 
 /* ======================================================================
-   16 — 距離の場から輪郭を拾う（2次元のサーフェスネット）
+   09 — 距離の場から輪郭を拾う（2次元のサーフェスネット）
    飴細工.js のウサギを横から見た形。部品を smin で溶かし、格子から線を張る
    ====================================================================== */
 (function () {
@@ -2185,7 +2343,7 @@ function foldField(u, v, seed) {
 })();
 
 /* ======================================================================
-   17 — 綿菓子は線の集まり
+   18 — 綿菓子は線の集まり
    綿菓子.js と同じ曲面（回転体 × 螺旋の帯）に糸を並べ、横から見る
    ====================================================================== */
 (function () {
@@ -2347,23 +2505,23 @@ function foldField(u, v, seed) {
 var FILES = [
     // 和菓子
     ["花見団子", "花見団子.js", "#F49DAD", "たれは色ではなく層。串の入口はすり鉢状にへこむ。12章の教材。"],
-    ["月見団子", "月見団子.js", "#D8CFBB", "接触で潰れる。減った体積の行き先と、縁の丸い土手。13章の教材。"],
-    ["たい焼き", "たい焼き.js", "#D79D55", "型の縁にできるミミと、薄い所ほど濃い焼き色。手前の1個はクリックで割れ、生地のちぎれ面とつぶあんが見える。"],
-    ["栗饅頭", "栗饅頭.js", "#B86126", "球を楕円に伸ばして頂点へ焼き込み（bakeCurrentTransformIntoVertices）、底を平らに、上をふっくら。焼き色は上の1/3に集める頂点カラー。いちばん短い1本で、05章で扱う。"],
+    ["月見団子", "月見団子.js", "#D8CFBB", "接触で潰れる。減った体積の行き先と、縁の丸い土手。物理を使わずに下の段だけを見て積む。08章・15章の教材。"],
+    ["たい焼き", "たい焼き.js", "#D79D55", "型の縁にできるミミと、薄い所ほど濃い焼き色。手前の1個はクリックで割れ、生地のちぎれ面とつぶあんが見える。06章・10章の教材。"],
+    ["栗饅頭", "栗饅頭.js", "#B86126", "球を楕円に伸ばして頂点へ焼き込み（bakeCurrentTransformIntoVertices）、底を平らに、上をふっくら。焼き色は上の1/3に集める頂点カラー。いちばん短い1本で、04章・10章で扱う。"],
     // 焼き菓子
-    ["クッキー", "クッキー.js", "#8F5A2B", "7種を断面と外形の数値だけで作り分ける。工業製品なので乱数の幅が狭い。"],
-    ["パンケーキ", "パンケーキ.js", "#EDAB37", "焼き色は縁の淡い環と側面の帯。天面のシロップは吸収を焼き込み、垂れと糸だけ背景を映した屈折で描く。"],
-    ["ドーナツ", "ドーナツ.js", "#DD9E55", "型に接した滑らかな面と、膨れてざらついた面の2つの肌。閉じた輪なのでノイズは3Dで引き、当たり判定はカプセル列で穴を残す。"],
-    ["ロールケーキ", "ロールケーキ.js", "#BB7745", "断面の渦巻きは線ではなくシート。生地とクリームの三日月を、テクスチャと形状が同じ断面関数から引く。"],
+    ["クッキー", "クッキー.js", "#8F5A2B", "7種を断面と外形の数値だけで作り分ける。工業製品なので乱数の幅が狭い。02章・06章・15章の教材。"],
+    ["パンケーキ", "パンケーキ.js", "#EDAB37", "焼き色は縁の淡い環と側面の帯。天面のシロップは吸収を焼き込み、垂れと糸だけ背景を映した屈折で描く。10章・12章の教材。"],
+    ["ドーナツ", "ドーナツ.js", "#DD9E55", "型に接した滑らかな面と、膨れてざらついた面の2つの肌。閉じた輪なのでノイズは3Dで引き、当たり判定はカプセル列で穴を残す。06章・10章・15章の教材。"],
+    ["ロールケーキ", "ロールケーキ.js", "#BB7745", "断面の渦巻きは線ではなくシート。生地とクリームの三日月を、テクスチャと形状が同じ断面関数から引く。07章の教材。"],
     // チョコレート
-    ["チョコレート", "チョコレート.js", "#3A2116", "外形（スーパー楕円）× 縦断面。ブルームと櫛目。Havok で1粒ずつ落とす。"],
-    ["チョコバナナ", "チョコバナナ.js", "#5D3322", "先端を下にして引き上げたチョコの垂れと滴。カラースプレーは上から振った背の側にだけ、半分沈めて付ける。"],
+    ["チョコレート", "チョコレート.js", "#3A2116", "外形（スーパー楕円）× 縦断面。ブルームと櫛目。Havok で1粒ずつ落とす。06章・11章の教材。"],
+    ["チョコバナナ", "チョコバナナ.js", "#5D3322", "先端を下にして引き上げたチョコの垂れと滴。カラースプレーは上から振った背の側にだけ、半分沈めて付ける。07章・16章の教材。"],
     // 冷やし固める・引いて作る
-    ["プリン", "プリン.js", "#C27A30", "Havok で落として、揺れは減衰するばね6本の重ね合わせ。法線も一緒に動かしてハイライトを走らせる。14章の教材。"],
-    ["ゼリー", "ゼリー.js", "#8EAB40", "色は塗らずに、中を通った光路長から解く。菊型の溝は母線の法線方向に彫り、谷のぶん光路を短くする。15章の教材。"],
-    ["アイス", "アイス.js", "#F5D480", "玉と裾を距離関数で溶かし、サーフェスネットで面を張る。ディッシャーの筋・めくれ・気泡を焼き込み、下から溶かす。16章の教材。"],
-    ["飴細工", "飴細工.js", "#FFA838", "ウサギは楕円体とカプセルを smin で溶かした一つの塊。脚の付け根だけ k を小さくして鋏の段を残す。16章の教材。"],
-    ["綿菓子", "綿菓子.js", "#FF9ECC", "螺旋に巻いた帯を持つ回転体の上に、帯の向きに沿って糸を3万2千本。糸は線で描き、浮き量はシェーダで掛ける。芯は深度だけ先に書く。17章の教材。"]
+    ["プリン", "プリン.js", "#C27A30", "Havok で落として、揺れは減衰するばね6本の重ね合わせ。法線も一緒に動かしてハイライトを走らせる。06章・17章の教材。"],
+    ["ゼリー", "ゼリー.js", "#8EAB40", "色は塗らずに、中を通った光路長から解く。菊型の溝は母線の法線方向に彫り、谷のぶん光路を短くする。13章の教材。"],
+    ["アイス", "アイス.js", "#F5D480", "玉と裾を距離関数で溶かし、サーフェスネットで面を張る。ディッシャーの筋・めくれ・気泡を焼き込み、下から溶かす。09章の教材。"],
+    ["飴細工", "飴細工.js", "#FFA838", "ウサギは楕円体とカプセルを smin で溶かした一つの塊。脚の付け根だけ k を小さくして鋏の段を残す。09章の教材。"],
+    ["綿菓子", "綿菓子.js", "#FF9ECC", "螺旋に巻いた帯を持つ回転体の上に、帯の向きに沿って糸を3万2千本。糸は線で描き、浮き量はシェーダで掛ける。芯は深度だけ先に書く。18章の教材。"]
 ];
 function viewHref(file) { return "view.html?f=" + encodeURIComponent(file); }
 function playHref(file) { return "play.html?f=" + encodeURIComponent(file); }

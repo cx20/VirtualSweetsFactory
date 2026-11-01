@@ -18,20 +18,21 @@
       <a href="ch01.html">01 生成</a>
       <a href="ch02.html">02 乱数</a>
       <a href="ch03.html" aria-current="page">03 ノイズ</a>
-      <a href="ch04.html">04 かたち</a>
-      <a href="ch05.html">05 面</a>
-      <a href="ch06.html">06 模様</a>
-      <a href="ch07.html">07 質感</a>
-      <a href="ch08.html">08 物理</a>
-      <a href="ch09.html">09 部品</a>
-      <a href="ch10.html">10 曲がり</a>
-      <a href="ch11.html">11 光</a>
+      <a href="ch04.html">04 面</a>
+      <a href="ch05.html">05 模様</a>
+      <a href="ch06.html">06 かたち</a>
+      <a href="ch07.html">07 曲がり</a>
+      <a href="ch08.html">08 潰れ</a>
+      <a href="ch09.html">09 塊</a>
+      <a href="ch10.html">10 焼き色</a>
+      <a href="ch11.html">11 質感</a>
       <a href="ch12.html">12 たれ</a>
-      <a href="ch13.html">13 潰れ</a>
-      <a href="ch14.html">14 揺れ</a>
-      <a href="ch15.html">15 透け</a>
-      <a href="ch16.html">16 塊</a>
-      <a href="ch17.html">17 糸</a>
+      <a href="ch13.html">13 透け</a>
+      <a href="ch14.html">14 光</a>
+      <a href="ch15.html">15 盛る</a>
+      <a href="ch16.html">16 振る</a>
+      <a href="ch17.html">17 揺れ</a>
+      <a href="ch18.html">18 糸</a>
       <a href="zukan.html">図鑑</a>
       <a href="view.html">ソース</a>
       <a href="terms.html">用語</a>
@@ -40,9 +41,9 @@
 </header>
 
 <main id="top" class="page">
-<div class="wrap" style="--ch:var(--p-cookie)">
+<div class="wrap" style="--ch:var(--p-pancake)">
   <p class="crumbs"><a href="index.html">目次</a><span class="sep">/</span>第03章</p>
-<section class="chapter" id="ch03" style="--ch:var(--p-cookie)">
+<section class="chapter" id="ch03" style="--ch:var(--p-pancake)">
   <div class="chapter-head">
     <div class="chnum">03<small>Noise</small></div>
     <div>
@@ -61,7 +62,7 @@
     </div>
 
     <p>
-      トーストの焼き色を、1ピクセルごとに <code>rnd()</code> で決めたらどうなるか。
+      パンケーキの焼き色を、1ピクセルごとに <code>rnd()</code> で決めたらどうなるか。
       白と茶色の点が入り乱れた砂嵐になります。実物の焼きムラは、
       <b>濃いところの隣はだいたい濃い</b>。となり合う値がつながっていないといけません。
     </p>
@@ -127,31 +128,43 @@
           <div class="chips" id="noiseUse">
             <button class="chip" type="button" data-v="raw" aria-pressed="true">生の値</button>
             <button class="chip" type="button" data-v="bake">焼き色にする</button>
-            <button class="chip" type="button" data-v="pore">す（気泡）にする</button>
+            <button class="chip" type="button" data-v="pore">生地の肌理にする</button>
           </div>
         </div>
         <canvas id="noiseCanvas" width="640" height="330" aria-label="ノイズのオクターブを重ねる実験"></canvas>
       </div>
       <p class="hint">
         左が乱数そのもの（となりと無関係）、右が値ノイズ。
-        「焼き色にする」を押すと、同じノイズがトーストの焼きムラに化けます。
+        「焼き色にする」を押すと、同じノイズがパンケーキの焼きムラに化けます。
       </p>
     </div>
 
     <h3>ぐるっと一周してつながるノイズ</h3>
     <p>
-      ウィンナーや秋刀魚のように<b>筒の表面に模様を巻く</b>とき、
+      団子やパンケーキの側面のように<b>ぐるりと一周する面に模様を巻く</b>とき、
       ふつうのノイズを使うと、一周して戻ってきたところで模様が切れて縦の線が入ります。
       そこで、横方向（u）だけ格子の番号を周期で折り返した専用のノイズを使います。
-      たべもの編の最初の14本のうち筒状のものには、必ずこの <code>v2u</code> が入っています。
-      <a href="https://cx20.github.io/VirtualFoodCourt/view.html?f=%E3%83%95%E3%83%A9%E3%83%B3%E3%82%B9%E3%83%91%E3%83%B3.js" title="姉妹編「たべもののつくりかた」のソース">フランスパン.js</a> のように、UV ではなく3Dのワールド座標でノイズを引いて、継ぎ目そのものを作らないやり方もあります。
+      月見団子.js の Noise には「x 方向だけ period で巻く。テクスチャの継ぎ目が出ないのはこのため」とあり、
+      パンケーキ.js の側面の帯も、同じ折り返しのノイズ <code>fbm2u</code> で描いています。
+    </p>
+    <p>
+      ドーナツとチョコバナナは、それでも足りません。どちらも<b>閉じた立体</b>で、
+      ドーナツは u も v も一周する輪、バナナは両端が点に閉じる筒です。
+      ドーナツ.js のコメントによれば、UV で引くと継ぎ目に線が出るうえ、
+      <b>外周と穴とで周長が3倍違う</b>ので模様の大きさもそろいません。
+      そこで2つとも、UV ではなく<b>3Dの位置から直接ノイズを引いて</b>、継ぎ目そのものを作らないようにしています。
     </p>
     <div class="trap">
       <span class="label">つまずきポイント</span>
       <p><b>fBm の平均は 0.5 のあたりに集まります。</b>
       オクターブを重ねるほど、極端な値（0 に近い／1 に近い）は出にくくなります。
       「しきい値 0.8 以上を焦げにする」と書いたのに焦げが1点も出ない、というのはこれが原因です。
-      <a href="https://cx20.github.io/VirtualFoodCourt/view.html?f=%E7%84%BC%E3%81%8D%E9%AD%9A%EF%BC%88%E3%82%B5%E3%83%B3%E3%83%9E%EF%BC%89.js" title="姉妹編「たべもののつくりかた」のソース">焼き魚（サンマ）.js</a> には、しきい値を実際の分布に合わせ直した記録が残っています。</p>
+      クッキー.js の修正記録には、クラッカーの気泡の膨れ（blister）のしきい値を
+      「fbm の実分布に合わせる」と直した跡が残っています。</p>
+      <p><b>気泡は、fBm のしきい値で作らないでください。</b>
+      ドーナツ.js のコメント：<b>「fbm のしきい値で気泡を作るとテラゾー（人造大理石）の模様になる。
+      実際の気泡は独立した球なので、球冠の深さで作るのが唯一それらしくなる方法」</b>。
+      パンケーキ.js も天面と側面の穴を、1個ずつの球冠（<code>Noise.cap</code>）で彫っています。</p>
     </div>
 
     <div class="try">
@@ -160,15 +173,15 @@
         <li>オクターブを1から6まで動かし、どこから「焼きムラらしく」見えるか決める。</li>
         <li>減り方を 0.85 にすると何が起きるか観察する（細かい粒が消えないので砂っぽくなる）。</li>
         <li>「焼き色にする」で、大きさを 1 と 14 にしたときの見え方の違いを言葉にする。</li>
-        <li><a href="https://cx20.github.io/VirtualFoodCourt/view.html?f=%E3%83%88%E3%83%BC%E3%82%B9%E3%83%88.js" title="姉妹編「たべもののつくりかた」のソース">トースト.js</a> の中で fbm を呼んでいる箇所を全部探し、それぞれ何に使っているか書き出す。</li>
+        <li>パンケーキ.js の sample() の中で fbm2 を呼んでいる箇所を全部探し、それぞれ何に使っているか（焼き色・高さ・縁）書き出す。</li>
       </ol>
     </div>
 
   </div>
 </section>
   <div class="pager">
-    <a class="prev" href="ch02.html"><span class="dir">← まえの章</span><span class="ttl">02 同じ種からは、同じ料理ができる</span></a>
-    <a class="next" href="ch04.html"><span class="dir">つぎの章 →</span><span class="ttl">04 断面を1枚描けば、立体になる</span></a>
+    <a class="prev" href="ch02.html"><span class="dir">← まえの章</span><span class="ttl">02 同じ種からは、同じお菓子が焼ける</span></a>
+    <a class="next" href="ch04.html"><span class="dir">つぎの章 →</span><span class="ttl">04 三角形の向きと、面の傾き</span></a>
   </div>
 </div>
 </main>
