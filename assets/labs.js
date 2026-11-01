@@ -14,7 +14,7 @@
      4. ミニレンダラ  … 画家のアルゴリズム + 簡易PBR
      5. キャンバスの下ごしらえ
      6. 料理のプリセット（断面と材質）
-     HERO / 02〜13 の実験 / 図鑑 / ソースビューア / 用語集の絞り込み
+     HERO / 02〜17 の実験 / 図鑑 / ソースビューア / 用語集の絞り込み
    ======================================================================= */
 (function () {
 "use strict";
@@ -1695,6 +1695,629 @@ function foldField(u, v, seed) {
 })();
 
 /* ======================================================================
+   14 — 揺れはばねの重ね合わせ（モーダル変形）
+   プリンを真横から見る。せん断（横揺れ）と縦の2モードだけ回す
+   ====================================================================== */
+(function () {
+    var cv = $("#jigCanvas"); if (!cv) return;
+    var c = setupCanvas(cv), ctx = c.ctx;
+    var W = 200, H = 170;
+    var pn = pixelPanel(W, H);
+    var out = $("#jigOut");
+
+    // 寸法は画素。プリン.js の rBot 3.30 / rTop 2.30 / H 4.30 の比に合わせる
+    var BH = 112, RB = 70, RT = 49, CX = 100, GY = 160;
+    // 周波数はプリン.js の modeFreq × freqScale（5.8 × 0.5）。縦は 9.2 / 5.8 倍、減衰比は 0.145 / 0.105 倍
+    var PRESET = {
+        purin:  { f: 2.90, z: 0.105 },
+        jelly:  { f: 5.60, z: 0.055 },   // ゼリー.js 8.0 × 0.70
+        kanten: { f: 2.90, z: 0.30 },
+        gomu:   { f: 2.90, z: 0.03 }
+    };
+    var freq = 2.9, zeta = 0.105, useN = true;
+    var q = [0, 0], qd = [0, 0], acc = 0, t = 0;
+    var hist = [], HN = 240;
+    var MAXQ = [26, 16];     // tanh の頭打ち（プリン.js の modeMax）
+
+    function omega(k) { return TAU * freq * (k === 0 ? 1 : 9.2 / 5.8); }
+    function zk(k) { return zeta * (k === 0 ? 1 : 0.145 / 0.105); }
+    var dir = 1;
+    function shake() {
+        dir = -dir;              // 左右を交互に押す
+        qd[0] += dir * 340; qd[1] += 120;
+    }
+    // 片持ちのたわみ形状と、その傾き
+    function psi(s) { return 1.5 * s * s - 0.5 * s * s * s; }
+    function dpsi(s) { return 3 * s - 1.5 * s * s; }
+
+    function step(dt) {
+        acc += Math.min(dt, 0.05);
+        var h = 1 / 240;
+        while (acc >= h) {
+            for (var k = 0; k < 2; k++) {
+                var w = omega(k), z = zk(k);
+                qd[k] += (-2 * z * w * qd[k] - w * w * q[k]) * h;
+                q[k] += qd[k] * h;
+            }
+            acc -= h; t += h;
+        }
+    }
+
+    function draw() {
+        var Q0 = MAXQ[0] * Math.tanh(q[0] / MAXQ[0]);
+        var Q1 = MAXQ[1] * Math.tanh(q[1] / MAXQ[1]);
+        var L = [-0.45, 0.55, 0.70], Ll = Math.hypot(L[0], L[1], L[2]);
+        L = [L[0] / Ll, L[1] / Ll, L[2] / Ll];
+        var hx = L[0], hy = L[1], hz = L[2] + 1, hl = Math.hypot(hx, hy, hz);
+        hx /= hl; hy /= hl; hz /= hl;
+        var taper = (RB - RT) / BH;
+        for (var y = 0; y < H; y++) for (var x = 0; x < W; x++) {
+            var i = y * W + x;
+            var r = 0.955, g = 0.945, b = 0.925;
+            // 変形した点から、静止形状の点へ戻す（縦: y = y0(1 - Q1/H)、せん断: x += Q0·ψ(s)）
+            var yy = GY - y;
+            var y0 = yy / (1 - Q1 / BH);
+            var s = y0 / BH;
+            if (s >= 0 && s <= 1) {
+                var x0 = (x - CX - Q0 * psi(s)) / (1 + Q1 / (2 * BH));
+                var rad = mix(RB, RT, s);
+                // 上の縁の丸め
+                var fl = 7;
+                if (y0 > BH - fl) rad -= fl - Math.sqrt(Math.max(0, fl * fl - Math.pow(y0 - (BH - fl), 2)));
+                if (Math.abs(x0) < rad) {
+                    var u = x0 / rad;
+                    var nx = u, nz = Math.sqrt(Math.max(0, 1 - u * u)), ny = taper;
+                    if (useN) {
+                        // n' = n − (∇u)ᵀ n。せん断は ∂ux/∂y、縦は対角成分
+                        ny -= nx * Q0 * dpsi(s) / BH;
+                        nx *= 1 - Q1 / (2 * BH); nz *= 1 - Q1 / (2 * BH); ny *= 1 + Q1 / BH;
+                    }
+                    var nl = Math.hypot(nx, ny, nz) || 1; nx /= nl; ny /= nl; nz /= nl;
+                    var ndl = Math.max(0, nx * L[0] + ny * L[1] + nz * L[2]);
+                    var spec = Math.pow(Math.max(0, nx * hx + ny * hy + nz * hz), 140) * 0.9;
+                    // カスタード → 上端のカラメルの染み（プリン.js の CUSTARD）
+                    var st = smooth(0.80, 0.97, s);
+                    var col = mix3([0.955, 0.840, 0.550], [0.760, 0.480, 0.190], st);
+                    if (s > 0.965) col = [0.36, 0.14, 0.04];
+                    var lit = 0.30 + 0.85 * ndl;
+                    var sss = Math.pow(1 - nz, 2) * 0.18;
+                    r = tone(srgbToLin(col[0]) * lit + spec + sss);
+                    g = tone(srgbToLin(col[1]) * lit + spec + sss * 0.75);
+                    b = tone(srgbToLin(col[2]) * lit + spec + sss * 0.40);
+                }
+            }
+            if (y >= GY && y < GY + 4) { r = 0.86; g = 0.87; b = 0.88; }   // 皿
+            pn.set(i, r, g, b);
+        }
+        pn.flush();
+        ctx.clearRect(0, 0, c.W, c.H);
+        ctx.drawImage(pn.cv, 0, 8, 400, 340);
+
+        // q の記録
+        var X0 = 420, X1 = 626, YM = 180, AMP = 120;
+        ctx.strokeStyle = "rgba(36,28,21,.25)"; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(X0, YM); ctx.lineTo(X1, YM); ctx.stroke();
+        ctx.strokeStyle = "#C27A30"; ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (var j = 0; j < hist.length; j++) {
+            var px = X0 + (X1 - X0) * j / (HN - 1), py = YM - hist[j] / MAXQ[0] * AMP;
+            j ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+        }
+        ctx.stroke();
+        ctx.fillStyle = "rgba(36,28,21,.6)"; ctx.font = "12px sans-serif";
+        ctx.fillText("横揺れ q（直近 4 秒）", X0, 40);
+
+        if (out) {
+            var w0 = omega(0), z0 = zk(0);
+            var t10 = Math.log(10) / (z0 * w0);       // 振幅が 1/10 になるまで
+            out.innerHTML = "振幅が 1/10 になるまで " + t10.toFixed(2) + " 秒<br>" +
+                "そのあいだに約 " + (t10 * freq).toFixed(1) + " 回揺れる" +
+                (useN ? "" : "<br><b style='color:#8F1619'>法線が止まっています。ハイライトが一緒に滑りません</b>");
+        }
+    }
+
+    var last = 0;
+    addLoop(cv, function (dt, now) {
+        step(dt);
+        // 1/60 秒ごとに記録（4 秒ぶん）
+        if (now - last > 1 / 60) {
+            last = now;
+            hist.push(MAXQ[0] * Math.tanh(q[0] / MAXQ[0]));
+            if (hist.length > HN) hist.shift();
+        }
+        draw();
+    });
+
+    var fEl = slider("#jigFreq", "#jigFreqV", f2, function (n) { freq = n; });
+    var zEl = slider("#jigZeta", "#jigZetaV", function (n) { return n.toFixed(3); }, function (n) { zeta = n; });
+    chipGroup("#jigPreset", function (v) {
+        var p = PRESET[v]; if (!p) return;
+        if (fEl) { fEl.value = p.f; fEl.dispatchEvent(new Event("input")); }
+        if (zEl) { zEl.value = p.z; zEl.dispatchEvent(new Event("input")); }
+        shake();
+    });
+    toggle("#jigNormal", function (v) { useN = v; });
+    var btn = $("#jigShake");
+    if (btn) btn.addEventListener("click", shake);
+    cv.addEventListener("click", shake);
+    cv.style.cursor = "pointer";
+    shake();
+})();
+
+/* ======================================================================
+   15 — ゼリーの色は光路長で決まる
+   菊型のゼリーを正面から見て、画素ごとに中を通る距離を数える
+   ====================================================================== */
+(function () {
+    var cv = $("#jellyCanvas"); if (!cv) return;
+    var c = setupCanvas(cv), ctx = c.ctx;
+    var W = 220, H = 170;
+    var pn = pixelPanel(W, H), pd = pixelPanel(W, H);
+    var out = $("#jellyOut");
+    var paint = false, sigma = 1, thin = true, flavor = "melon", mark;
+
+    // ゼリー.js の FLAVORS。基準の光路 4.5cm を通ったあとの透過率（linear）
+    var T0 = {
+        melon: [0.300, 0.440, 0.050],
+        strawberry: [0.560, 0.030, 0.030],
+        grape: [0.230, 0.045, 0.310],
+        orange: [0.800, 0.310, 0.028]
+    };
+    var REF = 4.5;
+    // 寸法（cm）。ゼリー.js の rBot 4.05 / rTop 2.50 / H 5.30 / 溝 12本・深さ 0.34・g^0.6
+    var JH = 5.3, RB = 4.05, RT = 2.5, FIL = 0.72, NF = 12, DEP = 0.34, POW = 0.6;
+    var S = 21;                 // 1cm あたりの画素
+    var CX = W / 2, GY = H - 8;
+
+    // 周方向の形を表にしておく（1 が山、0 が谷）
+    var NT = 1024, FT = new Float32Array(NT);
+    for (var k = 0; k < NT; k++) {
+        var gg = 0.5 + 0.5 * Math.cos(NF * k / NT * TAU);
+        FT[k] = Math.pow(gg, POW);
+    }
+    function flute(th) {
+        // 【対策】u が丸めでちょうど 1 になると表の外を引いて NaN になり、白い点が散る
+        var u = th / TAU; u -= Math.floor(u);
+        return FT[((u * NT) | 0) & (NT - 1)];
+    }
+    // 母線の半径。胴は少しふくらみ、肩は丸い
+    function side(y) { var s = y / JH; return mix(RB, RT + FIL, s) + 0.15 * Math.sin(Math.PI * s); }
+    function prof(y) {
+        if (y < 0 || y > JH) return 0;
+        var y0 = JH - FIL;
+        if (y <= y0) return side(y);
+        // 肩：胴の半径から天面の RT まで、段を作らずに丸める
+        var t = (y - y0) / FIL;
+        return RT + (side(y0) - RT) * Math.sqrt(Math.max(0, 1 - t * t));
+    }
+    function rEff(th, y, carve) {
+        var r = prof(y);
+        if (!carve) return r;
+        return r - DEP * smooth(0, 0.3, y) * (1 - flute(th));
+    }
+    // 光路長：視線（z 方向）に沿って中にいる長さを数える
+    function chord(X, Y, carve) {
+        var R = prof(Y); if (R <= 0 || Math.abs(X) >= R) return 0;
+        // 【対策】中か外かだけを数えると、刻みの段が縦縞になって出る。
+        //         境目をまたぐ区間は、内外の深さの比で按分する
+        var zM = Math.sqrt(R * R - X * X), n = 48, dz = 2 * zM / n, d = 0;
+        var fPrev = rEff(Math.atan2(-zM, X), Y, carve) - R;
+        for (var i = 1; i <= n; i++) {
+            var z = -zM + i * dz;
+            var f = rEff(Math.atan2(z, X), Y, carve) - Math.hypot(X, z);
+            if (fPrev > 0 && f > 0) d += dz;
+            else if (fPrev > 0 || f > 0) d += dz * Math.max(fPrev, f) / (Math.abs(fPrev) + Math.abs(f) + 1e-9);
+            fPrev = f;
+        }
+        return d;
+    }
+    // 手前の面の法線（∇F、F = r − rEff(θ, y)）
+    function frontNormal(X, Y) {
+        var R = prof(Y), zM = Math.sqrt(Math.max(0, R * R - X * X));
+        var z = zM;
+        for (var i = 0; i < 40; i++) {
+            if (Math.hypot(X, z) < rEff(Math.atan2(z, X), Y, true)) break;
+            z -= zM / 40;
+        }
+        var th = Math.atan2(z, X), r = Math.hypot(X, z) || 1e-6, e = 0.004;
+        var dth = (rEff(th + e, Y, true) - rEff(th - e, Y, true)) / (2 * e);
+        // 底のすぐ上で下側を測ると prof が 0 になって傾きが跳ねる（白い点が出る）
+        var ya = Math.max(0.005, Y - 0.02), yb = Math.min(JH - 0.005, Y + 0.02);
+        var dy = (rEff(th, yb, true) - rEff(th, ya, true)) / (yb - ya);
+        var c0 = Math.cos(th), s0 = Math.sin(th);
+        var nx = c0 + dth / r * s0, nz = s0 - dth / r * c0, ny = -dy;
+        var l = Math.hypot(nx, ny, nz) || 1;
+        return [nx / l, ny / l, nz / l];
+    }
+
+    function draw() {
+        var T = T0[flavor];
+        var sig = [-Math.log(T[0]) / REF * sigma, -Math.log(T[1]) / REF * sigma, -Math.log(T[2]) / REF * sigma];
+        var L = [-0.40, 0.62, 0.68], Ll = Math.hypot(L[0], L[1], L[2]);
+        L = [L[0] / Ll, L[1] / Ll, L[2] / Ll];
+        var hx = L[0], hy = L[1], hz = L[2] + 1, hl = Math.hypot(hx, hy, hz);
+        hx /= hl; hy /= hl; hz /= hl;
+        var BG = [0.92, 0.93, 0.94], dMax = 2 * RB;
+        for (var y = 0; y < H; y++) for (var x = 0; x < W; x++) {
+            var i = y * W + x;
+            var X = (x + 0.5 - CX) / S, Y = (GY - y - 0.5) / S;
+            var r = BG[0], g = BG[1], b = BG[2], dv = 0;
+            var R = prof(Y);
+            if (R > 0 && Math.abs(X) < R) {
+                var dSil = chord(X, Y, true);
+                if (dSil > 0) {
+                    // 光路：溝の目減りを入れるかどうか
+                    var d = thin ? dSil : chord(X, Y, false);
+                    dv = d / dMax;
+                    var n = frontNormal(X, Y);
+                    var ndl = Math.max(0, n[0] * L[0] + n[1] * L[1] + n[2] * L[2]);
+                    var spec = Math.pow(Math.max(0, n[0] * hx + n[1] * hy + n[2] * hz), 260) * 1.1;
+                    var fres = 0.04 + 0.5 * Math.pow(1 - Math.max(0, n[2]), 5);
+                    if (paint) {
+                        // アルベドに「基準の厚みの色」を塗る。厚みに関係なく同じ
+                        r = T[0] * (0.25 + 0.85 * ndl) + spec * 0.5;
+                        g = T[1] * (0.25 + 0.85 * ndl) + spec * 0.5;
+                        b = T[2] * (0.25 + 0.85 * ndl) + spec * 0.5;
+                    } else {
+                        // 透過光 = 背景 × exp(−σ·d)
+                        r = BG[0] * Math.exp(-sig[0] * d) * (1 - fres) + fres * 0.9 + spec;
+                        g = BG[1] * Math.exp(-sig[1] * d) * (1 - fres) + fres * 0.9 + spec;
+                        b = BG[2] * Math.exp(-sig[2] * d) * (1 - fres) + fres * 0.9 + spec;
+                    }
+                    r = tone(r); g = tone(g); b = tone(b);
+                } else { r = tone(r); g = tone(g); b = tone(b); }
+            } else { r = tone(r); g = tone(g); b = tone(b); }
+            if (y > GY) { r = 0.80; g = 0.80; b = 0.81; }
+            pn.set(i, r, g, b);
+            pd.set(i, dv, dv, dv);
+        }
+        pn.flush(); pd.flush();
+        ctx.clearRect(0, 0, c.W, c.H);
+        ctx.drawImage(pn.cv, 0, 10, 440, 340);
+        ctx.drawImage(pd.cv, 456, 120, 176, 136);
+        ctx.fillStyle = "rgba(36,28,21,.6)"; ctx.font = "12px sans-serif";
+        ctx.fillText("光路長 d（白いほど長い）", 456, 112);
+
+        if (out) {
+            // 胴の高さで、中心と縁の近くを比べる
+            var Y0 = JH * 0.45, R0 = prof(Y0) * 0.85;
+            var dP = chord(0, Y0, thin), dV = chord(R0, Y0, thin);
+            var tr = function (dd) {
+                return [Math.exp(-sig[0] * dd), Math.exp(-sig[1] * dd), Math.exp(-sig[2] * dd)]
+                    .map(function (v) { return v.toFixed(2); }).join(", ");
+            };
+            out.innerHTML = paint
+                ? "<b style='color:#8F1619'>色を塗っています。光路長を見ていないので、厚みで色が変わりません</b>"
+                : "σ（1cm あたり） " + sig.map(function (v) { return v.toFixed(2); }).join(", ") + "<br>" +
+                  "胴の中心 d = " + dP.toFixed(2) + "cm → 透過 (" + tr(dP) + ")<br>" +
+                  "縁の近く d = " + dV.toFixed(2) + "cm → 透過 (" + tr(dV) + ")";
+        }
+    }
+    mark = lazyLoop(cv, draw);
+    chipGroup("#jellyFlavor", function (v) { flavor = v; mark(); });
+    toggle("#jellyPaint", function (v) { paint = v; mark(); });
+    slider("#jellySigma", "#jellySigmaV", f2, function (n) { sigma = n; mark(); });
+    toggle("#jellyThin", function (v) { thin = v; mark(); });
+})();
+
+/* ======================================================================
+   16 — 距離の場から輪郭を拾う（2次元のサーフェスネット）
+   飴細工.js のウサギを横から見た形。部品を smin で溶かし、格子から線を張る
+   ====================================================================== */
+(function () {
+    var cv = $("#sdfCanvas"); if (!cv) return;
+    var c = setupCanvas(cv), ctx = c.ctx;
+    var out = $("#sdfOut");
+    var kk = 0.6, hGrid = 0.36, mode = "proj", showField = true, mark;
+
+    // 表示範囲（cm）と倍率
+    var XMIN = -4.4, XMAX = 4.6, YMIN = -2.9, YMAX = 4.9, SC = 44;
+    var OX = (c.W - (XMAX - XMIN) * SC) / 2, OY = (c.H - (YMAX - YMIN) * SC) / 2;
+    function sx(x) { return OX + (x - XMIN) * SC; }
+    function sy(y) { return OY + (YMAX - y) * SC; }
+
+    function smin(a, b, k) {
+        if (k <= 0) return Math.min(a, b);
+        var h = Math.max(k - Math.abs(a - b), 0) / k;
+        return Math.min(a, b) - h * h * k * 0.25;
+    }
+    // 楕円（iq の近似距離。飴細工.js の sdEll を2次元にしたもの）
+    function ell(px, py, cx, cy, rx, ry) {
+        var a = (px - cx) / rx, b = (py - cy) / ry;
+        var k0 = Math.sqrt(a * a + b * b);
+        var a2 = a / rx, b2 = b / ry, k1 = Math.sqrt(a2 * a2 + b2 * b2);
+        return k0 * (k0 - 1) / Math.max(k1, 1e-9);
+    }
+    // 先細りカプセル（半径を線形に変える簡易版）
+    function cap(px, py, ax, ay, bx, by, r1, r2) {
+        var pax = px - ax, pay = py - ay, bax = bx - ax, bay = by - ay;
+        var h = clamp((pax * bax + pay * bay) / (bax * bax + bay * bay), 0, 1);
+        return Math.hypot(pax - bax * h, pay - bay * h) - mix(r1, r2, h);
+    }
+    // k は飴細工.js の値の比を保って、頭と胴の 0.7 を基準に振る
+    function sdf(x, y) {
+        var m = kk / 0.7;
+        var d = ell(x, y, -1.3, 0.15, 1.55, 1.45);
+        d = smin(d, ell(x, y, 0.3, 0.0, 1.7, 1.25), 0.9 * m);
+        d = smin(d, ell(x, y, 1.55, 0.45, 1.1, 1.2), 0.9 * m);
+        d = smin(d, cap(x, y, 0.1, -0.7, 0.1, -2.6, 0.62, 0.5), 0.6 * m);
+        d = smin(d, ell(x, y, -2.75, 1.25, 0.55, 0.62), 0.3 * m);
+        var hd = ell(x, y, 2.7, 1.9, 1.18, 1.05);
+        hd = smin(hd, ell(x, y, 3.62, 1.58, 0.62, 0.55), 0.45 * m);
+        hd = smin(hd, cap(x, y, 2.35, 2.6, 1.35, 4.5, 0.42, 0.26), 0.25 * m);
+        hd = smin(hd, cap(x, y, 2.6, 2.6, 2.4, 4.4, 0.40, 0.25), 0.25 * m);
+        d = smin(d, hd, 0.7 * m);
+        var leg = smin(cap(x, y, 1.6, -0.3, 2.3, -1.5, 0.42, 0.3), ell(x, y, 2.45, -1.65, 0.42, 0.24), 0.15 * m);
+        d = smin(d, leg, 0.3 * m);
+        var hind = smin(ell(x, y, -1.5, -0.5, 1.0, 0.75), cap(x, y, -1.9, -0.8, -3.0, -1.9, 0.5, 0.36), 0.3 * m);
+        d = smin(d, hind, 0.35 * m);
+        return d;
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, c.W, c.H);
+        // 距離の場（等高線）
+        if (showField) {
+            var PW = 220, PH = 180, pn = pixelPanel(PW, PH);
+            for (var j = 0; j < PH; j++) for (var i = 0; i < PW; i++) {
+                var x = XMIN + (i + 0.5) / PW * (XMAX - XMIN);
+                var y = YMAX - (j + 0.5) / PH * (YMAX - YMIN);
+                var d = sdf(x, y);
+                var band = Math.abs((d / 0.3) - Math.round(d / 0.3));
+                var line = band < 0.07 ? 0.10 : 0;
+                var col = d < 0 ? [1.0, 0.86, 0.62] : [0.97, 0.95, 0.91];
+                pn.set(j * PW + i, col[0] - line, col[1] - line, col[2] - line * 0.8);
+            }
+            pn.flush();
+            ctx.drawImage(pn.cv, OX, OY, (XMAX - XMIN) * SC, (YMAX - YMIN) * SC);
+        }
+
+        // 格子で測る
+        var h = hGrid;
+        var nx = Math.ceil((XMAX - XMIN) / h) + 1, ny = Math.ceil((YMAX - YMIN) / h) + 1;
+        var F = new Float32Array(nx * ny);
+        for (var b = 0; b < ny; b++) for (var a = 0; a < nx; a++) F[b * nx + a] = sdf(XMIN + a * h, YMIN + b * h);
+        if (mode === "blur") {
+            // アイス.js と同じ 1:2:1 を軸ごとに1回
+            var T = new Float32Array(F.length);
+            for (b = 0; b < ny; b++) for (a = 0; a < nx; a++) {
+                var l = F[b * nx + Math.max(0, a - 1)], r = F[b * nx + Math.min(nx - 1, a + 1)];
+                T[b * nx + a] = (l + 2 * F[b * nx + a] + r) * 0.25;
+            }
+            for (b = 0; b < ny; b++) for (a = 0; a < nx; a++) {
+                var u = T[Math.max(0, b - 1) * nx + a], dn = T[Math.min(ny - 1, b + 1) * nx + a];
+                F[b * nx + a] = (u + 2 * T[b * nx + a] + dn) * 0.25;
+            }
+        }
+        // セルごとに頂点を1つ（符号の変わる辺の交点の平均）
+        var cellV = new Int32Array((nx - 1) * (ny - 1)).fill(-1), P = [];
+        for (b = 0; b < ny - 1; b++) for (a = 0; a < nx - 1; a++) {
+            var f = [F[b * nx + a], F[b * nx + a + 1], F[(b + 1) * nx + a], F[(b + 1) * nx + a + 1]];
+            var neg = (f[0] < 0) + (f[1] < 0) + (f[2] < 0) + (f[3] < 0);
+            if (neg === 0 || neg === 4) continue;
+            var E = [[0, 1, 0, 0, 1, 0], [2, 3, 0, 1, 1, 1], [0, 2, 0, 0, 0, 1], [1, 3, 1, 0, 1, 1]];
+            var px = 0, py = 0, n = 0;
+            for (var e = 0; e < 4; e++) {
+                var f0 = f[E[e][0]], f1 = f[E[e][1]];
+                if ((f0 < 0) === (f1 < 0)) continue;
+                var t = f0 / (f0 - f1);
+                px += mix(E[e][2], E[e][4], t); py += mix(E[e][3], E[e][5], t); n++;
+            }
+            cellV[b * (nx - 1) + a] = P.length;
+            P.push([XMIN + (a + px / n) * h, YMIN + (b + py / n) * h]);
+        }
+        // 面へ射影（飴細工.js の projectToSurface。2回、1歩は格子の 0.6 倍まで）
+        if (mode === "proj") {
+            for (var v = 0; v < P.length; v++) {
+                var p = P[v];
+                for (var it = 0; it < 2; it++) {
+                    var dd = sdf(p[0], p[1]), ee = 0.005;
+                    var gx = (sdf(p[0] + ee, p[1]) - sdf(p[0] - ee, p[1])) / (2 * ee);
+                    var gy = (sdf(p[0], p[1] + ee) - sdf(p[0], p[1] - ee)) / (2 * ee);
+                    var g2 = gx * gx + gy * gy; if (g2 < 1e-8) break;
+                    var stx = gx * dd / g2, sty = gy * dd / g2, sl = Math.hypot(stx, sty);
+                    if (sl > h * 0.6) { stx *= h * 0.6 / sl; sty *= h * 0.6 / sl; }
+                    p[0] -= stx; p[1] -= sty;
+                }
+            }
+        }
+        // 符号の変わる格子の辺ごとに、両側のセルの頂点を結ぶ
+        var segs = 0;
+        ctx.strokeStyle = "#57301A"; ctx.lineWidth = 2; ctx.lineJoin = "round";
+        ctx.beginPath();
+        for (b = 0; b < ny; b++) for (a = 0; a < nx; a++) {
+            var s0 = F[b * nx + a] < 0;
+            if (a + 1 < nx && b >= 1 && b < ny - 1 && s0 !== (F[b * nx + a + 1] < 0)) {
+                var v0 = cellV[(b - 1) * (nx - 1) + a], v1 = cellV[b * (nx - 1) + a];
+                if (v0 >= 0 && v1 >= 0) { ctx.moveTo(sx(P[v0][0]), sy(P[v0][1])); ctx.lineTo(sx(P[v1][0]), sy(P[v1][1])); segs++; }
+            }
+            if (b + 1 < ny && a >= 1 && a < nx - 1 && s0 !== (F[(b + 1) * nx + a] < 0)) {
+                var w0 = cellV[b * (nx - 1) + a - 1], w1 = cellV[b * (nx - 1) + a];
+                if (w0 >= 0 && w1 >= 0) { ctx.moveTo(sx(P[w0][0]), sy(P[w0][1])); ctx.lineTo(sx(P[w1][0]), sy(P[w1][1])); segs++; }
+            }
+        }
+        ctx.stroke();
+        // 頂点
+        ctx.fillStyle = "#57301A";
+        var err = 0;
+        for (v = 0; v < P.length; v++) {
+            err += Math.abs(sdf(P[v][0], P[v][1]));
+            if (h >= 0.22) { ctx.beginPath(); ctx.arc(sx(P[v][0]), sy(P[v][1]), 2.2, 0, TAU); ctx.fill(); }
+        }
+        // 格子（粗いときだけ）
+        if (h >= 0.3) {
+            ctx.fillStyle = "rgba(36,28,21,.18)";
+            for (b = 0; b < ny; b++) for (a = 0; a < nx; a++) ctx.fillRect(sx(XMIN + a * h) - 1, sy(YMIN + b * h) - 1, 2, 2);
+        }
+        if (out) {
+            out.innerHTML = "格子点 " + (nx * ny) + " / 頂点 " + P.length + " / 線分 " + segs + "<br>" +
+                "頂点と本当の輪郭のずれ 平均 " + (P.length ? err / P.length : 0).toFixed(3) + "cm" +
+                (kk < 0.05 ? "<br><b style='color:#8F1619'>k = 0。耳と頭、頭と胴のつなぎ目に角が出ています</b>" : "");
+        }
+    }
+    mark = lazyLoop(cv, draw);
+    slider("#sdfK", "#sdfKV", f2, function (n) { kk = n; mark(); });
+    slider("#sdfGrid", "#sdfGridV", f2, function (n) { hGrid = n; mark(); });
+    chipGroup("#sdfMode", function (v) { mode = v; mark(); });
+    toggle("#sdfField", function (v) { showField = v; mark(); });
+})();
+
+/* ======================================================================
+   17 — 綿菓子は線の集まり
+   綿菓子.js と同じ曲面（回転体 × 螺旋の帯）に糸を並べ、横から見る
+   ====================================================================== */
+(function () {
+    var cv = $("#flossCanvas"); if (!cv) return;
+    var c = setupCanvas(cv), ctx = c.ctx;
+    var out = $("#flossOut");
+    var count = 4000, fluff = 1, alongBand = true, useCore = true, color = "white", mark;
+
+    // 綿菓子.js の PROF / bands / thick / segs
+    var PROF = [
+        [0.000, 0.000], [0.055, 0.030], [0.150, 0.100], [0.250, 0.200],
+        [0.340, 0.320], [0.400, 0.450], [0.430, 0.580], [0.420, 0.700],
+        [0.370, 0.810], [0.280, 0.900], [0.150, 0.960], [0.000, 0.985]
+    ];
+    var BANDS = 6.5, THICK = 0.075, SEG = 14;
+    var COL = { white: [0.96, 0.91, 0.93], pink: [1.00, 0.62, 0.80] };
+    var YAW = 0.5, SC = 300, CX = 250, CY = 330;
+
+    function crom(a, b, cc, d, t) {
+        return 0.5 * (2 * b + (-a + cc) * t + (2 * a - 5 * b + 4 * cc - d) * t * t + (-a + 3 * b - 3 * cc + d) * t * t * t);
+    }
+    function profile(v, o) {
+        var n = PROF.length, f = clamp(v, 0, 0.99999) * (n - 1);
+        var i = Math.floor(f), t = f - i;
+        var p0 = PROF[Math.max(0, i - 1)], p1 = PROF[i], p2 = PROF[Math.min(n - 1, i + 1)], p3 = PROF[Math.min(n - 1, i + 2)];
+        o[0] = Math.max(0, crom(p0[0], p1[0], p2[0], p3[0], t));
+        o[1] = crom(p0[1], p1[1], p2[1], p3[1], t);
+    }
+    function bandK(phi, v) { return v * BANDS + phi / TAU + 0.22 * Math.sin(2 * phi + v * 5.0); }
+    var pr = [0, 0];
+    function surf(phi, v, o) {
+        profile(v, pr);
+        var k = bandK(phi, v), fr = k - Math.floor(k);
+        var band = Math.pow(Math.sin(Math.PI * fr), 0.7);
+        var sv = Math.sin(Math.PI * clamp(v, 0, 1));
+        var lobe = 0.07 * Math.sin(phi + 1.3) + 0.045 * Math.sin(2 * phi + v * 3.0 + 0.5) + 0.03 * Math.sin(3 * phi - v * 4.0 + 1.1);
+        var r = pr[0] * (0.84 + 0.16 * band + lobe * sv);
+        o[0] = r * Math.cos(phi); o[1] = pr[1] + 0.012 * band * sv; o[2] = r * Math.sin(phi); o[3] = band;
+    }
+    var A = [0, 0, 0, 0], B = [0, 0, 0, 0], C = [0, 0, 0, 0], D = [0, 0, 0, 0];
+    function frame(phi, v, P, N) {
+        surf(phi, v, P);
+        var vv = clamp(v, 0.004, 0.996), e = 1e-3;
+        surf(phi + e, vv, A); surf(phi - e, vv, B); surf(phi, vv + e, C); surf(phi, vv - e, D);
+        var ux = A[0] - B[0], uy = A[1] - B[1], uz = A[2] - B[2];
+        var wx = C[0] - D[0], wy = C[1] - D[1], wz = C[2] - D[2];
+        var nx = wy * uz - wz * uy, ny = wz * ux - wx * uz, nz = wx * uy - wy * ux;
+        var l = Math.hypot(nx, ny, nz) || 1; nx /= l; ny /= l; nz /= l;
+        if (nx * P[0] + ny * (P[1] - 0.5) + nz * P[2] < 0) { nx = -nx; ny = -ny; nz = -nz; }
+        N[0] = nx; N[1] = ny; N[2] = nz;
+    }
+    // 画面へ（横から少し回して見る。depth が正なら手前）
+    var cy0 = Math.cos(YAW), sy0 = Math.sin(YAW);
+    function depth(x, z) { return x * sy0 + z * cy0; }
+
+    // 糸は「表面の点」と「浮かせるベクトル」を別々に持つ（綿菓子.js の buildStrands）。
+    // ふわふわ度を変えても作り直さず、描くときに掛けるだけ
+    var strands = null, builtFor = "";
+    function build() {
+        var key = count + ":" + alongBand;
+        if (key === builtFor) return;
+        builtFor = key;
+        var rng = new Rng(20261101), rnd = function () { return rng.next(); };
+        var P = [0, 0, 0, 0], N = [0, 0, 0], q = [0, 0];
+        strands = [];
+        for (var k = 0; k < count; k++) {
+            var v;
+            do { v = 0.01 + 0.98 * rnd(); profile(v, q); } while (rnd() * 0.45 > q[0] + 0.02);
+            var phi = rnd() * TAU;
+            var stray = rnd() < 0.07;
+            var d = THICK * (0.25 + 0.75 * Math.pow(rnd(), 0.8)) * (stray ? 1.6 + rnd() * 0.9 : 1.0);
+            var len = (0.10 + 0.26 * rnd()) * (stray ? 1.5 : 1.0);
+            var dphi = Math.min(2.4, len / Math.max(q[0], 0.06)) / SEG * (rnd() < 0.5 ? -1 : 1);
+            var slope = alongBand
+                ? -(1 + (rnd() - 0.5) * 0.9) / (TAU * BANDS)          // 帯に沿う傾き
+                : (rnd() - 0.5) * 2.4 / Math.max(q[0], 0.08);            // ばらばらの向き
+            var pts = [];
+            for (var j = 0; j <= SEG; j++) {
+                frame(phi, v, P, N);
+                var s = j / SEG, dj = d;
+                if (stray) dj += THICK * 0.5 * Math.pow(Math.abs(2 * s - 1), 3);
+                pts.push(P[0], P[1], P[2], N[0] * dj, N[1] * dj, N[2] * dj);
+                phi += dphi;
+                v = clamp(v + dphi * slope + (rnd() - 0.5) * 0.006, 0.01, 0.99);
+            }
+            strands.push(pts);
+        }
+    }
+
+    function draw() {
+        build();
+        ctx.clearRect(0, 0, c.W, c.H);
+        var g = ctx.createRadialGradient(CX, 180, 20, CX, 180, 340);
+        g.addColorStop(0, "#e8eaf0"); g.addColorStop(1, "#8e96a6");
+        ctx.fillStyle = g; ctx.fillRect(0, 0, c.W, c.H);
+        // 割り箸
+        ctx.strokeStyle = "#C8A878"; ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.moveTo(CX, CY + 40); ctx.lineTo(CX, CY - 60); ctx.stroke();
+
+        var col = COL[color];
+        var c255 = function (k, m) { return (col[k] * m) | 0; };
+        // 芯：曲面の輪郭を半透明で塗る（正面ほど濃く、縁ほど薄く）
+        if (useCore) {
+            ctx.beginPath();
+            for (var i = 0; i <= 60; i++) {
+                profile(i / 60, pr);
+                var x = CX - pr[0] * 1.02 * SC, y = CY - pr[1] * SC;
+                i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+            }
+            for (i = 60; i >= 0; i--) {
+                profile(i / 60, pr);
+                ctx.lineTo(CX + pr[0] * 1.02 * SC, CY - pr[1] * SC);
+            }
+            ctx.closePath();
+            var cg = ctx.createRadialGradient(CX - 30, CY - 190, 10, CX, CY - 150, 150);
+            cg.addColorStop(0, "rgba(" + c255(0, 255) + "," + c255(1, 255) + "," + c255(2, 255) + ",0.9)");
+            cg.addColorStop(1, "rgba(" + c255(0, 200) + "," + c255(1, 200) + "," + c255(2, 205) + ",0.45)");
+            ctx.fillStyle = cg; ctx.fill();
+        }
+        // 糸：1本ずつ薄く重ねる。芯の深度が先にあれば、奥の半分にある点は描かれない
+        ctx.strokeStyle = "rgb(" + c255(0, 255) + "," + c255(1, 255) + "," + c255(2, 255) + ")";
+        ctx.lineWidth = 0.7; ctx.lineCap = "round";
+        ctx.globalAlpha = useCore ? 0.40 : 0.25;
+        var drawn = 0, hidden = 0;
+        for (var k = 0; k < strands.length; k++) {
+            var pts = strands[k], pen = false;
+            ctx.beginPath();
+            for (var j = 0; j <= SEG; j++) {
+                var b = j * 6;
+                var px = pts[b] + pts[b + 3] * fluff, py = pts[b + 1] + pts[b + 4] * fluff, pz = pts[b + 2] + pts[b + 5] * fluff;
+                if (useCore && depth(pts[b], pts[b + 2]) < 0) { pen = false; hidden++; continue; }
+                var X = CX + (px * cy0 - pz * sy0) * SC, Y = CY - py * SC;
+                if (pen) ctx.lineTo(X, Y); else { ctx.moveTo(X, Y); pen = true; }
+                drawn++;
+            }
+            ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+        if (out) {
+            out.innerHTML = "糸 " + strands.length + " 本 / 折れ線 " + (strands.length * SEG) + " 本<br>" +
+                (useCore ? "芯に隠れた点 " + Math.round(hidden / Math.max(1, drawn + hidden) * 100) + "%"
+                         : "<b style='color:#8F1619'>芯が無いので、奥の糸まで透けています</b>") +
+                (alongBand ? "" : "<br><b style='color:#8F1619'>糸が帯に沿っていません（毛玉）</b>");
+        }
+    }
+    mark = lazyLoop(cv, draw);
+    slider("#flossN", "#flossNV", function (n) { return String(n | 0); }, function (n) { count = n | 0; mark(); });
+    slider("#flossFluff", "#flossFluffV", f2, function (n) { fluff = n; mark(); });
+    toggle("#flossBand", function (v) { alongBand = v; mark(); });
+    toggle("#flossCore", function (v) { useCore = v; mark(); });
+    chipGroup("#flossColor", function (v) { color = v; mark(); });
+})();
+
+/* ======================================================================
    ファイル一覧（図鑑とソースビューアで共有）
    [表示名, ファイル名, 色, 説明]
    色は各ファイルのコードに実際に書かれている値
@@ -1704,6 +2327,7 @@ var FILES = [
     ["花見団子", "花見団子.js", "#F49DAD", "たれは色ではなく層。串の入口はすり鉢状にへこむ。12章の教材。"],
     ["月見団子", "月見団子.js", "#D8CFBB", "接触で潰れる。減った体積の行き先と、縁の丸い土手。13章の教材。"],
     ["たい焼き", "たい焼き.js", "#D79D55", "型の縁にできるミミと、薄い所ほど濃い焼き色。手前の1個はクリックで割れ、生地のちぎれ面とつぶあんが見える。"],
+    ["栗饅頭", "栗饅頭.js", "#B86126", "球を楕円に伸ばして頂点へ焼き込み（bakeCurrentTransformIntoVertices）、底を平らに、上をふっくら。焼き色は上の1/3に集める頂点カラー。いちばん短い1本で、05章で扱う。"],
     // 焼き菓子
     ["クッキー", "クッキー.js", "#8F5A2B", "7種を断面と外形の数値だけで作り分ける。工業製品なので乱数の幅が狭い。"],
     ["パンケーキ", "パンケーキ.js", "#EDAB37", "焼き色は縁の淡い環と側面の帯。天面のシロップは吸収を焼き込み、垂れと糸だけ背景を映した屈折で描く。"],
@@ -1711,7 +2335,13 @@ var FILES = [
     ["ロールケーキ", "ロールケーキ.js", "#BB7745", "断面の渦巻きは線ではなくシート。生地とクリームの三日月を、テクスチャと形状が同じ断面関数から引く。"],
     // チョコレート
     ["チョコレート", "チョコレート.js", "#3A2116", "外形（スーパー楕円）× 縦断面。ブルームと櫛目。Havok で1粒ずつ落とす。"],
-    ["チョコバナナ", "チョコバナナ.js", "#5D3322", "先端を下にして引き上げたチョコの垂れと滴。カラースプレーは上から振った背の側にだけ、半分沈めて付ける。"]
+    ["チョコバナナ", "チョコバナナ.js", "#5D3322", "先端を下にして引き上げたチョコの垂れと滴。カラースプレーは上から振った背の側にだけ、半分沈めて付ける。"],
+    // 冷やし固める・引いて作る
+    ["プリン", "プリン.js", "#C27A30", "Havok で落として、揺れは減衰するばね6本の重ね合わせ。法線も一緒に動かしてハイライトを走らせる。14章の教材。"],
+    ["ゼリー", "ゼリー.js", "#8EAB40", "色は塗らずに、中を通った光路長から解く。菊型の溝は母線の法線方向に彫り、谷のぶん光路を短くする。15章の教材。"],
+    ["アイス", "アイス.js", "#F5D480", "玉と裾を距離関数で溶かし、サーフェスネットで面を張る。ディッシャーの筋・めくれ・気泡を焼き込み、下から溶かす。16章の教材。"],
+    ["飴細工", "飴細工.js", "#FFA838", "ウサギは楕円体とカプセルを smin で溶かした一つの塊。脚の付け根だけ k を小さくして鋏の段を残す。16章の教材。"],
+    ["綿菓子", "綿菓子.js", "#FF9ECC", "螺旋に巻いた帯を持つ回転体の上に、帯の向きに沿って糸を3万2千本。糸は線で描き、浮き量はシェーダで掛ける。芯は深度だけ先に書く。17章の教材。"]
 ];
 function viewHref(file) { return "view.html?f=" + encodeURIComponent(file); }
 function playHref(file) { return "play.html?f=" + encodeURIComponent(file); }

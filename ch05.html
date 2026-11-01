@@ -28,6 +28,10 @@
       <a href="ch11.html">11 光</a>
       <a href="ch12.html">12 たれ</a>
       <a href="ch13.html">13 潰れ</a>
+      <a href="ch14.html">14 揺れ</a>
+      <a href="ch15.html">15 透け</a>
+      <a href="ch16.html">16 塊</a>
+      <a href="ch17.html">17 糸</a>
       <a href="zukan.html">図鑑</a>
       <a href="view.html">ソース</a>
       <a href="terms.html">用語</a>
@@ -148,6 +152,25 @@
       同じ場所に頂点が2つあり、それぞれが別の法線を持っているからです。
       そこで、<b>ごく近い頂点どうしの法線を平均して揃える</b>処理を入れます。これを溶接といいます。
       多くのサンプルに <code>weldNormals</code> という関数が入っているのはそのためです。
+    </p>
+
+    <h3>見た目の変形と、頂点の変形は別もの</h3>
+    <p>
+      いちばん短いサンプルの栗饅頭.js は、球を1つ作って楕円に伸ばし、底を平らにして上をふっくらさせるだけです。
+      ところが冒頭のコメントは、形ではなく<b>順番</b>の話をしています。
+    </p>
+    <div class="note">
+      <b>「mesh.scaling で楕円形にした後、bakeCurrentTransformIntoVertices() で頂点に焼き込む。
+      その後に底面平坦化などの頂点編集を行う → Playground表示 と glTFエクスポート の両方で一致する」</b>
+    </div>
+    <p>
+      <code>mesh.scaling</code> は、描くときに掛ける<b>拡大率</b>で、頂点の座標そのものは球のままです。
+      この状態で頂点を編集すると、「下から 15% を平らに」の 15% が<b>伸ばす前の球</b>に対して決まり、
+      あとから拡大率が掛かります。画面では合って見えても、拡大率を持たない形式へ書き出すとずれる。
+      <code>bakeCurrentTransformIntoVertices()</code> は拡大率を頂点に掛けて (1, 1, 1) に戻すので、
+      そのあとの編集は<b>見えている形</b>に対して効きます。
+      編集のあとに <code>ComputeNormals</code> で法線を計算し直すのも忘れずに。
+      頂点を動かしても、法線は勝手には付いてきません。
     </p>
     <div class="trap">
       <span class="label">つまずきポイント</span>

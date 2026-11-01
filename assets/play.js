@@ -80,6 +80,13 @@ function loadCode(name, done, fail) {
 function run(code) {
     var canvas = $("#playCanvas");
     var engine;
+    // 【対策】ゼリー.js は Playground に同梱の "textures/country.env" を
+    //         相対パスで読む。このサイトから読むと 404 になって環境が
+    //         無いまま描かれるので、Playground 側の同じファイルへ向ける
+    //         （CORS は許可されている）
+    BABYLON.Tools.PreprocessUrl = function (url) {
+        return url.indexOf("textures/") === 0 ? "https://playground.babylonjs.com/" + url : url;
+    };
     try {
         engine = new BABYLON.Engine(canvas, true, {
             preserveDrawingBuffer: true, stencil: true, antialias: true

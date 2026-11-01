@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>プルプルは、6本のばねの重ね合わせ — おかしのつくりかた</title>
+<meta name="description" content="プルプルは、6本のばねの重ね合わせ">
+<link rel="stylesheet" href="assets/site.css">
+<script src="assets/labs.js" defer></script>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="index.html">おかしのつくりかた<span class="dot">.</span></a>
+    <nav class="navlinks" aria-label="章">
+      <a href="index.html">目次</a>
+      <a href="start.html">00 はじめ</a>
+      <a href="ch01.html">01 生成</a>
+      <a href="ch02.html">02 乱数</a>
+      <a href="ch03.html">03 ノイズ</a>
+      <a href="ch04.html">04 かたち</a>
+      <a href="ch05.html">05 面</a>
+      <a href="ch06.html">06 模様</a>
+      <a href="ch07.html">07 質感</a>
+      <a href="ch08.html">08 物理</a>
+      <a href="ch09.html">09 部品</a>
+      <a href="ch10.html">10 曲がり</a>
+      <a href="ch11.html">11 光</a>
+      <a href="ch12.html">12 たれ</a>
+      <a href="ch13.html">13 潰れ</a>
+      <a href="ch14.html" aria-current="page">14 揺れ</a>
+      <a href="ch15.html">15 透け</a>
+      <a href="ch16.html">16 塊</a>
+      <a href="ch17.html">17 糸</a>
+      <a href="zukan.html">図鑑</a>
+      <a href="view.html">ソース</a>
+      <a href="terms.html">用語</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top" class="page">
+<div class="wrap" style="--ch:var(--p-purin)">
+  <p class="crumbs"><a href="index.html">目次</a><span class="sep">/</span>第14章</p>
+<section class="chapter" id="ch14" style="--ch:var(--p-purin)">
+  <div class="chapter-head">
+    <div class="chnum">14<small>Jiggle</small></div>
+    <div>
+      <h2>プルプルは、6本のばねの重ね合わせ</h2>
+      <p class="sub">modal deformation — 物理エンジンに無い、やわらかさの作り方</p>
+    </div>
+  </div>
+  <div class="body">
+    <div class="recap">
+      <span class="label">この章の3行まとめ</span>
+      <ul>
+        <li>Havok には<b>ソフトボディ（やわらかい物体）が無い</b>ので、落ちる・着地するは Havok に、揺れは自前の計算に分けます。</li>
+        <li>揺れは<b>減衰するばね（振動子）</b>を数本だけ回し、決まった形の変形を足し合わせて作ります。</li>
+        <li>目に付くのは形の変化より<b>ハイライトが走ること</b>。だから法線も一緒に動かします。</li>
+      </ul>
+    </div>
+
+    <p>
+      皿の上に落としたプリンは、ぷるんと2〜3回揺れて止まります。
+      08章では盛り付けを物理エンジン（Havok）に任せましたが、Havok が扱えるのは<b>硬い物体</b>だけです。
+      プリン.js の冒頭にこうあります。
+    </p>
+    <div class="note">
+      <b>「Babylon の Havok プラグインが公開しているのは剛体・シェイプ・拘束までで、
+      ソフトボディは出ていない。そこで役割を分ける。
+      Havok … 落下・着地・皿との接触。自前 … 揺れそのもの」</b>
+    </div>
+    <p>
+      落ちてくる・皿に当たる・止まる、までは硬い物体として Havok が計算します。
+      Havok から「いま速度がどれだけ急に変わったか」（＝着地の衝撃）を受け取り、
+      それを入力にして<b>揺れだけを自分で計算</b>します。
+      揺れの計算に使うのは、ばねにおもりを付けて揺らしたときと同じ式です。
+    </p>
+    <figure>
+<pre><span class="c">// 減衰するばね。q は揺れの大きさ、qd はその速さ</span>
+<span class="c">// q'' + 2ζω q' + ω² q = 0   （ω = 2π × 周波数、ζ = 減衰比）</span>
+<span class="k">for</span> (<span class="k">let</span> k = <span class="n">0</span>; k &lt; NMODE; k++) {
+    <span class="k">const</span> w = <span class="k">this</span>.omega(k), z = <span class="k">this</span>.zeta(k);
+    <span class="k">this</span>.qd[k] += (-<span class="n">2</span> * z * w * <span class="k">this</span>.qd[k] - w * w * <span class="k">this</span>.q[k]) * h;
+    <span class="k">this</span>.q[k]  += <span class="k">this</span>.qd[k] * h;
+}</pre>
+      <figcaption>プリン.js の Jiggle.step()。h は 1/240 秒。この数行が「プルプル」の本体</figcaption>
+    </figure>
+
+    <div class="lab" id="lab14">
+      <p class="lab-title">実験 — 揺れ方は、周波数と減衰比の2つで決まる</p>
+      <div class="lab-cols side">
+        <div class="controls">
+          <div class="chips" id="jigPreset">
+            <button class="chip" type="button" data-v="purin" aria-pressed="true">プリン</button>
+            <button class="chip" type="button" data-v="jelly">ゼリー</button>
+            <button class="chip" type="button" data-v="kanten">寒天</button>
+            <button class="chip" type="button" data-v="gomu">ゴム</button>
+          </div>
+          <div class="ctrl">
+            <label for="jigFreq">周波数（Hz）<span class="v" id="jigFreqV">2.90</span></label>
+            <input type="range" id="jigFreq" min="1" max="8" step="0.05" value="2.9">
+          </div>
+          <div class="ctrl">
+            <label for="jigZeta">減衰比 ζ<span class="v" id="jigZetaV">0.105</span></label>
+            <input type="range" id="jigZeta" min="0.01" max="0.4" step="0.005" value="0.105">
+          </div>
+          <label class="switch"><input type="checkbox" id="jigNormal" checked>法線も一緒に動かす</label>
+          <button class="chip" type="button" id="jigShake">ゆらす</button>
+          <div class="readout" id="jigOut">—</div>
+        </div>
+        <canvas id="jigCanvas" width="640" height="360" aria-label="プリンを横から見て、せん断と縦の2つのモードで揺らす実験"></canvas>
+      </div>
+      <p class="hint">
+        「ゆらす」かキャンバスのクリックで揺れます。右の線は揺れの大きさ q の記録です。
+        減衰比を 0.3 にすると寒天、0.03 にするとゴムになります。
+        「法線も一緒に動かす」を切ると、形は揺れているのにハイライトが止まったままになります。
+      </p>
+    </div>
+
+    <h3>揺れの「形」は、先に決めておける</h3>
+    <p>
+      やわらかい物を本気で計算すると、1万個の頂点が互いに押し合う連立方程式になります。
+      それを毎フレーム解くのは重すぎます。そこで、揺れ方を<b>決まった数パターン（モード）</b>に限ります。
+      プリン.js が使っているのは6つです。
+    </p>
+    <table>
+      <tr><th>#</th><th>揺れ方</th><th>形</th><th>周波数</th><th>減衰比</th></tr>
+      <tr><td>0, 1</td><td>横に首を振る（せん断 X / Z）</td><td>底を固定した片持ちのたわみ <code>1.5s² − 0.5s³</code></td><td>5.8 Hz</td><td>0.105</td></tr>
+      <tr><td>2</td><td>縦につぶれる・のびる</td><td>上が沈むぶん胴が太る（体積を保つ）</td><td>9.2 Hz</td><td>0.145</td></tr>
+      <tr><td>3, 4</td><td>上から見て楕円にゆがむ</td><td><code>cos 2θ</code> / <code>sin 2θ</code></td><td>12.5 Hz</td><td>0.175</td></tr>
+      <tr><td>5</td><td>天面が太鼓のように上下</td><td>天面の中心ほど大きい</td><td>15.5 Hz</td><td>0.240</td></tr>
+    </table>
+    <p>
+      s は底からの高さを 0〜1 にしたもの、θ は上から見た角度です。
+      どのモードも「静止しているときの形」だけで決まる関数なので、頂点ごとの動き方 Φ<sub>k</sub> を
+      <b>組み立てるときに1回だけ計算して焼いておけます</b>（焼き込み）。
+      実行中にやることは、6本のばねの値 q<sub>k</sub> を掛けて足すだけです。
+    </p>
+    <figure>
+<pre><span class="c">// 頂点の変位 u = Σ q_k Φ_k(p)。Φ はビルド時に焼いてある</span>
+<span class="k">for</span> (<span class="k">let</span> k = <span class="n">0</span>; k &lt; NMODE; k++) {
+    <span class="k">const</span> q = Q[k];
+    <span class="k">if</span> (q === <span class="n">0</span>) <span class="k">continue</span>;
+    ux += q * M[b]; uy += q * M[b + <span class="n">1</span>]; uz += q * M[b + <span class="n">2</span>];
+}</pre>
+      <figcaption>プリン.js の Deformable.apply()。足し算だけなので、1万頂点でも 60fps に収まる</figcaption>
+    </figure>
+
+    <h3>減衰比が、素材を決める</h3>
+    <p>
+      周波数は「どれだけ速く揺れるか」、減衰比 ζ は「どれだけ早く収まるか」です。
+      プリン.js は周波数を実物から見積もっています。カスタードのかたさ（数 kPa）と密度から、
+      揺れが伝わる速さはおよそ 1 m/s。高さ 4.3cm の片持ちなら <code>f ≈ c / (4H) ≈ 5.8 Hz</code>。
+      「2〜3回揺れて1秒以内に収まる」のは、減衰比 0.10〜0.15 にあたります。
+    </p>
+    <ul>
+      <li><b>プリン</b> — ζ = 0.105。2〜3回で止まる</li>
+      <li><b>ゼリー</b> — ζ = 0.055、周波数は 8.0 Hz と高め。カスタードよりよく響き、3〜4回揺れる（ゼリー.js）</li>
+      <li><b>寒天</b> — ζ を 0.3 まで上げると、ほとんど揺れずに止まる</li>
+      <li><b>ゴム</b> — ζ を 0.03 まで下げると、いつまでも揺れ続ける</li>
+    </ul>
+    <p>
+      見た目の形は同じでも、この2つの数だけで「何でできているか」が伝わります。
+      どちらのサンプルにも、GUI でまとめて振れる <code>freqScale</code>（やわらかさ）があり、
+      プリンは 0.50、ゼリーは 0.70 を掛けて、写真より少しゆっくり大きく揺らしています。
+    </p>
+
+    <h3>動いて見えるのは、ハイライト</h3>
+    <p>
+      頂点の位置だけを動かして法線を放っておくと、揺れているのに<b>濡れて見えません</b>。
+      プリン.js のコメントによれば、プルプル感の主成分は形の変化ではなく
+      <b>「ハイライトが表面を走ること」</b>です。05章で見たとおり、明るさを決めるのは法線です。
+    </p>
+    <p>
+      変位 u が小さいとき、変形後の法線は <code>n' ≈ normalize(n − (∇u)ᵀ n)</code> で近似できます。
+      静止時の法線 n は決まっているので、この (∇Φ<sub>k</sub>)ᵀ n も頂点ごとに焼いておける。
+      結果として、頂点1つあたり「モード数 × 6個の数」を持っておけば、位置も法線も足し算だけで動きます。
+    </p>
+    <div class="trap">
+      <span class="label">つまずきポイント</span>
+      <p><b>表示のフレームごとに積分すると、速いモードが暴れます。</b>
+      60fps の 1/60 秒で 15.5Hz のモードを進めると、1歩で ω×h が 1.6 になって符号が振動し、発散します。
+      プリン.js は内部で 1/240 秒に刻んで回しています。</p>
+      <p><b>衝撃は「力」ではなく「速度の差」で渡す。</b>
+      着地の加速度を力として積分していたら、60fps と 144fps で揺れの大きさが2倍違いました。
+      Havok から受け取った速度の差 Δv をそのまま q の速さに足せば、刻み幅が効かなくなります。</p>
+      <p><b>大きく揺らすと裏返る。</b>
+      モードの形は小さな変形を前提にした近似なので、縦モードを高さ H まで押すと潰れきって裏返ります。
+      ばねは線形のまま回し、表示に渡すところで <code>tanh</code> を通して頭打ちにします。
+      実物のゲルも大きく歪むと硬くなるので、挙動としても外れていません。</p>
+    </div>
+
+    <div class="try">
+      <span class="label">やってみよう</span>
+      <ol>
+        <li>プリン・ゼリー・寒天・ゴムを順に押し、「ゆらす」で止まるまでの回数を数える。</li>
+        <li>「法線も一緒に動かす」を切って揺らし、何が足りなく見えるかを1行で書く。</li>
+        <li>プリン.js で modeZeta を全部 0.03 にして Run し、皿の上で何に見えるか確かめる。</li>
+        <li>ゼリー.js の modeFreq / modeZeta をプリン.js と並べ、どのモードがどれだけ違うか表にする。</li>
+      </ol>
+    </div>
+
+  </div>
+</section>
+  <div class="pager">
+    <a class="prev" href="ch13.html"><span class="dir">← まえの章</span><span class="ttl">13 触れ合うと、潰れる</span></a>
+    <a class="next" href="ch15.html"><span class="dir">つぎの章 →</span><span class="ttl">15 ゼリーの色は、中を通った距離で決まる</span></a>
+  </div>
+</div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div><b>おかしのつくりかた</b> — Babylon.js による、お菓子の手続き的モデリングの学習ノート</div>
+    <div><a href="index.html">目次へ戻る</a></div>
+  </div>
+</footer>
+</body>
+</html>
