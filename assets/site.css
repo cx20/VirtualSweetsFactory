@@ -36,6 +36,10 @@
   --p-napoli:#E77A22;   /* スパゲッティ（ナポリタン）.js base [0.905,0.480,0.135] */
   --p-dashi:#8F521C;    /* おでん.js kanto haze   [0.560,0.320,0.110] 関東風の出汁 */
   --p-seiji:#87A28B;    /* 天ぷら.js seiji deep   [0.530,0.635,0.545] 青磁の見込み */
+  --p-purin:#C27A30;    /* プリン.js CUSTARD.stain [0.760,0.480,0.190] カラメルの染み */
+  --p-melon:#8EAB40;    /* ゼリー.js melon 写真A の胴 sRGB(142,171,64) */
+  --p-ame:#FFA838;      /* 飴細工.js amber albedo [1.00,0.66,0.22] べっこう飴 */
+  --p-wata:#FF9ECC;     /* 綿菓子.js pink body    [1.00,0.62,0.80] */
 
   --accent:var(--p-karaage);
 

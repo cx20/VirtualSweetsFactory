@@ -1,7 +1,7 @@
 /* =====================================================================
  *  おかしのつくりかた — 図鑑用サムネイルの収録
  *
- *  実行:  node tools/shoot.js            （9本ぜんぶ）
+ *  実行:  node tools/shoot.js            （samples/ のぜんぶ）
  *         node tools/shoot.js トースト   （名前で絞り込み。部分一致）
  *
  *  やっていること:
@@ -20,7 +20,7 @@
  *  【注意】このサンプルは野菜編より1本あたりが重いです。模様を画像として
  *          持たず、1024x1024 のテクスチャを実行時に何枚も CPU で焼くため
  *          （たこ焼きは4柄 x 3枚、チョコレートは8種ぶん）。
- *          組み立てだけで1〜5分かかるものがあり、9本だと20〜30分見てください。
+ *          組み立てだけで1〜5分かかるものがあり、15本だと40〜50分見てください。
  *
  *  再収録が要るのは「サンプルの見た目を変えたとき」だけです。
  *  生成物は assets/thumbs/ に入り、リポジトリに入れて配ります:
@@ -94,6 +94,11 @@ var canvas = document.getElementById("renderCanvas");
 var engine = new BABYLON.Engine(canvas, true, {
     preserveDrawingBuffer: true, stencil: true, antialias: true
 }, true);
+/* ゼリー.js は Playground 同梱の textures/country.env を相対パスで読む。
+   このサーバには無いので、Playground 側の同じファイルへ向ける */
+BABYLON.Tools.PreprocessUrl = function (url) {
+    return url.indexOf("textures/") === 0 ? "https://playground.babylonjs.com/" + url : url;
+};
 var f = new URLSearchParams(location.search).get("f");
 var s = document.createElement("script");
 s.src = "/sample?f=" + encodeURIComponent(f);

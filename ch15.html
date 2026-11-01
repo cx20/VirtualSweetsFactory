@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ゼリーの色は、中を通った距離で決まる — おかしのつくりかた</title>
+<meta name="description" content="ゼリーの色は、中を通った距離で決まる">
+<link rel="stylesheet" href="assets/site.css">
+<script src="assets/labs.js" defer></script>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="index.html">おかしのつくりかた<span class="dot">.</span></a>
+    <nav class="navlinks" aria-label="章">
+      <a href="index.html">目次</a>
+      <a href="start.html">00 はじめ</a>
+      <a href="ch01.html">01 生成</a>
+      <a href="ch02.html">02 乱数</a>
+      <a href="ch03.html">03 ノイズ</a>
+      <a href="ch04.html">04 かたち</a>
+      <a href="ch05.html">05 面</a>
+      <a href="ch06.html">06 模様</a>
+      <a href="ch07.html">07 質感</a>
+      <a href="ch08.html">08 物理</a>
+      <a href="ch09.html">09 部品</a>
+      <a href="ch10.html">10 曲がり</a>
+      <a href="ch11.html">11 光</a>
+      <a href="ch12.html">12 たれ</a>
+      <a href="ch13.html">13 潰れ</a>
+      <a href="ch14.html">14 揺れ</a>
+      <a href="ch15.html" aria-current="page">15 透け</a>
+      <a href="ch16.html">16 塊</a>
+      <a href="ch17.html">17 糸</a>
+      <a href="zukan.html">図鑑</a>
+      <a href="view.html">ソース</a>
+      <a href="terms.html">用語</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top" class="page">
+<div class="wrap" style="--ch:var(--p-melon)">
+  <p class="crumbs"><a href="index.html">目次</a><span class="sep">/</span>第15章</p>
+<section class="chapter" id="ch15" style="--ch:var(--p-melon)">
+  <div class="chapter-head">
+    <div class="chnum">15<small>Path</small></div>
+    <div>
+      <h2>ゼリーの色は、中を通った距離で決まる</h2>
+      <p class="sub">path length — 塗れない色の作り方</p>
+    </div>
+  </div>
+  <div class="body">
+    <div class="recap">
+      <span class="label">この章の3行まとめ</span>
+      <ul>
+        <li>プリンの色は<b>表面の色</b>（アルベド）で決まります。ゼリーの色は違います。</li>
+        <li>ゼリーは中身の詰まった色ガラスで、見える色は<b>光が中を何 cm 通ったか</b>だけで決まります。</li>
+        <li>だから厚みを<b>測って</b>シェーダに渡す。溝の底は薄いので明るく、山は厚いので濃い。</li>
+      </ul>
+    </div>
+
+    <p>
+      12章で、みたらしのたれを「色」ではなく「透明な層」として扱いました。
+      厚いところほど濃くなる、<code>exp(−吸収係数 × 厚み)</code> の話です。
+      ゼリーはその層が<b>まるごと全部</b>になったものです。ゼリー.js の冒頭にこうあります。
+    </p>
+    <div class="note">
+      <b>「プリンの色は『表面のアルベド』で決まる。ゼリーの色は違う。
+      ゼリーは中身の詰まった色ガラスで、見えている色は
+      透過光 = 背景 × exp(−σ · d) の d、つまり『その画素で光が中を何 cm 通ったか』でしか決まらない。
+      ここを『濃い緑のアルベド』で塗ると、必ず緑のプラスチックになる」</b>
+    </div>
+    <p>
+      σ（シグマ）は 1cm あたりにどれだけ光が吸われるかで、赤・緑・青で別の値を持ちます。
+      ゼリー.js では、味ごとの色を σ で直接書くのではなく、
+      <b>「基準の光路 4.5cm を通ったあとに何割残るか」</b>（T0）で持たせています。写真から拾えるのはこの値だからです。
+    </p>
+    <figure>
+<pre><span class="c">// 味は「色」ではなく「4.5cm 通ったあとの透過率」で持つ</span>
+melon:      { T0: [<span class="n">0.300</span>, <span class="n">0.440</span>, <span class="n">0.050</span>] },  <span class="c">// 赤は少し、緑はよく通す。青はほぼ消える</span>
+strawberry: { T0: [<span class="n">0.560</span>, <span class="n">0.030</span>, <span class="n">0.030</span>] },  <span class="c">// 赤だけ通す</span>
+
+<span class="c">// σ = −ln(T0) / 4.5  → メロンなら [0.27, 0.18, 0.67]（1cm あたり）</span>
+<span class="c">// 透過率 T(d) = exp(−σ·d) = T0 ^ (d / 4.5)</span></pre>
+      <figcaption>ゼリー.js のプリセット。メロンといちごは、吸うスペクトルがまったく逆</figcaption>
+    </figure>
+
+    <div class="lab" id="lab15">
+      <p class="lab-title">実験 — 塗る / 光路で解く</p>
+      <div class="lab-cols side">
+        <div class="controls">
+          <div class="chips" id="jellyFlavor">
+            <button class="chip" type="button" data-v="melon" aria-pressed="true">メロン</button>
+            <button class="chip" type="button" data-v="strawberry">いちご</button>
+            <button class="chip" type="button" data-v="grape">ぶどう</button>
+            <button class="chip" type="button" data-v="orange">オレンジ</button>
+          </div>
+          <label class="switch"><input type="checkbox" id="jellyPaint">アルベドに色を塗る（プラスチック）</label>
+          <div class="ctrl">
+            <label for="jellySigma">色の濃さ（σ の倍率）<span class="v" id="jellySigmaV">1.00</span></label>
+            <input type="range" id="jellySigma" min="0.2" max="2.5" step="0.01" value="1">
+          </div>
+          <label class="switch"><input type="checkbox" id="jellyThin" checked>溝のぶん光路を短くする</label>
+          <div class="readout" id="jellyOut">—</div>
+        </div>
+        <canvas id="jellyCanvas" width="640" height="360" aria-label="菊型のゼリーを正面から見て、画素ごとの光路長から色を解く実験"></canvas>
+      </div>
+      <p class="hint">
+        右の小さい図は、その画素で光が通った距離（白いほど長い）です。
+        「塗る」に切り替えると、縁と溝がいちばん濃くなるか、全体が同じ色のままになります。
+        どちらも、本物のゼリーでは起きません。
+      </p>
+    </div>
+
+    <h3>Babylon に、吸収の式をそのまま渡す</h3>
+    <p>
+      Babylon の PBR マテリアルには、屈折した光を中で色づける機能があり、その計算は
+      <code>透過率 = tintColor ^ (thickness / tintColorAtDistance)</code> です。
+      これはランベルト・ベールの法則そのものなので、
+    </p>
+    <figure>
+<pre>tintColorAtDistance = <span class="n">1</span>          <span class="c">// 1cm</span>
+tintColor           = exp(−σ)    <span class="c">// 1cm 通ったときの透過率</span>
+thicknessTexture    = 母線から実測した弦長（＋溝のぶんの目減り）</pre>
+      <figcaption>ゼリー.js の方針。式を自分で書かず、エンジンの式に正しい値を入れる</figcaption>
+    </figure>
+    <p>
+      と入れれば、吸収の式がそのままシェーダで解かれます。
+      12章のたれは「エンジンの着色は厚み 0 で壊れるので CPU で焼く」でした。
+      同じ吸収の式でも、たれは表面の薄い膜で、ゼリーは中身の詰まった塊です。
+      ゼリーでは屈折（向こう側が歪んで見えること）も要るので、こちらはエンジンの機能を使っています。
+    </p>
+
+    <h3>厚みは、近似せずに測る</h3>
+    <p>
+      難しいのは thickness のほうです。「半径の2倍」や定数で済ませると、
+      <b>シルエットのきわで厚みが最大</b>になり、いちばん薄いはずの縁がいちばん濃くなります。
+      ゼリー.js は、断面の形（母線）の内側へ<b>11本の光線を扇形に飛ばし</b>（±75°）、
+      壁に当たるまでの長さを、法線に近い向きほど重く平均しています。
+      法線1本だけで測ると、肩の丸みのような「外から見れば薄いのに、法線の向きには胴を斜めに貫く」場所で
+      値が跳ねるからです。
+    </p>
+    <p>
+      測った値にも、もうひと手間あります。照明は上半球が明るいので、上を向いた面は
+      <b>短い光路で光を集めます</b>。測った弦長をそのまま使うと、天面は全高 5.2cm ぶんが入って
+      いちばん濃くなり、写真といちばん食い違う場所になりました。
+      そこで上向きの面は <code>topThin: 0.42</code> だけ薄く扱います。
+      この値は、写真の天面と胴の色の比から逆算したものです。
+    </p>
+
+    <h3>溝の底は、両側から削れている</h3>
+    <p>
+      菊型の溝は、単なる波ではありません。山は広く丸く、谷は細く深い。
+      <code>cos</code> をそのまま使うと洗濯板になるので、<code>g<sup>0.6</sup></code> にして谷だけを尖らせます。
+      さらに、彫った深さ d のぶん、溝の底の光路は <b>2d</b> 短くなります（手前と奥で1回ずつ）。
+      ここを入れないと、いちばん明るいはずの谷がいちばん濃くなり、
+      ゼリー.js の言葉でいえば<b>「緑に塗った菊の置物」</b>になります。
+    </p>
+    <p>
+      溝を彫る向きにも工夫があります。<b>母線の法線方向に彫る</b>と、
+      天面（法線が真上）では高さの凹凸＝花びらに、側面（法線が横）では半径の凹凸＝溝に、自動的に変わる。
+      型は1枚のつながった面なので、天面と側面を別々に作ると位相がずれて、上と横で別の型に見えてしまいます。
+    </p>
+    <div class="trap">
+      <span class="label">つまずきポイント</span>
+      <p><b>ガラスの器を白く塗らない。</b>
+      ガラスは光を反射と透過に振り分けるだけで、拡散反射をほとんど持ちません。
+      アルベドを白にすると乳白色のすりガラスになり、中のゼリーを覆ってしまいます。
+      無色のガラスはアルベドを黒にして、見えるものは映り込みと屈折だけにします。</p>
+      <p><b>プリンのカラメルは、そのままだと暗すぎる。</b>
+      プリン.js のカラメルも同じ吸収の式で解いていますが、0.5mm の膜を往復するだけで橙、1.5mm で赤黒になるほど濃い。
+      ランベルト・ベールだけだと薄い縁まで濁った茶になるので、
+      膜の中で跳ね返る光を足す <b>Saunderson の補正</b>（内部反射率 0.45）を入れています。</p>
+      <p><b>透けるのに、不透明のパスで描く。</b>
+      屈折は透明（アルファ）と独立に効くので、ゼリーは不透明メッシュのままにしてあります。
+      深度を書くので、ガラスの器の奥の壁が正しく隠れ、前後のソートにも悩みません。</p>
+    </div>
+
+    <div class="try">
+      <span class="label">やってみよう</span>
+      <ol>
+        <li>「塗る」に切り替え、溝の谷と山のどちらが濃く見えるかを光路モードと見比べる。</li>
+        <li>いちごにして σ の倍率を 2.5 まで上げ、縁と胴の色がどう分かれるか見る。</li>
+        <li>メロンの T0 から σ を自分で計算し、本文の [0.27, 0.18, 0.67] と合うか確かめる。</li>
+        <li>ゼリー.js で topThin を 0 にして Run し、天面の色がどう変わるか見る。</li>
+      </ol>
+    </div>
+
+  </div>
+</section>
+  <div class="pager">
+    <a class="prev" href="ch14.html"><span class="dir">← まえの章</span><span class="ttl">14 プルプルは、6本のばねの重ね合わせ</span></a>
+    <a class="next" href="ch16.html"><span class="dir">つぎの章 →</span><span class="ttl">16 ひとつの塊は、距離の場から削り出す</span></a>
+  </div>
+</div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div><b>おかしのつくりかた</b> — Babylon.js による、お菓子の手続き的モデリングの学習ノート</div>
+    <div><a href="index.html">目次へ戻る</a></div>
+  </div>
+</footer>
+</body>
+</html>

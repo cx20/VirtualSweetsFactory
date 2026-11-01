@@ -4,20 +4,21 @@
  *  実行:  node tools/build.js   （リポジトリのどこからでも可）
  *
  *  生成するもの:
- *    ・index.html / start.html / ch01〜ch13.html /
- *      zukan.html / view.html / terms.html / play.html   … 全19ページ
- *    ・assets/src/*.src.js  … 9本のサンプルをビューア用に複製
+ *    ・index.html / start.html / ch01〜ch17.html /
+ *      zukan.html / view.html / terms.html / play.html   … 全23ページ
+ *    ・assets/src/*.src.js  … 15本のサンプルをビューア用に複製
  *                             （.gitignore 済み。再生成はこれで行う）
  *
  *  【注意】上記のファイルは毎回まるごと上書きされます。
  *          HTML を直接手で編集しても、次にこれを走らせると消えます。
- *          文章を直すときは tools/pages-1.js / tools/pages-2.js を、
+ *          文章を直すときは tools/pages-1.js / pages-2.js / pages-3.js を、
  *          目次や図鑑の枠組みを直すときはこのファイルを直してください。
  *
  *  入力:
  *    ・tools/pages-1.js  … 第I部（00〜11章）の本文
  *    ・tools/pages-2.js  … 第II部（12〜13章）の本文
- *    ・samples/*.js（9本）  … ビューア用の複製元
+ *    ・tools/pages-3.js  … 第III部（14〜17章）の本文
+ *    ・samples/*.js（15本）  … ビューア用の複製元
  *
  *  手書きで管理しているもの（このスクリプトは触りません）:
  *    ・assets/site.css / assets/labs.js / assets/play.js
@@ -37,7 +38,7 @@ const SAMPLES = path.join(ROOT, "samples");
 const SITE = "おかしのつくりかた";
 const TAGLINE = "Babylon.js による、お菓子の手続き的モデリングの学習ノート";
 
-const chapters = [].concat(require("./pages-1.js"), require("./pages-2.js"));
+const chapters = [].concat(require("./pages-1.js"), require("./pages-2.js"), require("./pages-3.js"));
 
 /* ---------------------------------------------------------------
    ナビゲーション
@@ -181,7 +182,7 @@ function hubCard(p) {
 
 /* トップの各カードに出す1行。章の見出しだけでは中身が分からないので別に持つ */
 const LEDE = {
-  "start.html": "インストールなし。ブラウザだけで9本を動かす手順。まずここから。",
+  "start.html": "インストールなし。ブラウザだけで15本を動かす手順。まずここから。",
   "ch01.html": "モデルファイルも写真も読み込まず、実行した瞬間に座標と模様を計算で作る。",
   "ch02.html": "Math.random() を使わない理由。種を渡すと毎回同じ結果になる乱数を自分で書く。",
   "ch03.html": "となり合う値がなめらかにつながる乱数。重ねると焼きムラや生地の肌理になる。",
@@ -194,12 +195,17 @@ const LEDE = {
   "ch10.html": "ウィンナーも秋刀魚も曲がっている。先に軸を決め、断面を軸に垂直に置いていく。",
   "ch11.html": "同じ料理でも光で別物になる。IBL・影・露出・トーンマッピング。",
   "ch12.html": "たれを茶色く塗ると光沢のない卵になる。色は厚みから解くもの。",
-  "ch13.html": "団子は真球では積めない。潰した体積の行き先と、接触の縁の土手。"
+  "ch13.html": "団子は真球では積めない。潰した体積の行き先と、接触の縁の土手。",
+  "ch14.html": "Havok にやわらかい物体は無い。減衰するばね6本の重ね合わせで、プリンを揺らす。",
+  "ch15.html": "ゼリーを緑に塗るとプラスチックになる。色は、光が中を通った距離から解く。",
+  "ch16.html": "飴細工のウサギは回しても作れない。距離関数を溶かし合わせ、格子から面を張る。",
+  "ch17.html": "綿菓子には表面が無い。帯に沿った3万本の糸を線で描き、芯の深度で裏を隠す。"
 };
 
 function indexPage() {
   const part1 = chapters.filter((p) => Number(p.no) <= 11);
-  const part2 = chapters.filter((p) => Number(p.no) >= 12);
+  const part2 = chapters.filter((p) => Number(p.no) >= 12 && Number(p.no) <= 13);
+  const part3 = chapters.filter((p) => Number(p.no) >= 14);
   const cards = (list) =>
     list.map((p) => hubCard(Object.assign({}, p, { lede: LEDE[p.file] || p.sub }))).join("\n");
 
@@ -210,7 +216,7 @@ function indexPage() {
       <p class="eyebrow">Babylon.js / procedural sweets</p>
       <h1>3Dのお菓子は、<br><span class="accent">数式から焼ける</span>。</h1>
       <p class="lede">
-        このサイトで扱う9本のプログラムは、3Dモデルも写真も1枚も読み込みません。
+        このサイトで扱う15本のプログラムは、3Dモデルも写真も1枚も読み込みません。
         点の座標を計算で並べ、焼き色をその場で描き、たれの濃さを厚みから解く。
         絵を描く技術ではなく、形と質感を組み立てる技術です。
         中学・高校の数学で追えるところから順に見ていきます。
@@ -250,7 +256,7 @@ function indexPage() {
     <ul class="roadmap">
       <li><span class="rn">A</span><span class="rt"><b>とにかく動かしたい人</b><span><a href="zukan.html">図鑑</a>の写真を押す → そのお菓子がこのサイトの中で動きます</span></span></li>
       <li><span class="rn">B</span><span class="rt"><b>順番に理解したい人</b><span>01 → 02 → 03 …… と上から。04章（かたち）と05章（面と法線）がこの教材の背骨です。</span></span></li>
-      <li><span class="rn">C</span><span class="rt"><b>お菓子として面白い所だけ見たい人</b><span>第II部（<a href="ch12.html">12</a>〜<a href="ch13.html">13</a>）へ。たれと潰れ。どちらも、硬い球では出てこない話です。</span></span></li>
+      <li><span class="rn">C</span><span class="rt"><b>お菓子として面白い所だけ見たい人</b><span>第II部（<a href="ch12.html">12</a>〜<a href="ch13.html">13</a>）と第III部（<a href="ch14.html">14</a>〜<a href="ch17.html">17</a>）へ。たれ・潰れ・揺れ・透け・塊・糸。どれも、硬い球では出てこない話です。</span></span></li>
       <li><span class="rn">D</span><span class="rt"><b>コードを読みたい人</b><span><a href="view.html">ソース</a>でファイルを選ぶ → 対応する章に戻る</span></span></li>
     </ul>
     <div class="note">
@@ -307,25 +313,49 @@ ${cards(part2)}
   </div>
 </section>
 
+<section class="chapter" id="chapters3" style="--ch:var(--p-melon)">
+  <div class="chapter-head">
+    <div class="chnum" style="font-size:15px">第III部<small style="opacity:.7">PART III</small></div>
+    <div>
+      <h2>揺れて、透けて、ひとつの塊になる（14〜17）</h2>
+      <p class="sub">型から抜いたもの、色ガラスのようなもの、引いて作るもの、表面の無いもの</p>
+    </div>
+  </div>
+  <div class="body">
+    <p>
+      プリン・ゼリー・アイス・飴細工・綿菓子の5本で初めて出てくる技術です。たべもの編には無い、このサイトだけの章です。
+      プリンとゼリーは<b>揺れる</b>のに、物理エンジンには硬い物体しかない。
+      ゼリーは<b>中まで透けていて</b>、表面に色を塗れない。
+      飴細工とアイスは<b>継ぎ目の無いひとつの塊</b>で、断面を回しても並べても作れない。
+      綿菓子には、そもそも<b>表面が無い</b>。
+    </p>
+  </div>
+  <div class="body" style="max-width:none">
+    <div class="hub">
+${cards(part3)}
+    </div>
+  </div>
+</section>
+
 <section class="chapter" id="refs" style="--ch:var(--p-karaage)">
   <div class="chapter-head">
     <div class="chnum" style="font-size:15px">資料<small style="opacity:.7">REFERENCE</small></div>
     <div>
-      <h2>9本を引く</h2>
+      <h2>15本を引く</h2>
       <p class="sub">ファイルから逆に読みたいとき</p>
     </div>
   </div>
   <div class="body" style="max-width:none">
     <div class="hub">
       <a class="hubcard" href="zukan.html" style="--ch:var(--p-koge)">
-        <span class="no">9<span style="opacity:.55;margin-left:8px">FILES</span></span>
+        <span class="no">15<span style="opacity:.55;margin-left:8px">FILES</span></span>
         <h3>どのファイルで、何が学べるか</h3>
-        <p>9本それぞれの「そこでしか出てこない技術」の一覧。カードから、その場で動かせます。</p>
+        <p>15本それぞれの「そこでしか出てこない技術」の一覧。カードから、その場で動かせます。</p>
       </a>
       <a class="hubcard" href="view.html" style="--ch:var(--p-karaage)">
         <span class="no">SRC<span style="opacity:.55;margin-left:8px">SOURCE</span></span>
         <h3>サンプルのソースを読む</h3>
-        <p>9本の .js をその場で表示。コピーすれば、そのまま Playground に貼れます。</p>
+        <p>15本の .js をその場で表示。コピーすれば、そのまま Playground に貼れます。</p>
       </a>
       <a class="hubcard" href="terms.html" style="--ch:var(--p-choco)">
         <span class="no">用語<span style="opacity:.55;margin-left:8px">GLOSSARY</span></span>
@@ -341,7 +371,7 @@ ${cards(part2)}
 
   return shell({
     title: SITE + " — コードでお菓子をつくる技術ノート",
-    desc: "Babylon.js でお菓子を手続き的に生成する9本のサンプルを、中学生・高校生向けに解説する学習ポータル",
+    desc: "Babylon.js でお菓子を手続き的に生成する15本のサンプルを、中学生・高校生向けに解説する学習ポータル",
     current: "index.html",
     main: main
   });
@@ -351,15 +381,16 @@ ${cards(part2)}
    図鑑 / ソースビューア / 用語集 / 実行ページ
    --------------------------------------------------------------- */
 function zukanPage() {
+  const LAST = chapters[chapters.length - 1];
   const main = `<main id="top" class="page">
 <div class="wrap" style="--ch:var(--p-koge)">
   <p class="crumbs"><a href="index.html">目次</a><span class="sep">/</span>図鑑</p>
 <section class="chapter" id="zukan" style="--ch:var(--p-koge)">
   <div class="chapter-head">
-    <div class="chnum">9<small>FILES</small></div>
+    <div class="chnum">15<small>FILES</small></div>
     <div>
       <h2>どのファイルで、何が学べるか</h2>
-      <p class="sub">9本それぞれに、そこでしか出てこない技術がある</p>
+      <p class="sub">15本それぞれに、そこでしか出てこない技術がある</p>
     </div>
   </div>
   <div class="body" style="max-width:none">
@@ -375,14 +406,14 @@ function zukanPage() {
   <div class="catalog" id="catalog"></div>
 </section>
   <div class="pager">
-    <a class="prev" href="ch13.html"><span class="dir">← まえの章</span><span class="ttl">13 触れ合うと、潰れる</span></a>
+    <a class="prev" href="${LAST.file}"><span class="dir">← まえの章</span><span class="ttl">${LAST.no} ${LAST.title}</span></a>
     <a class="next" href="view.html"><span class="dir">つぎへ →</span><span class="ttl">SRC サンプルのソースを読む</span></a>
   </div>
 </div>
 </main>`;
   return shell({
     title: "どのファイルで、何が学べるか — " + SITE,
-    desc: "9本の一覧と、それぞれの難所",
+    desc: "15本の一覧と、それぞれの難所",
     current: "zukan.html",
     // tools/shoot.js が書き出したサムネイル一覧。無ければカードだけ出る
     head: '<script src="assets/thumbs/thumbs.js" defer></script>\n',
@@ -399,7 +430,7 @@ function viewPage() {
     <div class="chnum" style="font-size:13px">src<small style="opacity:.7">SOURCE</small></div>
     <div>
       <h2>サンプルのソースを読む</h2>
-      <p class="sub">9本の .js を、そのまま表示します</p>
+      <p class="sub">15本の .js を、そのまま表示します</p>
     </div>
   </div>
   <div class="body" style="max-width:none">
@@ -441,6 +472,9 @@ function viewPage() {
         <tr><td>2. Noise</td><td>値ノイズ / 周期ノイズ / fBm / セルノイズ</td><td><a href="ch03.html">03 ノイズ</a></td></tr>
         <tr><td>3. Mesh utils</td><td>巻き順の判定・法線の溶接・掃引</td><td><a href="ch05.html">05 面と法線</a> / <a href="ch10.html">10 曲がり</a></td></tr>
         <tr><td>4. Fields / Section / Shape</td><td>断面のテーブル、外形、焼き色の場、垂れの輪郭</td><td><a href="ch04.html">04 かたち</a></td></tr>
+        <tr><td>（Profile のあと）Jiggle / Flute</td><td>揺れのモード、菊型の溝と光路長（プリン・ゼリー）</td><td><a href="ch14.html">14 揺れ</a> / <a href="ch15.html">15 透け</a></td></tr>
+        <tr><td>距離関数 / サーフェスネット</td><td>部品を溶かし合わせた形と、格子からの面張り（アイス・飴細工）</td><td><a href="ch16.html">16 塊</a></td></tr>
+        <tr><td>乱数・曲面 / 芯と糸 / シェーダ</td><td>帯を巻いた回転体と、その上に並べる糸（綿菓子）</td><td><a href="ch17.html">17 糸</a></td></tr>
         <tr><td>5. TextureLab</td><td>アルベド・ORM・法線・厚みの生成</td><td><a href="ch06.html">06 テクスチャ</a> / <a href="ch12.html">12 たれ</a></td></tr>
         <tr><td>6〜7. 本体 / トッピング</td><td>そのお菓子そのものの組み立てと、上に乗るもの</td><td><a href="ch09.html">09 部品</a></td></tr>
         <tr><td>7〜8. 皿 / 板 / トレイ / 盛り付け</td><td>器と、その上への配置</td><td><a href="ch08.html">08 物理</a> / <a href="ch13.html">13 潰れ</a></td></tr>
@@ -458,12 +492,12 @@ function viewPage() {
   </div>
 </section>
   <div class="pager">
-    <a class="prev" href="zukan.html"><span class="dir">← まえへ</span><span class="ttl">9 どのファイルで、何が学べるか</span></a>
+    <a class="prev" href="zukan.html"><span class="dir">← まえへ</span><span class="ttl">15 どのファイルで、何が学べるか</span></a>
     <a class="next" href="terms.html"><span class="dir">つぎへ →</span><span class="ttl">用語 コードに出てくる言葉</span></a>
   </div>
 </div>
 </main>`;
-  return shell({ title: "サンプルのソースを読む — " + SITE, desc: "9本の .js を行番号つきで表示します", current: "view.html", main: main });
+  return shell({ title: "サンプルのソースを読む — " + SITE, desc: "15本の .js を行番号つきで表示します", current: "view.html", main: main });
 }
 
 /* 用語。左が語、右が意味。labs.js が絞り込みを付ける */
@@ -480,7 +514,8 @@ const TERMS = [
   ["プロファイル / 断面", "形の横顔。半径や高さの表（<a href=\"ch04.html\">04章</a>）。"],
   ["回転体", "断面を軸のまわりに1周させて作る立体。団子・茶碗・クッキー。"],
   ["スーパー楕円", "指数 n で丸から四角まで連続に変わる輪郭。チョコの外形に使う。"],
-  ["SDF", "その点が形の内か外か、境界からどれだけ離れているかを返す関数。トーストの輪郭。"],
+  ["SDF", "その点が形の内か外か、境界からどれだけ離れているかを返す関数。トーストの輪郭、飴細工のウサギ（<a href=\"ch16.html\">16章</a>）。"],
+  ["サーフェスネット", "格子で測った距離の場から面を張る手法。符号が変わるセルに頂点を1つ置き、四角形でつなぐ（<a href=\"ch16.html\">16章</a>）。"],
   ["シード", "乱数の出発点になる整数。同じなら同じ結果（<a href=\"ch02.html\">02章</a>）。"],
   ["擬似乱数", "計算で作る、規則があるのに規則が見えない数列。mulberry32 を使っている。"],
   ["ノイズ", "となり合う値がなめらかにつながる乱数。自然な模様のもと（<a href=\"ch03.html\">03章</a>）。"],
@@ -504,7 +539,13 @@ const TERMS = [
   ["焼き込み / bake", "実行時に計算せず、あらかじめ求めてテクスチャや頂点色に入れておくこと。"],
   ["インスタンス", "同じ形を1個だけ作り、位置・向き・色を配って何百個も描く仕組み（<a href=\"ch09.html\">09章</a>）。"],
   ["頂点カラー", "頂点そのものが持つ色。唐揚げの揚げ色はこれで焼いてある。"],
-  ["smin", "なめらかな最小値。角を作らずに2つの形をつなぐ（<a href=\"ch13.html\">13章</a>）。"],
+  ["smin", "なめらかな最小値。角を作らずに2つの形をつなぐ（<a href=\"ch13.html\">13章</a>・<a href=\"ch16.html\">16章</a>）。"],
+  ["ソフトボディ", "押すと形が変わる物体の物理。Havok には無いので、プリンの揺れは自前で計算する（<a href=\"ch14.html\">14章</a>）。"],
+  ["モード / モーダル変形", "揺れ方を決まった数パターンに限り、その重ね合わせで変形を表す方法（<a href=\"ch14.html\">14章</a>）。"],
+  ["減衰比 ζ", "揺れがどれだけ早く収まるか。プリン 0.105、ゼリー 0.055。大きいと寒天、小さいとゴム（<a href=\"ch14.html\">14章</a>）。"],
+  ["深度プリパス", "色を描く前に深度だけ書いておくこと。半透明の芯の奥にある糸が描かれなくなる（<a href=\"ch17.html\">17章</a>）。"],
+  ["光路長", "光が物の中を通った距離。ゼリーの色はこれで決まる（<a href=\"ch15.html\">15章</a>）。"],
+  ["屈折 / refraction", "透明な物を通る光が曲がること。ゼリーやガラスの向こうが歪んで見える。"],
   ["凸包 / convex hull", "でっぱりだけを包んだ袋のような形。物理の当たり判定に使う。"],
   ["Havok", "Babylon.js が使う物理エンジンの名前（<a href=\"ch08.html\">08章</a>）。"],
   ["緩和 / relaxation", "重なりを少しずつ押し離す反復計算。物理を使わない配置に使う。"],
