@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>綿菓子は、面ではなく3万本の線 — おかしのつくりかた</title>
+<meta name="description" content="綿菓子は、面ではなく3万本の線">
+<link rel="stylesheet" href="assets/site.css">
+<script src="assets/labs.js" defer></script>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="index.html">おかしのつくりかた<span class="dot">.</span></a>
+    <nav class="navlinks" aria-label="章">
+      <a href="index.html">目次</a>
+      <a href="start.html">00 はじめ</a>
+      <a href="ch01.html">01 生成</a>
+      <a href="ch02.html">02 乱数</a>
+      <a href="ch03.html">03 ノイズ</a>
+      <a href="ch04.html">04 面</a>
+      <a href="ch05.html">05 模様</a>
+      <a href="ch06.html">06 かたち</a>
+      <a href="ch07.html">07 曲がり</a>
+      <a href="ch08.html">08 潰れ</a>
+      <a href="ch09.html">09 塊</a>
+      <a href="ch10.html">10 焼き色</a>
+      <a href="ch11.html">11 質感</a>
+      <a href="ch12.html">12 たれ</a>
+      <a href="ch13.html">13 透け</a>
+      <a href="ch14.html">14 光</a>
+      <a href="ch15.html">15 盛る</a>
+      <a href="ch16.html">16 振る</a>
+      <a href="ch17.html">17 揺れ</a>
+      <a href="ch18.html" aria-current="page">18 糸</a>
+      <a href="zukan.html">図鑑</a>
+      <a href="view.html">ソース</a>
+      <a href="terms.html">用語</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top" class="page">
+<div class="wrap" style="--ch:var(--p-wata)">
+  <p class="crumbs"><a href="index.html">目次</a><span class="sep">/</span>第18章</p>
+<section class="chapter" id="ch18" style="--ch:var(--p-wata)">
+  <div class="chapter-head">
+    <div class="chnum">18<small>Strand</small></div>
+    <div>
+      <h2>綿菓子は、面ではなく3万本の線</h2>
+      <p class="sub">strands — 表面の無いものの描き方</p>
+    </div>
+  </div>
+  <div class="body">
+    <div class="recap">
+      <span class="label">この章の3行まとめ</span>
+      <ul>
+        <li>綿菓子には、はっきりした<b>表面がありません</b>。見えているのは、細い砂糖の糸の重なりです。</li>
+        <li>形の土台は回転体の曲面。その上に<b>帯の向きに沿って</b>短い糸を3万2千本、三角形ではなく<b>線</b>で描きます。</li>
+        <li>糸だけだと中が空っぽに見えるので、半透明の<b>芯</b>を置き、その<b>深度を先に書いて</b>裏側の糸を隠します。</li>
+      </ul>
+    </div>
+
+    <p>
+      これまでの17章は、どれも「表面」を作る話でした。点を並べて三角形を張り、法線で明るさを決める。
+      綿菓子はそれが通じません。ふわふわの輪郭は、砂糖の糸が空中で重なってできています。
+      綿菓子.js の冒頭です。
+    </p>
+    <div class="note">
+      <b>「糸は曲面上を『帯に沿って』周方向に走らせる。……頂点には『表面上の点』と
+      『浮かせるベクトル（法線×浮き量）』を別々に持たせ、ふわふわ度はシェーダで掛けるだけにする。
+      糸だけだと中が空っぽに見えるので、少しだけ膨らませた曲面を半透明の『芯』として深度だけ先に書く」</b>
+    </div>
+
+    <h3>土台は、帯を巻いた回転体</h3>
+    <p>
+      割り箸に巻き取った綿菓子は、下がすぼまって上が丸い。これは06章と同じ<b>回転体の輪郭</b>で書けます。
+      その上に、巻き取ったときの<b>ロープを巻いたような段々</b>を乗せます。
+    </p>
+    <figure>
+<pre><span class="c">// 帯の番号。v は高さ（0〜1）、phi は周方向の角度</span>
+<span class="k">function</span> bandK(phi, v) {
+    <span class="k">return</span> v * CFG.bands + phi / TAU + <span class="n">0.22</span> * Math.sin(<span class="n">2</span> * phi + v * <span class="n">5.0</span>);
+}
+<span class="c">// 帯の小数部で半径を膨らませる → 螺旋状の段々</span>
+<span class="k">var</span> band = Math.pow(Math.sin(Math.PI * fr), <span class="n">0.7</span>);
+<span class="k">var</span> r = _pr[<span class="n">0</span>] * (<span class="n">0.84</span> + <span class="n">0.16</span> * band + lobe * sv);</pre>
+      <figcaption>綿菓子.js の surf()。phi/TAU を足しているので、1周すると帯が1段ずれる＝螺旋になる</figcaption>
+    </figure>
+    <p>
+      <code>v × 6.5 + φ/2π</code> が一定の線は、1周するあいだに高さが 1/6.5 だけ下がる螺旋です。
+      この「帯の番号が一定の線」を等高線として使うのが、次の糸の工夫です。
+    </p>
+
+    <div class="lab" id="lab17">
+      <p class="lab-title">実験 — 糸を帯に沿わせる / 芯で裏を隠す</p>
+      <div class="lab-cols side">
+        <div class="controls">
+          <div class="ctrl">
+            <label for="flossN">糸の本数<span class="v" id="flossNV">4000</span></label>
+            <input type="range" id="flossN" min="300" max="8000" step="100" value="4000">
+          </div>
+          <div class="ctrl">
+            <label for="flossFluff">ふわふわ度（浮き量の倍率）<span class="v" id="flossFluffV">1.00</span></label>
+            <input type="range" id="flossFluff" min="0" max="2.5" step="0.01" value="1">
+          </div>
+          <label class="switch"><input type="checkbox" id="flossBand" checked>糸を帯に沿わせる</label>
+          <label class="switch"><input type="checkbox" id="flossCore" checked>芯の深度を先に書く</label>
+          <div class="chips" id="flossColor">
+            <button class="chip" type="button" data-v="white" aria-pressed="true">白</button>
+            <button class="chip" type="button" data-v="pink">ピンク</button>
+          </div>
+          <div class="readout" id="flossOut">—</div>
+        </div>
+        <canvas id="flossCanvas" width="640" height="360" aria-label="綿菓子を線の集まりとして描き、帯の向きと芯の有無を切り替える実験"></canvas>
+      </div>
+      <p class="hint">
+        「帯に沿わせる」を切ると、糸がばらばらの向きを向いて毛玉になります。
+        「芯の深度を先に書く」を切ると、向こう側の糸まで透けて見えて、中身の無い網のかごになります。
+        ふわふわ度は、糸を作り直さずに浮き量だけを掛け直しています。
+      </p>
+    </div>
+
+    <h3>糸は、帯の等高線に沿って走る</h3>
+    <p>
+      糸1本は 14 個の折れ線です。始点を曲面の上に選び、周方向に少しずつ進みながら、
+      高さを <code>−1 / (2π × 帯の段数)</code> の傾きで下げていく。すると糸は帯の螺旋と同じ向きを向き、
+      ロープの段々を<b>なぞるように</b>並びます。傾きには ±45% ほどの乱れを入れ、
+      7% の糸だけは「外へ飛び出す毛羽」として、長く・高く浮かせ、端をめくれさせます。
+      輪郭のふわふわは、この 7% が作っています。
+    </p>
+    <p>
+      始点の選び方にも注意が要ります。高さ v を一様に選ぶと、細い下のほうに糸が詰まりすぎる。
+      綿菓子.js は<b>その高さの半径に比例する確率</b>で受け入れて（棄却法）、面積あたりの本数を揃えています。
+    </p>
+
+    <h3>浮き量は、あとから掛ける</h3>
+    <p>
+      糸の頂点は「曲面の上の点」と「そこから浮かせるベクトル（法線 × 浮き量）」の2つを別々に持ちます。
+      シェーダでは <code>p = position + normal * uFluff</code> と、浮かせるベクトルに倍率を掛けて足すだけ。
+      だから GUI の「ふわふわ度」を動かしても、<b>3万2千本を作り直す必要がありません</b>。
+      17章のプリンで揺れの形を焼いておいたのと同じ考え方で、変わらないものを先に作り、変わるものは掛け算1回にしておきます。
+      ついでに、時間で少しだけ揺らして、糸が空気に浮いているように見せています。
+    </p>
+
+    <h3>線で描いて、芯で裏を隠す</h3>
+    <p>
+      糸は三角形ではなく、マテリアルを <code>LineListDrawMode</code> にした<b>線</b>として描きます。
+      1本ずつの不透明度は 0.40、端に行くほど薄くして、重なったところだけが白く見えるようにする。
+      ところが糸だけだと、向こう側の糸まで全部見えて、中身の無い網のかごになります。
+    </p>
+    <p>
+      そこで、曲面を少しだけ膨らませた<b>芯</b>を半透明で置き、<code>needDepthPrePass = true</code> で
+      <b>色より先に深度だけ書いて</b>おきます。深度が書いてあれば、芯より奥の糸は自動的に描かれません。
+      芯は正面ほど不透明、縁ほど透明にしてあるので、輪郭は芯ではなく<b>糸の毛羽</b>で決まります。
+    </p>
+    <div class="trap">
+      <span class="label">つまずきポイント</span>
+      <p><b>糸に深度を書かせない。</b>
+      半透明の糸が深度を書くと、先に描いた糸が後ろの糸を消してしまい、描く順番で見た目が変わります。
+      糸のマテリアルは <code>disableDepthWrite = true</code>、描く順番は <code>alphaIndex</code> で「芯 → 糸」と決めています。</p>
+      <p><b>線の太さは選べないと思っておく。</b>
+      WebGL の線は、ほとんどの環境で太さ 1 画素に固定です。太さで表現しようとせず、
+      <b>本数と不透明度</b>で密度を作ります。3万2千本はそのための数です。</p>
+      <p><b>後処理に GUI まで巻き込まない。</b>
+      ポストエフェクトを掛けると、右下のつまみまでにじみます。綿菓子.js は
+      <code>ui.layer.applyPostProcess = false</code> で、GUI を後処理のあとに描いています。</p>
+    </div>
+
+    <div class="try">
+      <span class="label">やってみよう</span>
+      <ol>
+        <li>「帯に沿わせる」を切り、何が「綿菓子らしさ」を作っていたのかを1行で書く。</li>
+        <li>「芯の深度を先に書く」を切って、ふわふわ度を 0 と 2.5 にしたときの違いを見る。</li>
+        <li>綿菓子.js で CFG.bands を 6.5 から 3 にして Run し、帯の段々がどう変わるか見る。</li>
+        <li>綿菓子.js の buildStrands() で stray の割合（0.07）を探し、0 にすると輪郭がどうなるか試す。</li>
+      </ol>
+    </div>
+
+  </div>
+</section>
+  <div class="pager">
+    <a class="prev" href="ch17.html"><span class="dir">← まえの章</span><span class="ttl">17 プルプルは、6本のばねの重ね合わせ</span></a>
+    <a class="next" href="zukan.html"><span class="dir">つぎの章 →</span><span class="ttl">図鑑 どのファイルで、何が学べるか</span></a>
+  </div>
+</div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div><b>おかしのつくりかた</b> — Babylon.js による、お菓子の手続き的モデリングの学習ノート</div>
+    <div><a href="index.html">目次へ戻る</a></div>
+  </div>
+</footer>
+</body>
+</html>

@@ -18,20 +18,21 @@
       <a href="ch01.html">01 生成</a>
       <a href="ch02.html">02 乱数</a>
       <a href="ch03.html">03 ノイズ</a>
-      <a href="ch04.html">04 かたち</a>
-      <a href="ch05.html">05 面</a>
-      <a href="ch06.html">06 模様</a>
-      <a href="ch07.html">07 質感</a>
-      <a href="ch08.html">08 物理</a>
-      <a href="ch09.html">09 部品</a>
-      <a href="ch10.html">10 曲がり</a>
-      <a href="ch11.html">11 光</a>
+      <a href="ch04.html">04 面</a>
+      <a href="ch05.html">05 模様</a>
+      <a href="ch06.html">06 かたち</a>
+      <a href="ch07.html">07 曲がり</a>
+      <a href="ch08.html">08 潰れ</a>
+      <a href="ch09.html">09 塊</a>
+      <a href="ch10.html">10 焼き色</a>
+      <a href="ch11.html">11 質感</a>
       <a href="ch12.html">12 たれ</a>
-      <a href="ch13.html">13 潰れ</a>
-      <a href="ch14.html">14 揺れ</a>
-      <a href="ch15.html">15 透け</a>
-      <a href="ch16.html">16 塊</a>
-      <a href="ch17.html">17 糸</a>
+      <a href="ch13.html">13 透け</a>
+      <a href="ch14.html">14 光</a>
+      <a href="ch15.html">15 盛る</a>
+      <a href="ch16.html">16 振る</a>
+      <a href="ch17.html">17 揺れ</a>
+      <a href="ch18.html">18 糸</a>
       <a href="zukan.html">図鑑</a>
       <a href="view.html">ソース</a>
       <a href="terms.html">用語</a>
@@ -85,8 +86,8 @@
     </p>
     <ul class="roadmap">
       <li><span class="rn">A</span><span class="rt"><b>とにかく動かしたい人</b><span><a href="zukan.html">図鑑</a>の写真を押す → そのお菓子がこのサイトの中で動きます</span></span></li>
-      <li><span class="rn">B</span><span class="rt"><b>順番に理解したい人</b><span>01 → 02 → 03 …… と上から。04章（かたち）と05章（面と法線）がこの教材の背骨です。</span></span></li>
-      <li><span class="rn">C</span><span class="rt"><b>お菓子として面白い所だけ見たい人</b><span>第II部（<a href="ch12.html">12</a>〜<a href="ch13.html">13</a>）と第III部（<a href="ch14.html">14</a>〜<a href="ch17.html">17</a>）へ。たれ・潰れ・揺れ・透け・塊・糸。どれも、硬い球では出てこない話です。</span></span></li>
+      <li><span class="rn">B</span><span class="rt"><b>順番に理解したい人</b><span>01 → 02 → 03 …… と上から。お菓子作りと同じ順番で、道具 → 形 → 焼き・掛け → 盛り付け → 揺れと糸、と進みます。04章（面と法線）と06章（回す・型で抜く）がこの教材の背骨です。</span></span></li>
+      <li><span class="rn">C</span><span class="rt"><b>作りたいお菓子が決まっている人</b><span><a href="ch01.html">01章</a>の表で、そのお菓子の作り方（回す・型で抜く・焼く・掛ける……）から章を引いてください。たとえばドーナツなら <a href="ch06.html">06</a> → <a href="ch10.html">10</a> → <a href="ch15.html">15</a> → <a href="ch16.html">16</a>。</span></span></li>
       <li><span class="rn">D</span><span class="rt"><b>コードを読みたい人</b><span><a href="view.html">ソース</a>でファイルを選ぶ → 対応する章に戻る</span></span></li>
     </ul>
     <div class="note">
@@ -99,154 +100,189 @@
       <b>姉妹編があります。</b>
       このサイトは、料理30本を扱った<a href="https://cx20.github.io/VirtualFoodCourt/"><b>「たべもののつくりかた」</b></a>（VirtualFoodCourt）から、
       甘いものだけを別腹として切り出したものです。野菜と果物を扱った<b>「やさいのつくりかた」</b>（VirtualVegetablePlant）もあります。
-      第I部の11章は3つともほとんど共通の内容なので、どこから読んでもかまいません。
-      第I部の例に出てくるトーストやたこ焼きなどの .js は、たべもの編のソースへのリンクになっています。
+      乱数・ノイズ・面と法線のような道具は3つとも共通ですが、このサイトの章立てと例は、すべてお菓子の15本から取っています。
     </div>
   </div>
 </section>
 
-<section class="chapter" id="chapters" style="--ch:var(--p-koge)">
+<section class="chapter" id="chapters" style="--ch:var(--p-donut)">
   <div class="chapter-head">
     <div class="chnum" style="font-size:15px">第I部<small style="opacity:.7">PART I</small></div>
     <div>
-      <h2>1皿をつくる（00〜11）</h2>
-      <p class="sub">1本の .js ファイルを、上から順にほどいていく構成</p>
+      <h2>道具をそろえる（01〜05）</h2>
+      <p class="sub">どのお菓子のファイルにも、同じ場所に入っているもの</p>
     </div>
+  </div>
+  <div class="body">
+    <p>
+      乱数・ノイズ・面と法線・テクスチャ。お菓子の種類に関係なく、15本すべての土台になっている道具です。ここだけはファイルの層（CONFIG → Rng → Noise → Mesh utils → TextureLab）の順に並んでいます。
+    </p>
   </div>
   <div class="body" style="max-width:none">
     <div class="hub">
-      <a class="hubcard" href="start.html" style="--ch:var(--p-kitsune)">
-        <span class="no">00<span style="opacity:.55;margin-left:8px">START</span></span>
-        <h3>まず動かしてみる</h3>
-        <p>インストールなし。ブラウザだけで15本を動かす手順。まずここから。</p>
-      </a>
-      <a class="hubcard" href="ch01.html" style="--ch:var(--p-koge)">
+      <a class="hubcard" href="ch01.html" style="--ch:var(--p-donut)">
         <span class="no">01<span style="opacity:.55;margin-left:8px">CONFIG</span></span>
         <h3>「作る」と「読み込む」はどう違うのか</h3>
-        <p>モデルファイルも写真も読み込まず、実行した瞬間に座標と模様を計算で作る。</p>
+        <p>モデルファイルも写真も読み込まず、実行した瞬間に座標と模様を計算で作る。章はお菓子の作り方の順。</p>
       </a>
-      <a class="hubcard" href="ch02.html" style="--ch:var(--p-wiener)">
+      <a class="hubcard" href="ch02.html" style="--ch:var(--p-cookie)">
         <span class="no">02<span style="opacity:.55;margin-left:8px">Rng</span></span>
-        <h3>同じ種からは、同じ料理ができる</h3>
-        <p>Math.random() を使わない理由。種を渡すと毎回同じ結果になる乱数を自分で書く。</p>
+        <h3>同じ種からは、同じお菓子が焼ける</h3>
+        <p>Math.random() を使わない理由。型で焼くクッキーと1本ずつ違うバナナでは、揺らす幅も違う。</p>
       </a>
-      <a class="hubcard" href="ch03.html" style="--ch:var(--p-cookie)">
+      <a class="hubcard" href="ch03.html" style="--ch:var(--p-pancake)">
         <span class="no">03<span style="opacity:.55;margin-left:8px">Noise</span></span>
         <h3>焼きムラは、なめらかな乱数でできている</h3>
         <p>となり合う値がなめらかにつながる乱数。重ねると焼きムラや生地の肌理になる。</p>
       </a>
-      <a class="hubcard" href="ch04.html" style="--ch:var(--p-sakura)">
-        <span class="no">04<span style="opacity:.55;margin-left:8px">Shape</span></span>
-        <h3>断面を1枚描けば、立体になる</h3>
-        <p>断面を1枚描いて軸のまわりに回す。回らないものは外形×縦断面で作る。</p>
-      </a>
-      <a class="hubcard" href="ch05.html" style="--ch:var(--p-yomogi)">
-        <span class="no">05<span style="opacity:.55;margin-left:8px">Mesh</span></span>
+      <a class="hubcard" href="ch04.html" style="--ch:var(--p-yomogi)">
+        <span class="no">04<span style="opacity:.55;margin-left:8px">Mesh</span></span>
         <h3>三角形の向きと、面の傾き</h3>
         <p>3Dモデルの正体は座標の配列と三角形の番号表。裏返ると立体が消える理由。</p>
       </a>
-      <a class="hubcard" href="ch06.html" style="--ch:var(--p-kitsune)">
-        <span class="no">06<span style="opacity:.55;margin-left:8px">Texture</span></span>
+      <a class="hubcard" href="ch05.html" style="--ch:var(--p-kitsune)">
+        <span class="no">05<span style="opacity:.55;margin-left:8px">Texture</span></span>
         <h3>模様も、その場で描く</h3>
         <p>UVで立体と画像を対応させ、模様を1ピクセルずつ計算で描く。色・光り方・凹凸の3枚。</p>
       </a>
-      <a class="hubcard" href="ch07.html" style="--ch:var(--p-choco)">
-        <span class="no">07<span style="opacity:.55;margin-left:8px">PBR</span></span>
-        <h3>「照り」「ぬれ」「粉っぽさ」を数値で言う</h3>
-        <p>「照っている」「ぬれている」を数値で書く。粗さ・クリアコート・透け。</p>
-      </a>
-      <a class="hubcard" href="ch08.html" style="--ch:var(--p-karaage)">
-        <span class="no">08<span style="opacity:.55;margin-left:8px">Havok</span></span>
-        <h3>盛り付けは、手で置かない</h3>
-        <p>皿への盛り付けは手で置かない。重力と摩擦だけ与えて物理エンジンに任せる。</p>
-      </a>
-      <a class="hubcard" href="ch09.html" style="--ch:var(--p-sauce)">
-        <span class="no">09<span style="opacity:.55;margin-left:8px">Parts</span></span>
-        <h3>部品を作って、たくさん並べる</h3>
-        <p>青のりもかつお節も、テクスチャに描くと消える。実体のかけらとして撒く。</p>
-      </a>
-      <a class="hubcard" href="ch10.html" style="--ch:var(--p-salmon)">
-        <span class="no">10<span style="opacity:.55;margin-left:8px">Sweep</span></span>
-        <h3>曲がったものを作る</h3>
-        <p>ウィンナーも秋刀魚も曲がっている。先に軸を決め、断面を軸に垂直に置いていく。</p>
-      </a>
-      <a class="hubcard" href="ch11.html" style="--ch:var(--p-sanma)">
-        <span class="no">11<span style="opacity:.55;margin-left:8px">Scene</span></span>
-        <h3>見せ方を決める（光と露出）</h3>
-        <p>同じ料理でも光で別物になる。IBL・影・露出・トーンマッピング。</p>
-      </a>
     </div>
   </div>
 </section>
 
-<section class="chapter" id="chapters2" style="--ch:var(--p-sauce)">
+<section class="chapter" id="chapters2" style="--ch:var(--p-sakura)">
   <div class="chapter-head">
     <div class="chnum" style="font-size:15px">第II部<small style="opacity:.7">PART II</small></div>
     <div>
-      <h2>たれが掛かって、やわらかいものをつくる（12〜13）</h2>
-      <p class="sub">硬い球と色の塗り分けでは作れない、お菓子の2つの難所</p>
+      <h2>かたちをつくる（06〜09）</h2>
+      <p class="sub">回す・型で抜く・曲げる・潰す・溶かす</p>
     </div>
   </div>
   <div class="body">
     <p>
-      第I部の11章は、ファイルの構成（CONFIG → Rng → Noise → Mesh utils → Fields → TextureLab → 本体 …）に
-      そのまま対応していました。違いが出るのはここからで、お菓子には<b>たれが掛かっていて、
-      押せば潰れるほどやわらかい</b>。どちらも、もとは「たべもののつくりかた」の第II部にあった章です。
-      焼き色・透け・作り分けの章は、たべもの編の<a href="https://cx20.github.io/VirtualFoodCourt/ch12.html">12</a>・<a href="https://cx20.github.io/VirtualFoodCourt/ch13.html">13</a>・<a href="https://cx20.github.io/VirtualFoodCourt/ch15.html">15</a>章にあります。
+      お菓子の形は、作り方についてきます。ろくろのように回すもの（団子・プリン・ドーナツ）、型で抜くもの（クッキー・チョコレート・たい焼き）、曲げて巻いて絞るもの（チョコバナナ・ロールケーキ）、押されて潰れるもの（月見団子）、練って継ぎ目なく溶かし合わせるもの（飴細工・アイス）。
     </p>
   </div>
   <div class="body" style="max-width:none">
     <div class="hub">
-      <a class="hubcard" href="ch12.html" style="--ch:var(--p-sauce)">
-        <span class="no">12<span style="opacity:.55;margin-left:8px">Glaze</span></span>
-        <h3>たれは、色ではなく層</h3>
-        <p>たれを茶色く塗ると光沢のない卵になる。色は厚みから解くもの。</p>
+      <a class="hubcard" href="ch06.html" style="--ch:var(--p-sakura)">
+        <span class="no">06<span style="opacity:.55;margin-left:8px">Shape</span></span>
+        <h3>回す、型で抜く</h3>
+        <p>団子もプリンもドーナツも、断面を1枚描いて回す。クッキー7種は外形と断面の数値だけで作り分ける。</p>
       </a>
-      <a class="hubcard" href="ch13.html" style="--ch:var(--p-yomogi)">
-        <span class="no">13<span style="opacity:.55;margin-left:8px">Contact</span></span>
+      <a class="hubcard" href="ch07.html" style="--ch:var(--p-banana)">
+        <span class="no">07<span style="opacity:.55;margin-left:8px">Sweep</span></span>
+        <h3>曲げる、巻く、絞る</h3>
+        <p>チョコバナナは弓なり。先に軸を決めて断面を並べる。軸を閉じればロールケーキ、螺旋にすれば絞り出し。</p>
+      </a>
+      <a class="hubcard" href="ch08.html" style="--ch:var(--p-yomogi)">
+        <span class="no">08<span style="opacity:.55;margin-left:8px">Contact</span></span>
         <h3>触れ合うと、潰れる</h3>
         <p>団子は真球では積めない。潰した体積の行き先と、接触の縁の土手。</p>
+      </a>
+      <a class="hubcard" href="ch09.html" style="--ch:var(--p-ame)">
+        <span class="no">09<span style="opacity:.55;margin-left:8px">SDF</span></span>
+        <h3>ひとつの塊は、距離の場から削り出す</h3>
+        <p>飴細工のウサギは回しても作れない。距離関数を溶かし合わせ、格子から面を張る。</p>
       </a>
     </div>
   </div>
 </section>
 
-<section class="chapter" id="chapters3" style="--ch:var(--p-melon)">
+<section class="chapter" id="chapters3" style="--ch:var(--p-taiyaki)">
   <div class="chapter-head">
     <div class="chnum" style="font-size:15px">第III部<small style="opacity:.7">PART III</small></div>
     <div>
-      <h2>揺れて、透けて、ひとつの塊になる（14〜17）</h2>
-      <p class="sub">型から抜いたもの、色ガラスのようなもの、引いて作るもの、表面の無いもの</p>
+      <h2>焼いて、掛けて、透かす（10〜14）</h2>
+      <p class="sub">形が同じでも、質感で別のお菓子になる</p>
     </div>
   </div>
   <div class="body">
     <p>
-      プリン・ゼリー・アイス・飴細工・綿菓子の5本で初めて出てくる技術です。たべもの編には無い、このサイトだけの章です。
-      プリンとゼリーは<b>揺れる</b>のに、物理エンジンには硬い物体しかない。
-      ゼリーは<b>中まで透けていて</b>、表面に色を塗れない。
-      飴細工とアイスは<b>継ぎ目の無いひとつの塊</b>で、断面を回しても並べても作れない。
-      綿菓子には、そもそも<b>表面が無い</b>。
+      焼き色は熱の届き方、照りは膜、たれとシロップの色は厚み、ゼリーの色は光が通った距離。どれも<b>色を塗らずに、理由から計算する</b>のが共通の方針です。最後に、それを撮る光を決めます。
     </p>
   </div>
   <div class="body" style="max-width:none">
     <div class="hub">
-      <a class="hubcard" href="ch14.html" style="--ch:var(--p-purin)">
-        <span class="no">14<span style="opacity:.55;margin-left:8px">Jiggle</span></span>
-        <h3>プルプルは、6本のばねの重ね合わせ</h3>
-        <p>Havok にやわらかい物体は無い。減衰するばね6本の重ね合わせで、プリンを揺らす。</p>
+      <a class="hubcard" href="ch10.html" style="--ch:var(--p-taiyaki)">
+        <span class="no">10<span style="opacity:.55;margin-left:8px">Bake</span></span>
+        <h3>焼き色は、熱の届き方の地図</h3>
+        <p>焼き色は塗らない。鉄板に触れた所、薄い所、出っぱった所。熱の届き方を足して地図にする。</p>
       </a>
-      <a class="hubcard" href="ch15.html" style="--ch:var(--p-melon)">
-        <span class="no">15<span style="opacity:.55;margin-left:8px">Path</span></span>
+      <a class="hubcard" href="ch11.html" style="--ch:var(--p-choco)">
+        <span class="no">11<span style="opacity:.55;margin-left:8px">PBR</span></span>
+        <h3>「照り」「ぬれ」「粉っぽさ」を数値で言う</h3>
+        <p>「照っている」「粉をふいている」を数値で書く。チョコの照りは粗さではなく膜。</p>
+      </a>
+      <a class="hubcard" href="ch12.html" style="--ch:var(--p-sauce)">
+        <span class="no">12<span style="opacity:.55;margin-left:8px">Glaze</span></span>
+        <h3>たれは、色ではなく層</h3>
+        <p>たれを茶色く塗ると光沢のない卵になる。みたらしもシロップも、色は厚みから解くもの。</p>
+      </a>
+      <a class="hubcard" href="ch13.html" style="--ch:var(--p-melon)">
+        <span class="no">13<span style="opacity:.55;margin-left:8px">Path</span></span>
         <h3>ゼリーの色は、中を通った距離で決まる</h3>
         <p>ゼリーを緑に塗るとプラスチックになる。色は、光が中を通った距離から解く。</p>
       </a>
-      <a class="hubcard" href="ch16.html" style="--ch:var(--p-ame)">
-        <span class="no">16<span style="opacity:.55;margin-left:8px">SDF</span></span>
-        <h3>ひとつの塊は、距離の場から削り出す</h3>
-        <p>飴細工のウサギは回しても作れない。距離関数を溶かし合わせ、格子から面を張る。</p>
+      <a class="hubcard" href="ch14.html" style="--ch:var(--p-roll)">
+        <span class="no">14<span style="opacity:.55;margin-left:8px">Scene</span></span>
+        <h3>見せ方を決める（光と露出）</h3>
+        <p>同じお菓子でも光で別物になる。白い皿は 0.88、透けるものは映すものまで含めて光。</p>
       </a>
-      <a class="hubcard" href="ch17.html" style="--ch:var(--p-wata)">
-        <span class="no">17<span style="opacity:.55;margin-left:8px">Strand</span></span>
+    </div>
+  </div>
+</section>
+
+<section class="chapter" id="chapters4" style="--ch:var(--p-kuri)">
+  <div class="chapter-head">
+    <div class="chnum" style="font-size:15px">第IV部<small style="opacity:.7">PART IV</small></div>
+    <div>
+      <h2>皿にのせる（15〜16）</h2>
+      <p class="sub">盛り付けと、トッピング</p>
+    </div>
+  </div>
+  <div class="body">
+    <p>
+      クッキーは落として積み、ドーナツは穴を残して重ね、月見団子は決まった形に積む。仕上げのスプレーやチョコチップは、振った向きの側にだけ付いて、半分沈みます。
+    </p>
+  </div>
+  <div class="body" style="max-width:none">
+    <div class="hub">
+      <a class="hubcard" href="ch15.html" style="--ch:var(--p-kuri)">
+        <span class="no">15<span style="opacity:.55;margin-left:8px">Havok</span></span>
+        <h3>盛り付けは、手で置かない</h3>
+        <p>皿への盛り付けは手で置かない。クッキーは落とし、ドーナツは穴を残し、月見団子は物理を使わずに積む。</p>
+      </a>
+      <a class="hubcard" href="ch16.html" style="--ch:var(--p-sprinkle)">
+        <span class="no">16<span style="opacity:.55;margin-left:8px">Topping</span></span>
+        <h3>スプレーは、上から振ったところにだけ付く</h3>
+        <p>スプレーはテクスチャに描くと消える。振った向きの側にだけ付けて、半分沈める。</p>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="chapter" id="chapters5" style="--ch:var(--p-melon)">
+  <div class="chapter-head">
+    <div class="chnum" style="font-size:15px">第V部<small style="opacity:.7">PART V</small></div>
+    <div>
+      <h2>硬い面の外へ（17〜18）</h2>
+      <p class="sub">揺れるものと、表面の無いもの</p>
+    </div>
+  </div>
+  <div class="body">
+    <p>
+      プリンとゼリーは<b>揺れる</b>のに、物理エンジンには硬い物体しかない。綿菓子には、そもそも<b>表面が無い</b>。点を並べて三角形を張る、というここまでの前提の外側です。
+    </p>
+  </div>
+  <div class="body" style="max-width:none">
+    <div class="hub">
+      <a class="hubcard" href="ch17.html" style="--ch:var(--p-purin)">
+        <span class="no">17<span style="opacity:.55;margin-left:8px">Jiggle</span></span>
+        <h3>プルプルは、6本のばねの重ね合わせ</h3>
+        <p>Havok にやわらかい物体は無い。減衰するばね6本の重ね合わせで、プリンを揺らす。</p>
+      </a>
+      <a class="hubcard" href="ch18.html" style="--ch:var(--p-wata)">
+        <span class="no">18<span style="opacity:.55;margin-left:8px">Strand</span></span>
         <h3>綿菓子は、面ではなく3万本の線</h3>
         <p>綿菓子には表面が無い。帯に沿った3万本の糸を線で描き、芯の深度で裏を隠す。</p>
       </a>

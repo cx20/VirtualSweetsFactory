@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>同じ種からは、同じ料理ができる — おかしのつくりかた</title>
-<meta name="description" content="同じ種からは、同じ料理ができる">
+<title>同じ種からは、同じお菓子が焼ける — おかしのつくりかた</title>
+<meta name="description" content="同じ種からは、同じお菓子が焼ける">
 <link rel="stylesheet" href="assets/site.css">
 <script src="assets/labs.js" defer></script>
 </head>
@@ -18,20 +18,21 @@
       <a href="ch01.html">01 生成</a>
       <a href="ch02.html" aria-current="page">02 乱数</a>
       <a href="ch03.html">03 ノイズ</a>
-      <a href="ch04.html">04 かたち</a>
-      <a href="ch05.html">05 面</a>
-      <a href="ch06.html">06 模様</a>
-      <a href="ch07.html">07 質感</a>
-      <a href="ch08.html">08 物理</a>
-      <a href="ch09.html">09 部品</a>
-      <a href="ch10.html">10 曲がり</a>
-      <a href="ch11.html">11 光</a>
+      <a href="ch04.html">04 面</a>
+      <a href="ch05.html">05 模様</a>
+      <a href="ch06.html">06 かたち</a>
+      <a href="ch07.html">07 曲がり</a>
+      <a href="ch08.html">08 潰れ</a>
+      <a href="ch09.html">09 塊</a>
+      <a href="ch10.html">10 焼き色</a>
+      <a href="ch11.html">11 質感</a>
       <a href="ch12.html">12 たれ</a>
-      <a href="ch13.html">13 潰れ</a>
-      <a href="ch14.html">14 揺れ</a>
-      <a href="ch15.html">15 透け</a>
-      <a href="ch16.html">16 塊</a>
-      <a href="ch17.html">17 糸</a>
+      <a href="ch13.html">13 透け</a>
+      <a href="ch14.html">14 光</a>
+      <a href="ch15.html">15 盛る</a>
+      <a href="ch16.html">16 振る</a>
+      <a href="ch17.html">17 揺れ</a>
+      <a href="ch18.html">18 糸</a>
       <a href="zukan.html">図鑑</a>
       <a href="view.html">ソース</a>
       <a href="terms.html">用語</a>
@@ -40,13 +41,13 @@
 </header>
 
 <main id="top" class="page">
-<div class="wrap" style="--ch:var(--p-wiener)">
+<div class="wrap" style="--ch:var(--p-cookie)">
   <p class="crumbs"><a href="index.html">目次</a><span class="sep">/</span>第02章</p>
-<section class="chapter" id="ch02" style="--ch:var(--p-wiener)">
+<section class="chapter" id="ch02" style="--ch:var(--p-cookie)">
   <div class="chapter-head">
     <div class="chnum">02<small>Rng</small></div>
     <div>
-      <h2>同じ種からは、同じ料理ができる</h2>
+      <h2>同じ種からは、同じお菓子が焼ける</h2>
       <p class="sub">seeded pseudo random — シード付き擬似乱数</p>
     </div>
   </div>
@@ -61,12 +62,12 @@
     </div>
 
     <p>
-      ウィンナーを8本焼くとします。8本とも同じ太さ・同じ曲がり・同じ焼きムラなら、
-      それは工場の製品ではなくコピー＆ペーストに見えます。だから乱数で揺らします。
-      ここまではふつうです。問題はその次で、<b>ふつうの乱数だと二度と同じ8本が作れません</b>。
+      クッキーを8枚焼くとします。8枚とも同じ大きさ・同じ輪郭・同じ焼きムラなら、
+      それは焼き菓子ではなくコピー＆ペーストに見えます。だから乱数で揺らします。
+      ここまではふつうです。問題はその次で、<b>ふつうの乱数だと二度と同じ8枚が作れません</b>。
     </p>
     <p>
-      3本目だけ焼き色が変で直したい。ところが Run するたびに全部変わるので、
+      3枚目だけ焼き色が変で直したい。ところが Run するたびに全部変わるので、
       直したのか、たまたま別の個体が出ただけなのか分かりません。
       だからこのプロジェクトは形を作るところで <code>Math.random()</code> を使わず、
       <b>種を渡すと毎回同じ数列を返す乱数</b>を自分で書いています。
@@ -90,7 +91,7 @@
       中身は「かき混ぜて、上の桁と下の桁をぶつけて、また混ぜる」だけです。
       規則はあるのに、出てくる数の並びに規則が見えない。だから<b>擬似</b>乱数といいます。
       大事なのは仕組みより性質のほうで、<b>入れた種が同じなら、出てくる数列も同じ</b>。
-      これが「同じ料理をもう一度作れる」ということです。
+      これが「同じお菓子をもう一度焼ける」ということです。
     </p>
 
     <div class="lab" id="lab02">
@@ -108,19 +109,20 @@
           <button class="chip" type="button" id="seedRedraw">もう一度、同じ設定で作る</button>
           <div class="readout" id="seedOut">—</div>
         </div>
-        <canvas id="seedCanvas" width="640" height="330" aria-label="種を変えるとウィンナー8本の個体差が変わる"></canvas>
+        <canvas id="seedCanvas" width="640" height="330" aria-label="種を変えるとクッキー8枚の個体差が変わる"></canvas>
       </div>
       <p class="hint">
-        ウィンナー8本の長さ・太さ・曲がり・焼きムラを、乱数から作っています。
-        「もう一度作る」を押したとき、Rng なら同じ8本、Math.random() なら毎回別の8本になります。
+        クッキー8枚の直径・輪郭のゆがみ・焼き色・チョコチップの位置を、乱数から作っています。
+        「もう一度作る」を押したとき、Rng なら同じ8枚、Math.random() なら毎回別の8枚になります。
       </p>
     </div>
 
     <h3>種は、1個ではなく何個も要る</h3>
     <p>
       実際のコードでは、種をひとつだけ持つのではなく<b>用途ごとに分けて</b>います。
-      <a href="https://cx20.github.io/VirtualFoodCourt/view.html?f=%E3%81%9F%E3%81%93%E7%84%BC%E3%81%8D.js" title="姉妹編「たべもののつくりかた」のソース">たこ焼き.js</a> なら、生地の形の乱数・焼きムラの乱数・ソースの垂れの乱数が別々の種から出ます。
-      分けておかないと、「ソースの量を変えたら生地の形まで変わってしまった」ということが起きるからです。
+      チョコバナナ.js なら、長さ・太さ・曲がりといった個体差は <code>Rng(seed)</code> から引き、
+      チョコの塗り厚のムラや先端の垂れ筋は、別の種 <code>nseed</code> を渡したノイズから引きます。
+      分けておかないと、「垂れ筋の具合を直したらバナナの曲がりまで変わってしまった」ということが起きるからです。
     </p>
     <figure>
 <pre><span class="c">// 個体ごとに種をずらす。同じ列でも i が違えば別の個体になる</span>
@@ -136,28 +138,45 @@
       掛ける数を大きめの素数（1013 や 9176 など）にしておくのはそのためです。</p>
     </div>
 
+    <h3>揺らす幅は、お菓子の作られ方で決まる</h3>
+    <p>
+      乱数で揺らすと決めたら、次は<b>どれだけ揺らすか</b>です。ここにお菓子ごとの個性が出ます。
+      クッキーとドーナツは型や絞り袋で形をそろえて焼く、いわば工業製品です。
+      野菜や手で丸めたものと同じ幅で揺らすと、<b>手びねりの粘土</b>になります。
+    </p>
+    <table>
+      <tr><th>お菓子</th><th>揺らす幅</th><th>理由（コメントより）</th></tr>
+      <tr><td>ドーナツ.js</td><td>外形 ±3%、厚み ±7%</td><td>型で焼いた工業製品。単調さは焼きムラと膨れ方の偏りで消す</td></tr>
+      <tr><td>クッキー.js</td><td>半径 ±5.5%、厚み −8〜+10%</td><td>個体差は小さい。代わりに焼きムラと反りで単調さを消す</td></tr>
+      <tr><td>チョコバナナ.js</td><td>長さ −10〜+8%、曲がり −22〜+18%</td><td>バナナは1本ずつ太さも曲がりもかなり違う</td></tr>
+    </table>
+    <p>
+      形をそろえて作るものは<b>形を少し、焼き色を大きく</b>揺らす。自然のものは形そのものを大きく揺らす。
+      揺らす量は、そのお菓子がどうやって作られるかを数字にしたものです。
+    </p>
+
     <h3>正規分布のほうが「らしい」ことがある</h3>
     <p>
       <code>rnd()</code> は 0〜1 のあいだを平らに出します。長さを ±10% 振りたいときはこれでよいのですが、
       「たいていは真ん中くらい、たまに極端」という揺れ方をさせたいときは、
       平らな乱数だと極端なものが多すぎます。そこで <b>ガウス（正規分布）</b>を使います。
-      クッキーの反りや、団子の練りむらがこれです。
+      月見団子の1個ずつの大きさと置き位置のずれや、チョコバナナの横方向のわずかな曲がりがこれです。
     </p>
     <figure>
 <pre><span class="c">// Box-Muller 法。平らな乱数2つから、釣鐘型の乱数を作る</span>
 <span class="k">const</span> gauss = (m, sd) =&gt;
     m + sd * Math.sqrt(<span class="n">-2</span> * Math.log(Math.max(<span class="n">1e-9</span>, rnd())))
           * Math.cos(<span class="n">6.28318</span> * rnd());</pre>
-      <figcaption>クッキー.js の反り、月見団子.js の練りむらはこちらを使う</figcaption>
+      <figcaption>月見団子.js の大きさと位置のずれ、チョコバナナ.js の sideBend はこちらを使う</figcaption>
     </figure>
 
     <div class="try">
       <span class="label">やってみよう</span>
       <ol>
-        <li>上の実験で種を 7 から 8 に変え、8本すべてが変わることを確かめる。</li>
+        <li>上の実験で種を 7 から 8 に変え、8枚すべてが変わることを確かめる。</li>
         <li>Math.random() に切り替えて「もう一度作る」を3回押し、毎回変わることを確かめる。</li>
-        <li><a href="https://cx20.github.io/VirtualFoodCourt/view.html?f=%E3%82%A6%E3%82%A3%E3%83%B3%E3%83%8A%E3%83%BC.js" title="姉妹編「たべもののつくりかた」のソース">ウィンナー.js</a> を開いて Rng という語を検索し、何か所で新しい乱数を作っているか数える。</li>
-        <li>「同じ種なら同じ結果」でないと困る場面を、料理以外で3つ考えてみる。</li>
+        <li>チョコバナナ.js を開いて rng.range を検索し、1本ごとの個体差に何項目を振っているか数える。</li>
+        <li>ドーナツ.js とチョコバナナ.js で、形を揺らす幅がなぜこれだけ違うのかを1行で説明する。</li>
       </ol>
     </div>
 

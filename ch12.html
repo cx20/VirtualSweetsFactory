@@ -18,20 +18,21 @@
       <a href="ch01.html">01 生成</a>
       <a href="ch02.html">02 乱数</a>
       <a href="ch03.html">03 ノイズ</a>
-      <a href="ch04.html">04 かたち</a>
-      <a href="ch05.html">05 面</a>
-      <a href="ch06.html">06 模様</a>
-      <a href="ch07.html">07 質感</a>
-      <a href="ch08.html">08 物理</a>
-      <a href="ch09.html">09 部品</a>
-      <a href="ch10.html">10 曲がり</a>
-      <a href="ch11.html">11 光</a>
+      <a href="ch04.html">04 面</a>
+      <a href="ch05.html">05 模様</a>
+      <a href="ch06.html">06 かたち</a>
+      <a href="ch07.html">07 曲がり</a>
+      <a href="ch08.html">08 潰れ</a>
+      <a href="ch09.html">09 塊</a>
+      <a href="ch10.html">10 焼き色</a>
+      <a href="ch11.html">11 質感</a>
       <a href="ch12.html" aria-current="page">12 たれ</a>
-      <a href="ch13.html">13 潰れ</a>
-      <a href="ch14.html">14 揺れ</a>
-      <a href="ch15.html">15 透け</a>
-      <a href="ch16.html">16 塊</a>
-      <a href="ch17.html">17 糸</a>
+      <a href="ch13.html">13 透け</a>
+      <a href="ch14.html">14 光</a>
+      <a href="ch15.html">15 盛る</a>
+      <a href="ch16.html">16 振る</a>
+      <a href="ch17.html">17 揺れ</a>
+      <a href="ch18.html">18 糸</a>
       <a href="zukan.html">図鑑</a>
       <a href="view.html">ソース</a>
       <a href="terms.html">用語</a>
@@ -73,19 +74,29 @@
       透明なものを光が通ると、進んだ距離に応じて吸収されます。これがランベルト・ベールの法則で、
       残る光の量は <code>exp(−吸収係数 × 厚み)</code> です。
       吸収係数を赤・緑・青で別々にすると、<b>厚みが変わるだけで色が変わります</b>。
-      たこ焼きのソースなら、単位厚みあたりの吸収が RGB で <code>[1.5, 3.2, 5.4]</code>。
-      青がいちばん吸われるので、薄いところは橙、厚いところは黒に近い赤褐色になります。
+      みたらしのたれなら、単位厚みを通ったあとに残る光が RGB で <code>[0.60, 0.235, 0.045]</code>。
+      青がいちばん吸われるので、薄いところは淡い琥珀、厚いところは黒に近い赤褐色になります。
     </p>
     <figure>
-<pre><span class="c">// 5. TextureLab : ソースの色は「塗る」のではなく「解く」</span>
-<span class="k">const</span> EXT = [<span class="n">1.5</span>, <span class="n">3.2</span>, <span class="n">5.4</span>];   <span class="c">// 単位厚みあたりの吸収（RGB）</span>
-<span class="k">const</span> t = thickness(u, v);       <span class="c">// その場所のソースの厚み</span>
-<span class="k">for</span> (<span class="k">let</span> c = <span class="n">0</span>; c &lt; <span class="n">3</span>; c++) {
-    <span class="c">// 下地の色に、通った距離ぶんの吸収を掛ける</span>
-    out[c] = base[c] * Math.exp(-EXT[c] * t);
+<pre><span class="c">// 5. TextureLab : たれの色は「塗る」のではなく「透かす」（花見団子.js）</span>
+<span class="k">const</span> TARE = [<span class="n">0.60</span>, <span class="n">0.235</span>, <span class="n">0.045</span>];   <span class="c">// 単位厚みを通した後の色</span>
+<span class="k">const</span> TARE_PATH = <span class="n">2.4</span>;                 <span class="c">// 最大厚みでの光路長</span>
+<span class="k">const</span> T = Glaze.at(u, v, glaze);         <span class="c">// その場所のたれの厚み</span>
+<span class="k">if</span> (T &gt; <span class="n">0</span>) {
+    <span class="k">const</span> th = (T / Glaze.MAX) * TARE_PATH;
+    <span class="c">// 下地の色に、通った距離ぶんの吸収を掛ける（TARE^th = exp(th·ln TARE)）</span>
+    cr *= Math.pow(TARE[<span class="n">0</span>], th);
+    cg *= Math.pow(TARE[<span class="n">1</span>], th);
+    cb *= Math.pow(TARE[<span class="n">2</span>], th);
 }</pre>
-      <figcaption><a href="https://cx20.github.io/VirtualFoodCourt/view.html?f=%E3%81%9F%E3%81%93%E7%84%BC%E3%81%8D.js" title="姉妹編「たべもののつくりかた」のソース">たこ焼き.js</a>。Babylon のクリアコート着色は薄いところで数値的に破綻するので、CPU で解いて焼く</figcaption>
+      <figcaption>花見団子.js。Babylon のクリアコート着色は浅い角度と厚み 0 で数値的に破綻するので、CPU で解いて焼く</figcaption>
     </figure>
+    <p>
+      パンケーキのメープルシロップも同じ式です。パンケーキ.js は「560nm の光が 1cm 通ると 38% 残る」という1つの値から、
+      赤・緑・青それぞれの吸収係数を約 <code>[0.37, 1.17, 6.01]</code>（1cm あたり）と求めています。
+      天面に広がった薄い膜は金色、縁や皿のたまりのように厚い所は赤みの強い琥珀色。
+      色を決めているのは、シロップの種類ではなく<b>その場所の厚み</b>です。
+    </p>
 
     <div class="lab" id="lab12">
       <p class="lab-title">実験 — 塗る / 層として解く</p>
@@ -115,7 +126,8 @@
     <p>
       上から掛けたたれは、下へ流れて、途中で止まります。止まった線から下は、
       白い生地が出たままです。<b>全面を覆うと、たれではなくコーティングになります</b>。
-      たこ焼きのソースも同じで、垂れの輪郭がシルエットに出て初めてソースになる。
+      チョコバナナのチョコも同じで、先端を下にして引き上げるので、<b>先端側ほど厚く、先端に滴がたまり</b>、
+      縦の垂れ筋が残ります（→ <a href="ch07.html">07章</a>）。垂れの輪郭がシルエットに出て初めて、掛けたものに見える。
       アルベドに茶色を描くだけだと、ハイライトが玉全体で一様のままなので、印刷したように見えます。
     </p>
 
@@ -135,15 +147,18 @@
     <h3>艶にも、ムラが要る</h3>
     <p>
       たれを一様に光らせると、プラスチックの成型品になります。
-      <a href="https://cx20.github.io/VirtualFoodCourt/view.html?f=%E3%81%9F%E3%81%93%E7%84%BC%E3%81%8D.js" title="姉妹編「たべもののつくりかた」のソース">たこ焼き.js</a> のコメント：<b>「乾きかけた縁はざらつき、たまりだけが鏡になる」</b>。
-      同じソースの中で、粗さが場所ごとに違う。
-      07章で「粗さは1つの数値ではなく1枚の画像」と言ったのは、ここに効いてきます。
+      花見団子.js は、たれの掛かった所の膜の粗さを 0.17 まで下げたうえで、そこに流れの向きの細長いノイズを足しています。
+      コメント：<b>「流れの跡でハイライトがわずかに割れる。完全に均一だと吹き付け塗装のように見える」</b>。
+      チョコバナナ.js も、チョコの塗り厚に「乾く途中の細かなさざ波」を足して、照りの映り込みを揺らしています。
+      11章で「粗さは1つの数値ではなく1枚の画像」と言ったのは、ここに効いてきます。
     </p>
     <div class="trap">
       <span class="label">つまずきポイント</span>
       <p><b>クリアコートの着色は、厚み 0 のところで壊れます。</b>
       Babylon.js のクリアコート着色は、浅い入射角と厚み 0 の組み合わせで数値的に破綻します。
-      団子シリーズ4本とも、着色をエンジンに任せず<b>CPU で吸収を解いてテクスチャに焼く</b>方針をとっています。
+      厚み 0 の素の生地では 0×∞ になって、真っ黒に落ちます。
+      花見団子.js もパンケーキ.js も、着色をエンジンに任せず<b>CPU で吸収を解いてテクスチャに焼き</b>、
+      クリアコートには無色の艶だけを持たせています。
       「エンジンの機能があるから使う」ではなく、壊れない側を選ぶ、という判断です。</p>
     </div>
 
@@ -160,8 +175,8 @@
   </div>
 </section>
   <div class="pager">
-    <a class="prev" href="ch11.html"><span class="dir">← まえの章</span><span class="ttl">11 見せ方を決める（光と露出）</span></a>
-    <a class="next" href="ch13.html"><span class="dir">つぎの章 →</span><span class="ttl">13 触れ合うと、潰れる</span></a>
+    <a class="prev" href="ch11.html"><span class="dir">← まえの章</span><span class="ttl">11 「照り」「ぬれ」「粉っぽさ」を数値で言う</span></a>
+    <a class="next" href="ch13.html"><span class="dir">つぎの章 →</span><span class="ttl">13 ゼリーの色は、中を通った距離で決まる</span></a>
   </div>
 </div>
 </main>
