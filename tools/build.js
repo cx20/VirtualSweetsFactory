@@ -228,7 +228,7 @@ function indexPage() {
       </div>
     </div>
     <div class="stage">
-      <canvas id="heroCanvas" width="640" height="480" aria-label="団子が点から立体へ組み上がり、焼き目がついて、たれが流れ落ちる様子"></canvas>
+      <canvas id="heroCanvas" width="640" height="480" aria-label="ドーナツが断面から立体へ組み上がり、焼き色がついて、チョコに浸かる様子"></canvas>
       <div class="stage-caption">
         <b id="heroStage">準備中</b>
         <span id="heroCount">0 頂点</span>
