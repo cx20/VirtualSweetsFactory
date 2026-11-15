@@ -5,7 +5,7 @@
 **→ [https://cx20.github.io/VirtualSweetsFactory/](https://cx20.github.io/VirtualSweetsFactory/)**
 
 3Dモデルファイルも写真も **1枚も読み込みません**。点の座標を計算で並べ、焼き色をその場で1ピクセルずつ描き、
-たれの濃さを「厚み × 吸収係数」から解く。そうやって作ったお菓子 15 本のサンプルと、
+たれの濃さを「厚み × 吸収係数」から解く。そうやって作ったお菓子 16 本のサンプルと、
 それを中学生・高校生向けにほどいた全 19 章（00〜18）の解説で構成しています。
 章立ては、お菓子を作るときに必要になる技術の順（道具 → 形 → 焼く・掛ける → 盛り付け → 揺れと糸）です。
 
@@ -16,7 +16,7 @@
 **[たべもののつくりかた（VirtualFoodCourt）](https://github.com/cx20/VirtualFoodCourt)** から、
 お菓子だけを切り出したものです。野菜と果物を扱った
 **[やさいのつくりかた（VirtualVegetablePlant）](https://github.com/cx20/VirtualVegetablePlant)** もあります。
-乱数・ノイズ・面と法線のような道具は 3 つとも共通ですが、このサイトの章立てと例は、すべてお菓子の 15 本から取っています。
+乱数・ノイズ・面と法線のような道具は 3 つとも共通ですが、このサイトの章立てと例は、すべてお菓子の 16 本から取っています。
 
 3 つの関係は [姉妹リポジトリ](#姉妹リポジトリ) にまとめてあります。
 
@@ -29,25 +29,28 @@
 
 <table>
   <tr>
-    <td align="center" width="20%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=花見団子.js"><img src="assets/thumbs/花見団子.jpg" alt="花見団子" width="160"></a><br><a href="samples/花見団子.js">花見団子</a></td>
-    <td align="center" width="20%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=月見団子.js"><img src="assets/thumbs/月見団子.jpg" alt="月見団子" width="160"></a><br><a href="samples/月見団子.js">月見団子</a></td>
-    <td align="center" width="20%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=たい焼き.js"><img src="assets/thumbs/たい焼き.jpg" alt="たい焼き" width="160"></a><br><a href="samples/たい焼き.js">たい焼き</a></td>
-    <td align="center" width="20%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=栗饅頭.js"><img src="assets/thumbs/栗饅頭.jpg" alt="栗饅頭" width="160"></a><br><a href="samples/栗饅頭.js">栗饅頭</a></td>
-    <td align="center" width="20%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=クッキー.js"><img src="assets/thumbs/クッキー.jpg" alt="クッキー" width="160"></a><br><a href="samples/クッキー.js">クッキー</a></td>
+    <td align="center" width="25%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=花見団子.js"><img src="assets/thumbs/花見団子.jpg" alt="花見団子" width="160"></a><br><a href="samples/花見団子.js">花見団子</a></td>
+    <td align="center" width="25%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=月見団子.js"><img src="assets/thumbs/月見団子.jpg" alt="月見団子" width="160"></a><br><a href="samples/月見団子.js">月見団子</a></td>
+    <td align="center" width="25%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=たい焼き.js"><img src="assets/thumbs/たい焼き.jpg" alt="たい焼き" width="160"></a><br><a href="samples/たい焼き.js">たい焼き</a></td>
+    <td align="center" width="25%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=栗饅頭.js"><img src="assets/thumbs/栗饅頭.jpg" alt="栗饅頭" width="160"></a><br><a href="samples/栗饅頭.js">栗饅頭</a></td>
   </tr>
   <tr>
-    <td align="center" width="20%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=パンケーキ.js"><img src="assets/thumbs/パンケーキ.jpg" alt="パンケーキ" width="160"></a><br><a href="samples/パンケーキ.js">パンケーキ</a></td>
-    <td align="center" width="20%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=ドーナツ.js"><img src="assets/thumbs/ドーナツ.jpg" alt="ドーナツ" width="160"></a><br><a href="samples/ドーナツ.js">ドーナツ</a></td>
-    <td align="center" width="20%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=ロールケーキ.js"><img src="assets/thumbs/ロールケーキ.jpg" alt="ロールケーキ" width="160"></a><br><a href="samples/ロールケーキ.js">ロールケーキ</a></td>
-    <td align="center" width="20%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=チョコレート.js"><img src="assets/thumbs/チョコレート.jpg" alt="チョコレート" width="160"></a><br><a href="samples/チョコレート.js">チョコレート</a></td>
-    <td align="center" width="20%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=チョコバナナ.js"><img src="assets/thumbs/チョコバナナ.jpg" alt="チョコバナナ" width="160"></a><br><a href="samples/チョコバナナ.js">チョコバナナ</a></td>
+    <td align="center" width="25%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=クッキー.js"><img src="assets/thumbs/クッキー.jpg" alt="クッキー" width="160"></a><br><a href="samples/クッキー.js">クッキー</a></td>
+    <td align="center" width="25%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=パンケーキ.js"><img src="assets/thumbs/パンケーキ.jpg" alt="パンケーキ" width="160"></a><br><a href="samples/パンケーキ.js">パンケーキ</a></td>
+    <td align="center" width="25%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=ドーナツ.js"><img src="assets/thumbs/ドーナツ.jpg" alt="ドーナツ" width="160"></a><br><a href="samples/ドーナツ.js">ドーナツ</a></td>
+    <td align="center" width="25%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=ロールケーキ.js"><img src="assets/thumbs/ロールケーキ.jpg" alt="ロールケーキ" width="160"></a><br><a href="samples/ロールケーキ.js">ロールケーキ</a></td>
   </tr>
   <tr>
-    <td align="center" width="20%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=プリン.js"><img src="assets/thumbs/プリン.jpg" alt="プリン" width="160"></a><br><a href="samples/プリン.js">プリン</a></td>
-    <td align="center" width="20%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=ゼリー.js"><img src="assets/thumbs/ゼリー.jpg" alt="ゼリー" width="160"></a><br><a href="samples/ゼリー.js">ゼリー</a></td>
-    <td align="center" width="20%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=アイス.js"><img src="assets/thumbs/アイス.jpg" alt="アイス" width="160"></a><br><a href="samples/アイス.js">アイス</a></td>
-    <td align="center" width="20%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=飴細工.js"><img src="assets/thumbs/飴細工.jpg" alt="飴細工" width="160"></a><br><a href="samples/飴細工.js">飴細工</a></td>
-    <td align="center" width="20%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=綿菓子.js"><img src="assets/thumbs/綿菓子.jpg" alt="綿菓子" width="160"></a><br><a href="samples/綿菓子.js">綿菓子</a></td>
+    <td align="center" width="25%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=チョコレート.js"><img src="assets/thumbs/チョコレート.jpg" alt="チョコレート" width="160"></a><br><a href="samples/チョコレート.js">チョコレート</a></td>
+    <td align="center" width="25%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=チョコバナナ.js"><img src="assets/thumbs/チョコバナナ.jpg" alt="チョコバナナ" width="160"></a><br><a href="samples/チョコバナナ.js">チョコバナナ</a></td>
+    <td align="center" width="25%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=棒チョコ菓子.js"><img src="assets/thumbs/棒チョコ菓子.jpg" alt="棒チョコ菓子" width="160"></a><br><a href="samples/棒チョコ菓子.js">棒チョコ菓子</a></td>
+    <td align="center" width="25%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=プリン.js"><img src="assets/thumbs/プリン.jpg" alt="プリン" width="160"></a><br><a href="samples/プリン.js">プリン</a></td>
+  </tr>
+  <tr>
+    <td align="center" width="25%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=ゼリー.js"><img src="assets/thumbs/ゼリー.jpg" alt="ゼリー" width="160"></a><br><a href="samples/ゼリー.js">ゼリー</a></td>
+    <td align="center" width="25%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=アイス.js"><img src="assets/thumbs/アイス.jpg" alt="アイス" width="160"></a><br><a href="samples/アイス.js">アイス</a></td>
+    <td align="center" width="25%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=飴細工.js"><img src="assets/thumbs/飴細工.jpg" alt="飴細工" width="160"></a><br><a href="samples/飴細工.js">飴細工</a></td>
+    <td align="center" width="25%"><a href="https://cx20.github.io/VirtualSweetsFactory/play.html?f=綿菓子.js"><img src="assets/thumbs/綿菓子.jpg" alt="綿菓子" width="160"></a><br><a href="samples/綿菓子.js">綿菓子</a></td>
   </tr>
 </table>
 
@@ -87,13 +90,13 @@ npx serve .                  # 任意の静的サーバでよい
 ├── index.html               目次（トップページ）
 ├── start.html               00 まず動かしてみる
 ├── ch01.html … ch18.html    第I部（01〜05）／第II部（06〜09）／第III部（10〜14）／第IV部（15〜16）／第V部（17〜18）
-├── zukan.html               図鑑（15本の一覧。サムネイルから実行できる）
+├── zukan.html               図鑑（16本の一覧。サムネイルから実行できる）
 ├── view.html                ソースビューア
 ├── play.html                サンプルをその場で実行するページ
 ├── terms.html               用語集
 ├── LICENSE                  MIT License
 │
-├── samples/                 ★ サンプル 15 本（Babylon.js Playground 用の .js）
+├── samples/                 ★ サンプル 16 本（Babylon.js Playground 用の .js）
 │
 ├── assets/
 │   ├── site.css             サイト全体のスタイル          （手書き）
@@ -141,7 +144,7 @@ sRGB 0-1 → 16進に直したものです。たべもの編から切り出し�
 
 ---
 
-## サンプル 15 本
+## サンプル 16 本
 
 `samples/` 以下。同じ枠組みで書かれていますが、担当する「難所」が 1 本ずつ違います。
 
@@ -169,6 +172,7 @@ sRGB 0-1 → 16進に直したものです。たべもの編から切り出し�
 | --- | --- |
 | [チョコレート.js](samples/チョコレート.js) | 外形（スーパー楕円）× 縦断面。ブルームと櫛目。Havok で1粒ずつ落とす |
 | [チョコバナナ.js](samples/チョコバナナ.js) | 引き上げたチョコの垂れと滴。スプレーは上から振った側にだけ半分沈めて付ける |
+| [棒チョコ菓子.js](samples/棒チョコ菓子.js) | チョコの鞘の縁は周方向に不揃いで、手前に溜まりの膨らみ。Havok でグラスへ落として縁に立てかけ、グラスの当たり判定は箱の輪で穴を残す |
 
 ### 冷やし固める・引いて作る
 
@@ -191,12 +195,12 @@ sRGB 0-1 → 16進に直したものです。たべもの編から切り出し�
 
 ## 章立て
 
-お菓子を作るときに必要になる技術の順に並べてあります。例はすべてこの 15 本から取っています。
+お菓子を作るときに必要になる技術の順に並べてあります。例はすべてこの 16 本から取っています。
 作りたいお菓子が決まっているなら、01章の表から「作り方」で章を引けます（ドーナツなら 06 → 10 → 15 → 16）。
 
 | | 章 | 内容 |
 | --- | --- | --- |
-| 00 | まず動かしてみる | インストールなし。ブラウザだけで15本を動かす手順 |
+| 00 | まず動かしてみる | インストールなし。ブラウザだけで16本を動かす手順 |
 
 ### 第I部 — 道具をそろえる（01〜05）
 
@@ -233,7 +237,7 @@ sRGB 0-1 → 16進に直したものです。たべもの編から切り出し�
 
 | | 章 | 内容 |
 | --- | --- | --- |
-| 15 | 盛り付け | クッキーは落として積み、ドーナツはカプセル列で穴を残し、月見団子は物理を使わずに下の段だけを見て積む |
+| 15 | 盛り付け | クッキーは落として積み、ドーナツはカプセル列で穴を残し、棒チョコ菓子はグラスの縁に立てかけ、月見団子は物理を使わずに下の段だけを見て積む |
 | 16 | トッピング | スプレーはテクスチャに描くと消える。インスタンスで置き、振った向きの側にだけ付けて、半分沈める |
 
 ### 第V部 — 硬い面の外へ（17〜18）
@@ -263,9 +267,13 @@ node tools/shoot.js クッキー   # 名前で絞り込み（部分一致）
 3. `createScene()` の完了を待ち、**メッシュが増えず・動かなくなる**まで待つ
    （固定時間で待つと、クッキーが宙に浮いた絵で撮れる）
 4. 待つあいだは 1/6 解像度・影と後処理オフで回し、撮る直前に等倍へ戻す
-5. GUI（右下のスライダー）だけ隠し、描かれた画素から被写体の枠を求めて切り出す
+5. GUI（右下のスライダー）だけ隠し、**お菓子へ寄せる**。サンプルのカメラは手で回して皿ごと
+   眺められるよう引き気味なので、カメラの位置はそのままで、お菓子へ向き直って画角を絞る
+   （寄り具合と狙う点は `tools/shoot.js` の `CLOSE` 表。載っていないサンプルは 1.3 倍）
+6. 描かれた画素から被写体の枠を求めて切り出す
 
-環境変数: `SHOOT_DEBUG=1`（各段階の所要時間と切り出し枠）、`SHOOT_DUMP=1`（メッシュ一覧）、
+環境変数: `SHOOT_DEBUG=1`（各段階の所要時間・寄り・切り出し枠）、`SHOOT_DUMP=1`（メッシュ一覧）、
+`SHOOT_ZOOM=1.5`（寄りを全サンプルこの値で撮る。調整用）、
 `SHOOT_BUILD_TIMEOUT`（組み立て待ちの上限 ms、既定 600000）。
 
 再収録が要るのは**サンプルの見た目を変えたときだけ**です。

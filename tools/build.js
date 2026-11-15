@@ -6,7 +6,7 @@
  *  生成するもの:
  *    ・index.html / start.html / ch01〜ch18.html /
  *      zukan.html / view.html / terms.html / play.html   … 全24ページ
- *    ・assets/src/*.src.js  … 15本のサンプルをビューア用に複製
+ *    ・assets/src/*.src.js  … 16本のサンプルをビューア用に複製
  *                             （.gitignore 済み。再生成はこれで行う）
  *
  *  【注意】上記のファイルは毎回まるごと上書きされます。
@@ -19,7 +19,7 @@
  *    ・tools/pages-2.js  … 第II部（06〜09章）の本文
  *    ・tools/pages-3.js  … 第III部（10〜14章）の本文
  *    ・tools/pages-4.js  … 第IV部（15〜16章）と第V部（17〜18章）の本文
- *    ・samples/*.js（15本）  … ビューア用の複製元
+ *    ・samples/*.js（16本）  … ビューア用の複製元
  *
  *  手書きで管理しているもの（このスクリプトは触りません）:
  *    ・assets/site.css / assets/labs.js / assets/play.js
@@ -203,7 +203,7 @@ function hubCard(p) {
 
 /* トップの各カードに出す1行。章の見出しだけでは中身が分からないので別に持つ */
 const LEDE = {
-  "start.html": "インストールなし。ブラウザだけで15本を動かす手順。まずここから。",
+  "start.html": "インストールなし。ブラウザだけで16本を動かす手順。まずここから。",
   "ch01.html": "モデルファイルも写真も読み込まず、実行した瞬間に座標と模様を計算で作る。章はお菓子の作り方の順。",
   "ch02.html": "Math.random() を使わない理由。型で焼くクッキーと1本ずつ違うバナナでは、揺らす幅も違う。",
   "ch03.html": "となり合う値がなめらかにつながる乱数。重ねると焼きムラや生地の肌理になる。",
@@ -218,7 +218,7 @@ const LEDE = {
   "ch12.html": "たれを茶色く塗ると光沢のない卵になる。みたらしもシロップも、色は厚みから解くもの。",
   "ch13.html": "ゼリーを緑に塗るとプラスチックになる。色は、光が中を通った距離から解く。",
   "ch14.html": "同じお菓子でも光で別物になる。白い皿は 0.88、透けるものは映すものまで含めて光。",
-  "ch15.html": "皿への盛り付けは手で置かない。クッキーは落とし、ドーナツは穴を残し、月見団子は物理を使わずに積む。",
+  "ch15.html": "皿への盛り付けは手で置かない。クッキーは落とし、ドーナツは穴を残し、棒チョコ菓子はグラスの縁に立てかけ、月見団子は物理を使わずに積む。",
   "ch16.html": "スプレーはテクスチャに描くと消える。振った向きの側にだけ付けて、半分沈める。",
   "ch17.html": "Havok にやわらかい物体は無い。減衰するばね6本の重ね合わせで、プリンを揺らす。",
   "ch18.html": "綿菓子には表面が無い。帯に沿った3万本の糸を線で描き、芯の深度で裏を隠す。"
@@ -229,7 +229,7 @@ const PARTS = [
   { from: 1, to: 5, no: "第I部", en: "PART I", color: "donut", id: "chapters",
     title: "道具をそろえる（01〜05）",
     sub: "どのお菓子のファイルにも、同じ場所に入っているもの",
-    text: "乱数・ノイズ・面と法線・テクスチャ。お菓子の種類に関係なく、15本すべての土台になっている道具です。" +
+    text: "乱数・ノイズ・面と法線・テクスチャ。お菓子の種類に関係なく、16本すべての土台になっている道具です。" +
           "ここだけはファイルの層（CONFIG → Rng → Noise → Mesh utils → TextureLab）の順に並んでいます。" },
   { from: 6, to: 9, no: "第II部", en: "PART II", color: "sakura", id: "chapters2",
     title: "かたちをつくる（06〜09）",
@@ -245,7 +245,7 @@ const PARTS = [
   { from: 15, to: 16, no: "第IV部", en: "PART IV", color: "kuri", id: "chapters4",
     title: "皿にのせる（15〜16）",
     sub: "盛り付けと、トッピング",
-    text: "クッキーは落として積み、ドーナツは穴を残して重ね、月見団子は決まった形に積む。" +
+    text: "クッキーは落として積み、ドーナツは穴を残して重ね、棒チョコ菓子はグラスの縁に立てかけ、月見団子は決まった形に積む。" +
           "仕上げのスプレーやチョコチップは、振った向きの側にだけ付いて、半分沈みます。" },
   { from: 17, to: 18, no: "第V部", en: "PART V", color: "melon", id: "chapters5",
     title: "硬い面の外へ（17〜18）",
@@ -284,7 +284,7 @@ ${cards(chapters.filter((p) => Number(p.no) >= pt.from && Number(p.no) <= pt.to)
       <p class="eyebrow">Babylon.js / procedural sweets</p>
       <h1>3Dのお菓子は、<br><span class="accent">数式から焼ける</span>。</h1>
       <p class="lede">
-        このサイトで扱う15本のプログラムは、3Dモデルも写真も1枚も読み込みません。
+        このサイトで扱う16本のプログラムは、3Dモデルも写真も1枚も読み込みません。
         点の座標を計算で並べ、焼き色をその場で描き、たれの濃さを厚みから解く。
         絵を描く技術ではなく、形と質感を組み立てる技術です。
         中学・高校の数学で追えるところから順に見ていきます。
@@ -337,7 +337,7 @@ ${cards(chapters.filter((p) => Number(p.no) >= pt.from && Number(p.no) <= pt.to)
       <b>姉妹編があります。</b>
       このサイトは、料理30本を扱った<a href="https://cx20.github.io/VirtualFoodCourt/"><b>「たべもののつくりかた」</b></a>（VirtualFoodCourt）から、
       甘いものだけを別腹として切り出したものです。野菜と果物を扱った<a href="https://cx20.github.io/VirtualVegetablePlant/"><b>「やさいのつくりかた」</b></a>（VirtualVegetablePlant）もあります。
-      乱数・ノイズ・面と法線のような道具は3つとも共通ですが、このサイトの章立てと例は、すべてお菓子の15本から取っています。
+      乱数・ノイズ・面と法線のような道具は3つとも共通ですが、このサイトの章立てと例は、すべてお菓子の16本から取っています。
     </div>
   </div>
 </section>
@@ -348,21 +348,21 @@ ${PARTS.map(partSection).join("\n\n")}
   <div class="chapter-head">
     <div class="chnum" style="font-size:15px">資料<small style="opacity:.7">REFERENCE</small></div>
     <div>
-      <h2>15本を引く</h2>
+      <h2>16本を引く</h2>
       <p class="sub">ファイルから逆に読みたいとき</p>
     </div>
   </div>
   <div class="body" style="max-width:none">
     <div class="hub">
       <a class="hubcard" href="zukan.html" style="--ch:var(--p-koge)">
-        <span class="no">15<span style="opacity:.55;margin-left:8px">FILES</span></span>
+        <span class="no">16<span style="opacity:.55;margin-left:8px">FILES</span></span>
         <h3>どのファイルで、何が学べるか</h3>
-        <p>15本それぞれの「そこでしか出てこない技術」の一覧。カードから、その場で動かせます。</p>
+        <p>16本それぞれの「そこでしか出てこない技術」の一覧。カードから、その場で動かせます。</p>
       </a>
       <a class="hubcard" href="view.html" style="--ch:var(--p-karaage)">
         <span class="no">SRC<span style="opacity:.55;margin-left:8px">SOURCE</span></span>
         <h3>サンプルのソースを読む</h3>
-        <p>15本の .js をその場で表示。コピーすれば、そのまま Playground に貼れます。</p>
+        <p>16本の .js をその場で表示。コピーすれば、そのまま Playground に貼れます。</p>
       </a>
       <a class="hubcard" href="terms.html" style="--ch:var(--p-choco)">
         <span class="no">用語<span style="opacity:.55;margin-left:8px">GLOSSARY</span></span>
@@ -402,7 +402,7 @@ ${SISTERS.map((s) => `      <a class="hubcard" href="${s.site}" target="_blank" 
 
   return shell({
     title: SITE + " — コードでお菓子をつくる技術ノート",
-    desc: "Babylon.js でお菓子を手続き的に生成する15本のサンプルを、中学生・高校生向けに解説する学習ポータル",
+    desc: "Babylon.js でお菓子を手続き的に生成する16本のサンプルを、中学生・高校生向けに解説する学習ポータル",
     current: "index.html",
     main: main
   });
@@ -418,10 +418,10 @@ function zukanPage() {
   <p class="crumbs"><a href="index.html">目次</a><span class="sep">/</span>図鑑</p>
 <section class="chapter" id="zukan" style="--ch:var(--p-koge)">
   <div class="chapter-head">
-    <div class="chnum">15<small>FILES</small></div>
+    <div class="chnum">16<small>FILES</small></div>
     <div>
       <h2>どのファイルで、何が学べるか</h2>
-      <p class="sub">15本それぞれに、そこでしか出てこない技術がある</p>
+      <p class="sub">16本それぞれに、そこでしか出てこない技術がある</p>
     </div>
   </div>
   <div class="body" style="max-width:none">
@@ -444,7 +444,7 @@ function zukanPage() {
 </main>`;
   return shell({
     title: "どのファイルで、何が学べるか — " + SITE,
-    desc: "15本の一覧と、それぞれの難所",
+    desc: "16本の一覧と、それぞれの難所",
     current: "zukan.html",
     // tools/shoot.js が書き出したサムネイル一覧。無ければカードだけ出る
     head: '<script src="assets/thumbs/thumbs.js" defer></script>\n',
@@ -461,7 +461,7 @@ function viewPage() {
     <div class="chnum" style="font-size:13px">src<small style="opacity:.7">SOURCE</small></div>
     <div>
       <h2>サンプルのソースを読む</h2>
-      <p class="sub">15本の .js を、そのまま表示します</p>
+      <p class="sub">16本の .js を、そのまま表示します</p>
     </div>
   </div>
   <div class="body" style="max-width:none">
@@ -528,7 +528,7 @@ function viewPage() {
   </div>
 </div>
 </main>`;
-  return shell({ title: "サンプルのソースを読む — " + SITE, desc: "15本の .js を行番号つきで表示します", current: "view.html", main: main });
+  return shell({ title: "サンプルのソースを読む — " + SITE, desc: "16本の .js を行番号つきで表示します", current: "view.html", main: main });
 }
 
 /* 用語。左が語、右が意味。labs.js が絞り込みを付ける */
@@ -707,7 +707,7 @@ function buildSrc() {
    実行
    --------------------------------------------------------------- */
 /* 姉妹編「たべもののつくりかた」のサンプル。本文に「○○.js」と出てきたら、そちらのソースビューアへつなぐ。
-   本文の例はすべてお菓子の15本から取っているので、いまは使われていない。
+   本文の例はすべてお菓子の16本から取っているので、いまは使われていない。
    たべもの編のファイルを引き合いに出したくなったときのために残してある。
    <pre> の中・既にあるリンクの中・タグの属性は触らない */
 const SISTER = {

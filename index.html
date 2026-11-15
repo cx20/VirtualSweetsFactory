@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>おかしのつくりかた — コードでお菓子をつくる技術ノート</title>
-<meta name="description" content="Babylon.js でお菓子を手続き的に生成する15本のサンプルを、中学生・高校生向けに解説する学習ポータル">
+<meta name="description" content="Babylon.js でお菓子を手続き的に生成する16本のサンプルを、中学生・高校生向けに解説する学習ポータル">
 <link rel="stylesheet" href="assets/site.css">
 <script src="assets/labs.js" defer></script>
 </head>
@@ -47,7 +47,7 @@
       <p class="eyebrow">Babylon.js / procedural sweets</p>
       <h1>3Dのお菓子は、<br><span class="accent">数式から焼ける</span>。</h1>
       <p class="lede">
-        このサイトで扱う15本のプログラムは、3Dモデルも写真も1枚も読み込みません。
+        このサイトで扱う16本のプログラムは、3Dモデルも写真も1枚も読み込みません。
         点の座標を計算で並べ、焼き色をその場で描き、たれの濃さを厚みから解く。
         絵を描く技術ではなく、形と質感を組み立てる技術です。
         中学・高校の数学で追えるところから順に見ていきます。
@@ -100,7 +100,7 @@
       <b>姉妹編があります。</b>
       このサイトは、料理30本を扱った<a href="https://cx20.github.io/VirtualFoodCourt/"><b>「たべもののつくりかた」</b></a>（VirtualFoodCourt）から、
       甘いものだけを別腹として切り出したものです。野菜と果物を扱った<a href="https://cx20.github.io/VirtualVegetablePlant/"><b>「やさいのつくりかた」</b></a>（VirtualVegetablePlant）もあります。
-      乱数・ノイズ・面と法線のような道具は3つとも共通ですが、このサイトの章立てと例は、すべてお菓子の15本から取っています。
+      乱数・ノイズ・面と法線のような道具は3つとも共通ですが、このサイトの章立てと例は、すべてお菓子の16本から取っています。
     </div>
   </div>
 </section>
@@ -115,7 +115,7 @@
   </div>
   <div class="body">
     <p>
-      乱数・ノイズ・面と法線・テクスチャ。お菓子の種類に関係なく、15本すべての土台になっている道具です。ここだけはファイルの層（CONFIG → Rng → Noise → Mesh utils → TextureLab）の順に並んでいます。
+      乱数・ノイズ・面と法線・テクスチャ。お菓子の種類に関係なく、16本すべての土台になっている道具です。ここだけはファイルの層（CONFIG → Rng → Noise → Mesh utils → TextureLab）の順に並んでいます。
     </p>
   </div>
   <div class="body" style="max-width:none">
@@ -242,7 +242,7 @@
   </div>
   <div class="body">
     <p>
-      クッキーは落として積み、ドーナツは穴を残して重ね、月見団子は決まった形に積む。仕上げのスプレーやチョコチップは、振った向きの側にだけ付いて、半分沈みます。
+      クッキーは落として積み、ドーナツは穴を残して重ね、棒チョコ菓子はグラスの縁に立てかけ、月見団子は決まった形に積む。仕上げのスプレーやチョコチップは、振った向きの側にだけ付いて、半分沈みます。
     </p>
   </div>
   <div class="body" style="max-width:none">
@@ -250,7 +250,7 @@
       <a class="hubcard" href="ch15.html" style="--ch:var(--p-kuri)">
         <span class="no">15<span style="opacity:.55;margin-left:8px">Havok</span></span>
         <h3>盛り付けは、手で置かない</h3>
-        <p>皿への盛り付けは手で置かない。クッキーは落とし、ドーナツは穴を残し、月見団子は物理を使わずに積む。</p>
+        <p>皿への盛り付けは手で置かない。クッキーは落とし、ドーナツは穴を残し、棒チョコ菓子はグラスの縁に立てかけ、月見団子は物理を使わずに積む。</p>
       </a>
       <a class="hubcard" href="ch16.html" style="--ch:var(--p-sprinkle)">
         <span class="no">16<span style="opacity:.55;margin-left:8px">Topping</span></span>
@@ -294,21 +294,21 @@
   <div class="chapter-head">
     <div class="chnum" style="font-size:15px">資料<small style="opacity:.7">REFERENCE</small></div>
     <div>
-      <h2>15本を引く</h2>
+      <h2>16本を引く</h2>
       <p class="sub">ファイルから逆に読みたいとき</p>
     </div>
   </div>
   <div class="body" style="max-width:none">
     <div class="hub">
       <a class="hubcard" href="zukan.html" style="--ch:var(--p-koge)">
-        <span class="no">15<span style="opacity:.55;margin-left:8px">FILES</span></span>
+        <span class="no">16<span style="opacity:.55;margin-left:8px">FILES</span></span>
         <h3>どのファイルで、何が学べるか</h3>
-        <p>15本それぞれの「そこでしか出てこない技術」の一覧。カードから、その場で動かせます。</p>
+        <p>16本それぞれの「そこでしか出てこない技術」の一覧。カードから、その場で動かせます。</p>
       </a>
       <a class="hubcard" href="view.html" style="--ch:var(--p-karaage)">
         <span class="no">SRC<span style="opacity:.55;margin-left:8px">SOURCE</span></span>
         <h3>サンプルのソースを読む</h3>
-        <p>15本の .js をその場で表示。コピーすれば、そのまま Playground に貼れます。</p>
+        <p>16本の .js をその場で表示。コピーすれば、そのまま Playground に貼れます。</p>
       </a>
       <a class="hubcard" href="terms.html" style="--ch:var(--p-choco)">
         <span class="no">用語<span style="opacity:.55;margin-left:8px">GLOSSARY</span></span>
