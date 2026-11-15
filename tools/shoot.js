@@ -10,7 +10,8 @@
  *    2. ヘッドレスの Chrome を --remote-debugging-port つきで起動し、
  *       DevTools プロトコル（CDP）を Node 内蔵の WebSocket で叩く
  *    3. サンプルを1本ずつ実際に実行し、盛り付けが落ち着いたところで
- *       GUI だけ隠して撮る
+ *       GUI だけ隠し、お菓子へ寄せて（CLOSE 表）撮る
+ *       たい焼きは先に「割る」を押し、手前の断面が見える状態で撮る
  *    4. assets/thumbs/<名前>.jpg に書き出す
  *
  *  【注意】初回だけ Babylon 本体を CDN から落とします（以後は一時フォルダに
@@ -20,7 +21,7 @@
  *  【注意】このサンプルは野菜編より1本あたりが重いです。模様を画像として
  *          持たず、1024x1024 のテクスチャを実行時に何枚も CPU で焼くため
  *          （たこ焼きは4柄 x 3枚、チョコレートは8種ぶん）。
- *          組み立てだけで1〜5分かかるものがあり、15本だと40〜50分見てください。
+ *          組み立てだけで1〜5分かかるものがあり、16本だと40〜50分見てください。
  *
  *  再収録が要るのは「サンプルの見た目を変えたとき」だけです。
  *  生成物は assets/thumbs/ に入り、リポジトリに入れて配ります:
@@ -57,6 +58,41 @@ const STILL_POLLS = 3;         // 誰も動かない状態がこれだけ続い�
 const GIVEUP_POLLS = 14;       // 止まりきらないサンプル用の保険
 const POLL_EVERY = 1500;
 const SETTLE_MOVE = 0.02;      // 1回ぶんの間にこれ以下しか動かなければ静止（cm）
+
+/* 撮るときの寄り。
+   【対策】サンプルのカメラは、手で回して皿ごと眺められるよう引き気味に
+           置いてある。そのまま撮ると、一覧に並べたときに皿やテーブルばかり
+           大きく、お菓子が小さかった。撮るときだけ寄せる。
+   zoom … 画角を何分の1に絞るか（1 なら寄らない）
+   at   … 「寄る前の絵」で、真ん中に持ってくる点（左上 0,0 〜 右下 1,1）。
+           お菓子が真ん中から外れているサンプルで、寄ると切れるのを防ぐ
+   載っていないサンプルは DEFAULT_CLOSE で撮る。新しく足したら、まず既定で
+   撮ってみて、切れる・まだ小さいときだけここに書き足す。
+   SHOOT_ZOOM=1.5 のように渡すと、zoom だけ全サンプルその値で撮れる（調整用） */
+const DEFAULT_CLOSE = { zoom: 1.3, at: [0.50, 0.50] };
+const CLOSE = {
+  "たい焼き":     { zoom: 1.50, at: [0.50, 0.50] },
+  "アイス":       { zoom: 1.35, at: [0.51, 0.36] },   // ウエハースの先が上に近い
+  "クッキー":     { zoom: 1.60, at: [0.47, 0.40] },
+  "ゼリー":       { zoom: 1.60, at: [0.50, 0.51] },
+  "チョコバナナ": { zoom: 1.20, at: [0.52, 0.50] },   // 横一列で、もとから幅いっぱい
+  "チョコレート": { zoom: 1.20, at: [0.53, 0.45] },   // 右奥のトリュフまで入れる
+  "ドーナツ":     { zoom: 1.25, at: [0.40, 0.39] },   // 左に1個離れている
+  "パンケーキ":   { zoom: 1.25, at: [0.50, 0.55] },
+  "プリン":       { zoom: 1.60, at: [0.50, 0.54] },
+  "ロールケーキ": { zoom: 1.75, at: [0.50, 0.475] },
+  "月見団子":     { zoom: 1.45, at: [0.49, 0.55] },
+  "栗饅頭":       { zoom: 1.00, at: [0.50, 0.50] },   // もとから画面いっぱい
+  "棒チョコ菓子": { zoom: 1.50, at: [0.55, 0.385] },  // グラスが右上に寄っている
+  "綿菓子":       { zoom: 1.35, at: [0.49, 0.42] },   // 綿を主役に。棒の下は切れてよい
+  "花見団子":     { zoom: 1.60, at: [0.52, 0.55] },
+  "飴細工":       { zoom: 1.60, at: [0.50, 0.47] }
+};
+function closeOf(label) {
+  const c = Object.assign({}, CLOSE[label] || DEFAULT_CLOSE);
+  if (process.env.SHOOT_ZOOM) c.zoom = +process.env.SHOOT_ZOOM;
+  return c;
+}
 
 const only = process.argv[2];
 const files = fs
@@ -154,6 +190,57 @@ window.__hideGui = function () {
         }
     });
     return n;
+};
+
+/* 撮る直前に、お菓子へ寄せる（zoom と狙う点は Node 側の CLOSE 表）。
+   【対策】半径を縮めて近づけると、サンプルごとの事情とぶつかる。
+           minZ を 5〜10 と大きく取っていて手前が欠ける、半径の下限で止まる、
+           毎フレーム半径を目標へ寄せる演出に引き戻される、など。
+           カメラの位置は動かさず「狙う点へ向き直る → 画角を絞る（望遠）」に
+           すれば、どれとも干渉しない。被写界深度のピントは camera.radius から
+           出しているサンプルが多いが、向き直ると半径が「狙う点までの距離」に
+           なるので、そのまま合う
+   【対策】寄せたあと、自動で左右に振る演出（飴細工）や半径を寄せる演出が
+           残っていると、撮るまでのあいだに絵がずれる。角度と半径の上下限を
+           今の値に揃えて留める（制限は描画のたびに掛け直されるので確実） */
+window.__closeUp = function (zoom, ax, ay) {
+    var s = window.__scene; if (!s) return "シーンなし";
+    var list = [s.activeCamera].concat(s.activeCameras || [], s.cameras || []);
+    var cam = null;
+    for (var i = 0; i < list.length && !cam; i++) {
+        if (list[i] instanceof BABYLON.ArcRotateCamera) cam = list[i];
+    }
+    if (!cam) return "ArcRotateCamera が無いので寄らない";
+    if (!(zoom > 0)) zoom = 1;
+    if (zoom === 1 && Math.abs(ax - 0.5) < 0.001 && Math.abs(ay - 0.5) < 0.001) return "寄らない";
+    cam.useAutoRotationBehavior = false;
+    cam.inertialAlphaOffset = 0; cam.inertialBetaOffset = 0; cam.inertialRadiusOffset = 0;
+    cam.inertialPanningX = 0; cam.inertialPanningY = 0;
+    cam.lowerAlphaLimit = null; cam.upperAlphaLimit = null;
+    cam.lowerBetaLimit = 0.01; cam.upperBetaLimit = Math.PI - 0.01;
+    cam.lowerRadiusLimit = null; cam.upperRadiusLimit = null;
+
+    var r0 = cam.radius;
+    if (Math.abs(ax - 0.5) >= 0.001 || Math.abs(ay - 0.5) >= 0.001) {
+        // 狙う点を通る視線を作り、今の注視点と同じ奥行きの所を新しい注視点にする
+        var cv = s.getEngine().getRenderingCanvas();
+        var ray = s.createPickingRay(ax * cv.clientWidth, ay * cv.clientHeight,
+                                     BABYLON.Matrix.Identity(), cam);
+        var pos = cam.position.clone();
+        var toT = cam.target.subtract(pos);
+        var fwd = toT.normalizeToNew();
+        var cosA = Math.max(0.2, BABYLON.Vector3.Dot(ray.direction, fwd));
+        var dist = BABYLON.Vector3.Dot(toT, fwd) / cosA;
+        cam.setTarget(pos.add(ray.direction.scale(dist)));
+    }
+    var f0 = cam.fov;
+    cam.fov = 2 * Math.atan(Math.tan(f0 / 2) / zoom);
+
+    cam.lowerAlphaLimit = cam.alpha; cam.upperAlphaLimit = cam.alpha;
+    cam.lowerBetaLimit = cam.beta; cam.upperBetaLimit = cam.beta;
+    cam.lowerRadiusLimit = cam.radius; cam.upperRadiusLimit = cam.radius;
+    return "fov " + f0.toFixed(3) + "→" + cam.fov.toFixed(3) +
+        "  半径 " + r0.toFixed(2) + "→" + cam.radius.toFixed(2);
 };
 
 /* 盛り付けが終わったかの目印。
@@ -502,6 +589,20 @@ function cropOf(f) {
            width: Math.round(w), height: Math.round(h), scale: 1 };
 }
 
+function saveManifest(file, manifest) {
+  // ファイル名順に並べ直して書く（差分が読みやすくなる）
+  const sorted = {};
+  Object.keys(manifest).sort().forEach((k) => { sorted[k] = manifest[k]; });
+  fs.writeFileSync(file, JSON.stringify(sorted, null, 2) + "\n", "utf8");
+  // 図鑑から読む用。file:// でも動くように JSON ではなく <script> の形で置く
+  fs.writeFileSync(
+    path.join(OUT, "thumbs.js"),
+    "/* tools/shoot.js が書き出したもの。手で直さないこと */\n" +
+    "window.__THUMBS = " + JSON.stringify(sorted, null, 2) + ";\n",
+    "utf8"
+  );
+}
+
 async function getJson(pathname, method) {
   // 【対策】/json/new は GET を受け付けない（"Using unsafe HTTP verb" が
   //         JSON ではなく素のテキストで返り、パースで落ちる）。PUT で叩く
@@ -622,6 +723,24 @@ function findChrome() {
       // 盛り付けが終わる（増えも動きもしなくなる）まで待つ。
       // 待っているあいだは粗く描いて、物理を実時間で進める
       await page.send("Runtime.evaluate", { expression: "window.__fast(true)", returnByValue: true });
+      if (label === "たい焼き") {
+        const split = await page.send("Runtime.evaluate", {
+          expression: `(function () {
+            for (const t of window.__scene.textures) {
+              if (!(t instanceof BABYLON.GUI.AdvancedDynamicTexture)) continue;
+              const button = t.getControlByName("split");
+              if (!button) continue;
+              if (button.textBlock.text === "割る") button.onPointerUpObservable.notifyObservers();
+              return button.textBlock.text === "くっつける";
+            }
+            return false;
+          })()`,
+          returnByValue: true
+        });
+        if (split.exceptionDetails || split.result.value !== true) {
+          throw new Error("たい焼きの「割る」ボタンを操作できません: " + JSON.stringify(split));
+        }
+      }
       let lastCount = -1, same = 0, still = 0, lastFrames = 0, fps = 0;
       let motion = 999, dbg = "";
       const settleUntil = Date.now() + SETTLE_TIMEOUT;
@@ -647,6 +766,9 @@ function findChrome() {
         if (same >= STABLE_POLLS && still >= STILL_POLLS) break;
         if (same >= GIVEUP_POLLS) break;   // 止まりきらないものは、そこで撮る
       }
+      if (label === "たい焼き" && still < STILL_POLLS) {
+        throw new Error("たい焼きの割れる動きが止まりません");
+      }
       if (process.env.SHOOT_DEBUG) {
         console.log("\n    組立 " + Math.round((tBuilt - t0) / 1000) + "s" +
           "  整定 " + Math.round((Date.now() - tBuilt) / 1000) + "s" +
@@ -654,9 +776,17 @@ function findChrome() {
           "  剛体/速度=" + dbg);
       }
 
-      // 撮る用に解像度を戻し、GUI を隠して、描き直しを待つ
+      // 撮る用に解像度を戻し、GUI を隠して、お菓子へ寄せてから描き直しを待つ
       await page.send("Runtime.evaluate", { expression: "window.__hideGui()", returnByValue: true });
       await page.send("Runtime.evaluate", { expression: "window.__fast(false)", returnByValue: true });
+      const close = closeOf(label);
+      const closeMsg = (await page.send("Runtime.evaluate", {
+        expression: "window.__closeUp(" + close.zoom + "," + close.at[0] + "," + close.at[1] + ")",
+        returnByValue: true
+      })).result.value;
+      if (process.env.SHOOT_DEBUG) {
+        console.log("    寄り x" + close.zoom + " @ " + close.at.join(",") + "  " + closeMsg);
+      }
       await waitFrames(page, 4, 60000);
 
       // 見えているものに寄せて切り出す
@@ -690,6 +820,9 @@ function findChrome() {
         w: Math.round((clip ? clip.width : W) * SCALE),
         h: Math.round((clip ? clip.height : H) * SCALE)
       };
+      // 【対策】一覧を最後にまとめて書くと、途中で止まった（止めた）回は
+      //         写真だけ新しく、大きさと下地色は古いままの一覧が残った。1枚ごとに書く
+      saveManifest(MANIFEST, manifest);
       console.log("OK  " + kb + "KB  " + Math.round((Date.now() - t0) / 1000) + "s");
       done.push(label);
       await page.send("Page.close").catch(() => {});
@@ -701,17 +834,7 @@ function findChrome() {
     }
   }
 
-  // ファイル名順に並べ直して書く（差分が読みやすくなる）
-  const sorted = {};
-  Object.keys(manifest).sort().forEach((k) => { sorted[k] = manifest[k]; });
-  fs.writeFileSync(MANIFEST, JSON.stringify(sorted, null, 2) + "\n", "utf8");
-  // 図鑑から読む用。file:// でも動くように JSON ではなく <script> の形で置く
-  fs.writeFileSync(
-    path.join(OUT, "thumbs.js"),
-    "/* tools/shoot.js が書き出したもの。手で直さないこと */\n" +
-    "window.__THUMBS = " + JSON.stringify(sorted, null, 2) + ";\n",
-    "utf8"
-  );
+  saveManifest(MANIFEST, manifest);
 
   chrome.kill();
   server.close();
