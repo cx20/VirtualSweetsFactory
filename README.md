@@ -18,6 +18,8 @@
 **[やさいのつくりかた（VirtualVegetablePlant）](https://github.com/cx20/VirtualVegetablePlant)** もあります。
 乱数・ノイズ・面と法線のような道具は 3 つとも共通ですが、このサイトの章立てと例は、すべてお菓子の 15 本から取っています。
 
+3 つの関係は [姉妹リポジトリ](#姉妹リポジトリ) にまとめてあります。
+
 ---
 
 ## まず動かす
@@ -58,6 +60,7 @@ npx serve .                  # 任意の静的サーバでよい
 ├── view.html                ソースビューア
 ├── play.html                サンプルをその場で実行するページ
 ├── terms.html               用語集
+├── LICENSE                  MIT License
 │
 ├── samples/                 ★ サンプル 15 本（Babylon.js Playground 用の .js）
 │
@@ -91,6 +94,7 @@ npx serve .                  # 任意の静的サーバでよい
 | 章の本文（10〜14） | `tools/pages-3.js` |
 | 章の本文（15〜18） | `tools/pages-4.js` |
 | 目次・図鑑・ソース・用語集の枠組み、ナビ、用語の表、目次の部立て（`PARTS`） | `tools/build.js` |
+| 姉妹サイトの一覧（全ページのフッターと、目次の「姉妹編」欄） | `tools/build.js` の `SISTERS` |
 | 本文中の「○○.js」をたべもの編へつなぐ一覧（いまの本文では未使用） | `tools/build.js` の `SISTER` |
 | 見た目（色・レイアウト） | `assets/site.css` |
 | 各章の実験、図鑑のファイル一覧、ソースビューア | `assets/labs.js` |
@@ -250,3 +254,24 @@ VERIFY_FRAME_WAIT=30000 node tools/verify-play.js チョコレート
 
 `play.html` を実際に開いて、`createScene()` が値を返し、描画ループが回り、
 ページ内にエラーが出ていないことを確かめます。
+
+---
+
+## 姉妹リポジトリ
+
+同じ Babylon.js による手続き的モデリングを、題材を変えて解説しています。
+
+| サイト | リポジトリ | 内容 |
+| --- | --- | --- |
+| [やさいのつくりかた](https://cx20.github.io/VirtualVegetablePlant/) | [VirtualVegetablePlant](https://github.com/cx20/VirtualVegetablePlant) | 野菜・果物・きのこの形や表面の模様を、計算とコードで作る方法を解説します。 |
+| [たべもののつくりかた](https://cx20.github.io/VirtualFoodCourt/) | [VirtualFoodCourt](https://github.com/cx20/VirtualFoodCourt) | 料理を題材に、形に加えて焼き色や透け、衣・麺・汁、盛り付けなどの表現を解説します。 |
+| [おかしのつくりかた](https://cx20.github.io/VirtualSweetsFactory/) | [VirtualSweetsFactory](https://github.com/cx20/VirtualSweetsFactory)（このリポジトリ） | お菓子を題材に、型で抜く、焼く、たれを掛けるといった工程や、やわらかい物が触れ合って変形する表現を解説します。 |
+
+---
+
+## ライセンス
+
+[MIT License](LICENSE) です。サンプルのコード、解説ページ、サムネイル画像を含む、このリポジトリの内容すべてに適用されます。
+
+実行時に CDN から読み込む Babylon.js（Apache License 2.0）と Havok Physics（MIT License）は、
+このリポジトリには含まれていません。それぞれのライセンスに従います。
