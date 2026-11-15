@@ -38,6 +38,25 @@ const ROOT = path.resolve(__dirname, "..");
 const SAMPLES = path.join(ROOT, "samples");
 const SITE = "おかしのつくりかた";
 const TAGLINE = "Babylon.js による、お菓子の手続き的モデリングの学習ノート";
+const REPO_URL = "https://github.com/cx20/VirtualSweetsFactory";
+
+/* 姉妹サイト。フッター（全ページ）とトップページの紹介欄で使う */
+const SISTERS = [
+  {
+    title: "やさいのつくりかた",
+    repo: "VirtualVegetablePlant",
+    site: "https://cx20.github.io/VirtualVegetablePlant/",
+    color: "var(--p-yomogi)",
+    desc: "野菜・果物・きのこの形や表面の模様を、計算とコードで作る方法を解説します。"
+  },
+  {
+    title: "たべもののつくりかた",
+    repo: "VirtualFoodCourt",
+    site: "https://cx20.github.io/VirtualFoodCourt/",
+    color: "var(--p-kitsune)",
+    desc: "料理を題材に、形に加えて焼き色や透け、衣・麺・汁、盛り付けなどの表現を解説します。"
+  }
+];
 
 const chapters = [].concat(require("./pages-1.js"), require("./pages-2.js"), require("./pages-3.js"), require("./pages-4.js"));
 
@@ -91,7 +110,8 @@ ${o.main}
 <footer>
   <div class="wrap">
     <div><b>${SITE}</b> — ${TAGLINE}</div>
-    <div><a href="index.html">目次へ戻る</a></div>
+    <div>姉妹サイト：${SISTERS.map((s) => '<a href="' + s.site + '" target="_blank" rel="noopener">' + s.title + "</a>").join(" ／ ")}</div>
+    <div><a href="${REPO_URL}/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a> ・ <a href="index.html">目次へ戻る</a></div>
   </div>
 </footer>
 </body>
@@ -316,7 +336,7 @@ ${cards(chapters.filter((p) => Number(p.no) >= pt.from && Number(p.no) <= pt.to)
     <div class="note">
       <b>姉妹編があります。</b>
       このサイトは、料理30本を扱った<a href="https://cx20.github.io/VirtualFoodCourt/"><b>「たべもののつくりかた」</b></a>（VirtualFoodCourt）から、
-      甘いものだけを別腹として切り出したものです。野菜と果物を扱った<b>「やさいのつくりかた」</b>（VirtualVegetablePlant）もあります。
+      甘いものだけを別腹として切り出したものです。野菜と果物を扱った<a href="https://cx20.github.io/VirtualVegetablePlant/"><b>「やさいのつくりかた」</b></a>（VirtualVegetablePlant）もあります。
       乱数・ノイズ・面と法線のような道具は3つとも共通ですが、このサイトの章立てと例は、すべてお菓子の15本から取っています。
     </div>
   </div>
@@ -349,6 +369,30 @@ ${PARTS.map(partSection).join("\n\n")}
         <h3>コードに出てくる言葉</h3>
         <p>法線、UV、巻き順、ORM、メイラード……最初の1周で引っかかる言葉だけ。検索できます。</p>
       </a>
+    </div>
+  </div>
+</section>
+
+<section class="chapter" id="sisters" style="--ch:var(--p-wata)">
+  <div class="chapter-head">
+    <div class="chnum" style="font-size:15px">姉妹編<small style="opacity:.7">SISTERS</small></div>
+    <div>
+      <h2>ほかの題材でつくる</h2>
+      <p class="sub">同じ手続き的モデリングを、野菜と料理で</p>
+    </div>
+  </div>
+  <div class="body">
+    <p>
+      このサイトは、お菓子を題材に、型で抜く、焼く、たれを掛けるといった工程や、やわらかい物が触れ合って変形する表現を解説します。題材を変えた姉妹サイトが2つあります。乱数・ノイズ・面と法線のような道具は共通です。
+    </p>
+  </div>
+  <div class="body" style="max-width:none">
+    <div class="hub">
+${SISTERS.map((s) => `      <a class="hubcard" href="${s.site}" target="_blank" rel="noopener" style="--ch:${s.color}">
+        <span class="no">${s.repo}</span>
+        <h3>${s.title}</h3>
+        <p>${s.desc}</p>
+      </a>`).join("\n")}
     </div>
   </div>
 </section>
